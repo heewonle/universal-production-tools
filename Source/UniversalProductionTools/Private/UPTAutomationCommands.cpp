@@ -5,8 +5,11 @@
 #include "UPTReferenceBlockingSolver.h"
 #include "UPTReferencePlanParser.h"
 #include "UPTSequenceBuilder.h"
+#include "UPTSkeletonAnalyzer.h"
 
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Animation/AnimSequenceBase.h"
+#include "Engine/SkeletalMesh.h"
 #include "Dom/JsonObject.h"
 #include "Editor.h"
 #include "Engine/World.h"
@@ -287,8 +290,103 @@ void RunReferenceE2E(const TArray<FString>& InArgs, UWorld* World)
     if (LoadReferencePlan(ReferenceFile, Reference)) RunPipeline(Reference, ReferenceFile, Actors, Options);
 }
 
+
+// 스켈레톤 분석기를 프로젝트의 모든 Skeletal Mesh에 돌려 준비도 분포를 뽑는다.
+// 자동 리타기팅의 70% 게이트가 실제 자산에서 어떻게 작동하는지 확인하기 위한 것이다.
+void RunSkeletonAudit(const TArray<FString>& Args, UWorld* World)
+{
+    int32 Limit = 0;
+    FString Filter;
+    FString OutputFile = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UniversalProductionTools"), TEXT("skeleton_audit.json"));
+    for (const FString& Arg : Args)
+    {
+        if (Arg.StartsWith(TEXT("-limit="))) Limit = FCString::Atoi(*Arg.RightChop(7));
+        else if (Arg.StartsWith(TEXT("-filter="))) Filter = Arg.RightChop(8);
+        else if (Arg.StartsWith(TEXT("-out="))) OutputFile = Arg.RightChop(5);
+    }
+
+    const FAssetRegistryModule& Registry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+    TArray<FAssetData> Assets;
+    Registry.Get().GetAssetsByClass(USkeletalMesh::StaticClass()->GetClassPathName(), Assets);
+    UE_LOG(LogUPTAutomation, Log, TEXT("UPT_AUDIT 대상 Skeletal Mesh %d개"), Assets.Num());
+
+    TArray<TSharedPtr<FJsonValue>> Rows;
+    int32 Examined = 0, Failed = 0;
+    int32 TierA = 0, TierB = 0, TierC = 0;
+    const double Started = FPlatformTime::Seconds();
+    for (const FAssetData& Data : Assets)
+    {
+        const FString Path = Data.GetObjectPathString();
+        if (!Filter.IsEmpty() && !Path.Contains(Filter)) continue;
+        if (Limit > 0 && Examined >= Limit) break;
+
+        USkeletalMesh* Mesh = Cast<USkeletalMesh>(Data.GetAsset());
+        if (!Mesh) { ++Failed; continue; }
+        ++Examined;
+
+        const FUPTSkeletonAnalysisData Result = FUPTSkeletonAnalyzer::AnalyzeDetailed(Mesh, FString());
+        const FString Tier = Result.Readiness >= 0.90f ? TEXT("A") : Result.Readiness >= 0.70f ? TEXT("B") : TEXT("C");
+        if (Tier == TEXT("A")) ++TierA; else if (Tier == TEXT("B")) ++TierB; else ++TierC;
+
+        int32 LowConfidence = 0;
+        for (const TPair<FString, float>& Pair : Result.Confidences)
+        {
+            if (Pair.Value < 0.6f) ++LowConfidence;
+        }
+
+        TSharedRef<FJsonObject> Row = MakeShared<FJsonObject>();
+        Row->SetStringField(TEXT("asset"), Path);
+        Row->SetNumberField(TEXT("bones"), Mesh->GetRefSkeleton().GetNum());
+        Row->SetNumberField(TEXT("readiness"), Result.Readiness);
+        Row->SetStringField(TEXT("tier"), Tier);
+        Row->SetNumberField(TEXT("mapped_roles"), Result.BoneMappings.Num());
+        Row->SetNumberField(TEXT("low_confidence_roles"), LowConfidence);
+        Row->SetNumberField(TEXT("twist_bones"), Result.TwistBones.Num());
+        Row->SetNumberField(TEXT("finger_bones"), Result.FingerBones.Num());
+        Row->SetNumberField(TEXT("face_bones"), Result.FaceBones.Num());
+        TArray<TSharedPtr<FJsonValue>> Roles;
+        for (const TPair<FString, FName>& Pair : Result.BoneMappings)
+        {
+            TSharedRef<FJsonObject> Role = MakeShared<FJsonObject>();
+            Role->SetStringField(TEXT("role"), Pair.Key);
+            Role->SetStringField(TEXT("bone"), Pair.Value.ToString());
+            const float* Confidence = Result.Confidences.Find(Pair.Key);
+            Role->SetNumberField(TEXT("confidence"), Confidence ? *Confidence : 0.0f);
+            Roles.Add(MakeShared<FJsonValueObject>(Role));
+        }
+        Row->SetArrayField(TEXT("roles"), Roles);
+        Rows.Add(MakeShared<FJsonValueObject>(Row));
+
+        // 메시를 계속 들고 있으면 메모리가 터진다. 주기적으로 정리한다.
+        if (Examined % 40 == 0)
+        {
+            CollectGarbage(RF_NoFlags);
+            UE_LOG(LogUPTAutomation, Log, TEXT("UPT_AUDIT 진행 %d/%d (A %d / B %d / C %d)"), Examined, Assets.Num(), TierA, TierB, TierC);
+        }
+    }
+
+    TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
+    Root->SetNumberField(TEXT("examined"), Examined);
+    Root->SetNumberField(TEXT("load_failed"), Failed);
+    Root->SetNumberField(TEXT("tier_a"), TierA);
+    Root->SetNumberField(TEXT("tier_b"), TierB);
+    Root->SetNumberField(TEXT("tier_c"), TierC);
+    Root->SetNumberField(TEXT("seconds"), FPlatformTime::Seconds() - Started);
+    Root->SetArrayField(TEXT("rows"), Rows);
+    FString Text;
+    FJsonSerializer::Serialize(Root, TJsonWriterFactory<>::Create(&Text));
+    FFileHelper::SaveStringToFile(Text, *OutputFile, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+    UE_LOG(LogUPTAutomation, Log, TEXT("UPT_AUDIT_DONE %d개 분석 (A %d / B %d / C %d, 실패 %d) → %s"),
+        Examined, TierA, TierB, TierC, Failed, *OutputFile);
+}
+
 FAutoConsoleCommandWithWorldAndArgs GUPTReferenceE2ECommand(
     TEXT("UPT.ReferenceE2E"),
     TEXT("Runs the panel pipeline without the panel: [reference_plan.json] <ActorLabel...> [-refine=N] [-editshot=N] [-link=URL -section=A-B -rights] [-library=DIR -promptfile=FILE]"),
     FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&RunReferenceE2E));
+
+FAutoConsoleCommandWithWorldAndArgs GUPTSkeletonAuditCommand(
+    TEXT("UPT.SkeletonAudit"),
+    TEXT("Runs the skeleton analyzer over every Skeletal Mesh and writes a readiness distribution: [-limit=N] [-filter=substring] [-out=path]"),
+    FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&RunSkeletonAudit));
 }

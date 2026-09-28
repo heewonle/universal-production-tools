@@ -78,6 +78,13 @@ TArray<FTransform> BuildComponentPose(const FReferenceSkeleton& Ref)
     return ComponentPose;
 }
 
+int32 GetBoneDepth(const FReferenceSkeleton& Ref, int32 BoneIndex)
+{
+    int32 Depth = 0;
+    for (int32 Index = Ref.GetParentIndex(BoneIndex); Index != INDEX_NONE; Index = Ref.GetParentIndex(Index)) ++Depth;
+    return Depth;
+}
+
 int32 GetDescendantDistance(const FReferenceSkeleton& Ref, int32 DescendantIndex, int32 AncestorIndex)
 {
     int32 Distance = 0;
@@ -338,6 +345,59 @@ FUPTSkeletonAnalysisData FUPTSkeletonAnalyzer::AnalyzeDetailed(USkeletalMesh* Sk
         if (ContainsAny(BoneName, {TEXT("jaw"), TEXT("eye"), TEXT("brow"), TEXT("lid"), TEXT("lip"), TEXT("mouth"), TEXT("cheek"), TEXT("nose"), TEXT("tongue")})) FaceBones.Add(BoneName);
     }
 
+    // 역할을 하나씩 따로 고르면 체인이 한 칸씩 밀려도 각 역할은 그럴듯해 보인다.
+    // Mixamo 계열(X_Bot)에서 왼쪽 다리만 LeftLeg→LeftFoot→LeftToeBase로 밀렸는데 준비도가 100%로 나왔다.
+    // 배정이 끝난 뒤 역할 사이의 계층 관계를 스켈레톤에서 다시 확인하고, 어긋난 역할의 신뢰도를 깎는다.
+    TArray<FString> StructureWarnings;
+    auto DemoteRole = [&Matches, &StructureWarnings](const FString& Role, const FString& Reason)
+    {
+        FRoleMatch* Match = Matches.Find(Role);
+        if (!Match || Match->BoneIndex == INDEX_NONE || Match->bManual) return;
+        Match->Confidence = FMath::Min(Match->Confidence, 0.40f);
+        StructureWarnings.Add(FString::Printf(TEXT("%s - %s"), *Role, *Reason));
+    };
+
+    for (const FRoleSpec& Spec : Specs)
+    {
+        if (Spec.ParentRole.IsEmpty()) continue;
+        const FRoleMatch* Child = Matches.Find(Spec.Role);
+        const FRoleMatch* Parent = Matches.Find(Spec.ParentRole);
+        if (!Child || !Parent || Child->BoneIndex == INDEX_NONE || Parent->BoneIndex == INDEX_NONE) continue;
+        if (!Ref.BoneIsChildOf(Child->BoneIndex, Parent->BoneIndex))
+        {
+            DemoteRole(Spec.Role, FString::Printf(TEXT("%s(%s) 아래에 있지 않습니다"),
+                *Spec.ParentRole, *Ref.GetBoneName(Parent->BoneIndex).ToString()));
+        }
+    }
+
+    // 좌우 짝 역할은 대칭 리그에서 같은 깊이에 있어야 한다. 한쪽만 밀린 배정을 여기서 잡는다.
+    static const TCHAR* PairedRoles[][2] = {
+        { TEXT("LeftClavicle"), TEXT("RightClavicle") }, { TEXT("LeftUpperArm"), TEXT("RightUpperArm") },
+        { TEXT("LeftLowerArm"), TEXT("RightLowerArm") }, { TEXT("LeftHand"), TEXT("RightHand") },
+        { TEXT("LeftThigh"), TEXT("RightThigh") }, { TEXT("LeftCalf"), TEXT("RightCalf") },
+        { TEXT("LeftFoot"), TEXT("RightFoot") },
+    };
+    for (int32 PairIndex = 0; PairIndex < UE_ARRAY_COUNT(PairedRoles); ++PairIndex)
+    {
+        const FString LeftRole = PairedRoles[PairIndex][0];
+        const FString RightRole = PairedRoles[PairIndex][1];
+        const FRoleMatch* Left = Matches.Find(LeftRole);
+        const FRoleMatch* Right = Matches.Find(RightRole);
+        if (!Left || !Right || Left->BoneIndex == INDEX_NONE || Right->BoneIndex == INDEX_NONE) continue;
+        // 이름이 양쪽 모두 확실하면(foot_l / foot_r) 리그가 비대칭이어도 자산 특성으로 본다.
+        // Sidekick 계열에는 오른발 위에만 transform2 같은 중간 본이 하나 더 있는 메시가 있는데, 매핑 자체는 옳다.
+        if (FMath::Min(Left->Confidence, Right->Confidence) >= 0.90f) continue;
+        const int32 LeftDepth = GetBoneDepth(Ref, Left->BoneIndex);
+        const int32 RightDepth = GetBoneDepth(Ref, Right->BoneIndex);
+        if (LeftDepth != RightDepth)
+        {
+            const FString Reason = FString::Printf(TEXT("좌우 깊이가 다릅니다(%s %d / %s %d) - 한쪽 체인이 밀렸습니다"),
+                *LeftRole, LeftDepth, *RightRole, RightDepth);
+            DemoteRole(LeftRole, Reason);
+            DemoteRole(RightRole, Reason);
+        }
+    }
+
     int32 RequiredCount = 0;
     int32 ReadyCount = 0;
     int32 HighConfidenceCount = 0;
@@ -359,6 +419,13 @@ FUPTSkeletonAnalysisData FUPTSkeletonAnalyzer::AnalyzeDetailed(USkeletalMesh* Sk
         *SkeletalMesh->GetName(), Ref.GetNum(), Size.X, Size.Y, Size.Z,
         LateralAxis == 0 ? TEXT("X") : TEXT("Y"), LeftSign > 0 ? TEXT("positive") : TEXT("negative"),
         Readiness * 100.0f, *Tier, HighConfidenceCount, RequiredCount);
+
+    if (StructureWarnings.Num() > 0)
+    {
+        Report += TEXT("Structure warnings (체인 정합성)\n");
+        for (const FString& Warning : StructureWarnings) Report += FString::Printf(TEXT("  ! %s\n"), *Warning);
+        Report += TEXT("\n");
+    }
 
     Report += TEXT("Semantic mapping\n");
     for (const FRoleSpec& Spec : Specs)
