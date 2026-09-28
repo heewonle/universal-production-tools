@@ -3,7 +3,7 @@
 일반 영상에서 MetaHuman **얼굴 애니메이션**을 뽑아 5.7 팀 프로젝트로 가져오기 위한 별도 프로젝트입니다.
 팀 프로젝트(`GoddessSlot/Retrieve.uproject`)는 **5.7 그대로 둡니다**.
 
-- 위치: `C:\Users\lhw45\Downloads\TeamProject\CH5_Project\MetaHumanCapture58`
+- 위치: `<CAPTURE58>`
 - 팀 저장소 폴더 바깥이라 커밋에 섞이지 않습니다. C++ 없는 블루프린트 프로젝트라 빌드가 필요 없습니다.
 - 2026-09-20 실제로 영상 2개를 끝까지 돌려 확인한 내용입니다.
 
@@ -42,7 +42,7 @@ Capture Manager가 받는 소스는 **iPhone Live Link Face**와 **HMC(헤드캠
 ### 1. 프레임 뽑기 (언리얼 밖, 5.7 분석 가상환경의 Python)
 
 ```bash
-cd C:/Users/lhw45/Downloads/TeamProject/CH5_Project/GoddessSlot
+cd <PROJECT>
 ThirdParty/UPTAnalyzer/.venv/Scripts/python.exe ../MetaHumanCapture58/Scripts/extract_frames.py --video D:/clip.mp4 --name MyShot --start 5 --end 13
 ```
 
@@ -51,13 +51,13 @@ ThirdParty/UPTAnalyzer/.venv/Scripts/python.exe ../MetaHumanCapture58/Scripts/ex
 ### 2. Capture Data 에셋 만들기
 
 ```bash
-UPT_FOOTAGE=MyShot "C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor-Cmd.exe" "C:/Users/lhw45/Downloads/TeamProject/CH5_Project/MetaHumanCapture58/MetaHumanCapture58.uproject" -ExecutePythonScript="C:/Users/lhw45/Downloads/TeamProject/CH5_Project/MetaHumanCapture58/Scripts/create_capture_data.py" -unattended -nullrhi -nosplash
+UPT_FOOTAGE=MyShot "<UE58>/Engine/Binaries/Win64/UnrealEditor-Cmd.exe" "<CAPTURE58>/MetaHumanCapture58.uproject" -ExecutePythonScript="<CAPTURE58>/Scripts/create_capture_data.py" -unattended -nullrhi -nosplash
 ```
 
 ### 3. 처리하기 (GPU 필요, GUI 에디터로 실행)
 
 ```bash
-UPT_CAPTURE=CD_MyShot "C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor.exe" "C:/Users/lhw45/Downloads/TeamProject/CH5_Project/MetaHumanCapture58/MetaHumanCapture58.uproject" -ExecCmds="py C:/Users/lhw45/Downloads/TeamProject/CH5_Project/MetaHumanCapture58/Scripts/run_mono_performance.py" -nosplash
+UPT_CAPTURE=CD_MyShot "<UE58>/Engine/Binaries/Win64/UnrealEditor.exe" "<CAPTURE58>/MetaHumanCapture58.uproject" -ExecCmds="py <CAPTURE58>/Scripts/run_mono_performance.py" -nosplash
 ```
 
 ### 4. 결과 확인
