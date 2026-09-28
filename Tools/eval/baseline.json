@@ -186,16 +186,16 @@
   },
   "body_height": {
     "frames_without_person": {
-      "max": 45
+      "max": 80
     },
     "all.median_pct": {
-      "max": 14.0
+      "max": 13.0
     },
     "full_body.median_pct": {
       "max": 12.0
     },
     "cropped.median_pct": {
-      "max": 17.0
+      "max": 16.0
     },
     "worst_dataset_median_pct": {
       "max": 20.0

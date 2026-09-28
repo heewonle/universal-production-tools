@@ -50,7 +50,7 @@ Tools/eval/
   run_regression.py         run every suite, compare against baseline.json
 ```
 
-**11 suites** currently run. A sample:
+**12 suites** currently run. A sample:
 
 | Suite | What it protects | Current |
 |---|---|---|
@@ -58,7 +58,8 @@ Tools/eval/
 | `twoshot_video` | two-character blocking, over-the-shoulder detection | 0 false positives |
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
-| `body_height` | full-body height estimation, two body types | 11.6% median |
+| `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
+| `retarget` | does retargeting preserve the motion | 3.7° segment angle |
 
 ## What the apparatus actually found
 
@@ -126,6 +127,34 @@ with the `MetaHumanBodyTracker` plugin the UE 5.8 route would be the proper one.
 5.8 side (frame filename rules, `metadata.frame_rate`, the async pipeline, hardcoded paths inside the
 engine's own exporter) are written up in
 [METAHUMAN_CAPTURE_5_8.md](Docs/METAHUMAN_CAPTURE_5_8.md) (Korean).
+
+
+### The animation side is measured too
+
+**Skeleton analyzer validated across 1,691 assets.** Automatic retargeting stops below 70% readiness,
+but nobody had checked whether that gate behaves on real assets. A console command
+(`UPT.SkeletonAudit`) analyses every Skeletal Mesh in the project in 21 seconds.
+
+The 196 C-tier meshes were mostly two-bone cubes, camera rigs, vehicle templates, spiders and dragons —
+**the gate was blocking the right things**. But **7 of the meshes that passed carried a wrong mapping**.
+Mixamo's `X_Bot` had **only its left leg shifted by one joint** (LeftThigh←LeftLeg) while the right leg was
+correct, so it scored **100% readiness and passed**. Roles were chosen independently of one another and
+never checked for mutual consistency.
+
+→ Added a **chain consistency pass** after assignment (is each role a descendant of its parent role; are
+left/right pairs at the same depth). Exactly **3 of 1,691** meshes changed tier — all genuinely shifted —
+with zero false positives. One earlier version was too strict and demoted 10 Sidekick meshes; an exception
+for strong name evidence (asymmetric rigs are an asset trait) fixed that.
+
+**Retargeting quality measured.** Joint positions cannot be compared across body types, so the suite
+measures **segment directions** and **foot sliding**. The first run showed legs at 2.2° but **arms off by
+52.9°**, with a standard deviation of **0.0** across all 24 samples — the motion transferred exactly, but
+the rest-pose (A-pose vs T-pose) difference was never corrected. The builder skipped pose alignment
+entirely because `AutoAlignAllBones` can assert on partial mappings; the cost of skipping it had never
+been measured.
+
+→ Aligning only the bones of mapped chains brought **median 7.8° → 3.7°, worst 58.4° → 10.4°, arms
+52.9° → 0.1°**. Foot sliding stayed at the source level (0.0995 → 0.1049), so retargeting adds none.
 
 ## Layout
 
