@@ -31,6 +31,7 @@ import eval_body_pose  # noqa: E402
 import eval_library  # noqa: E402
 import eval_letterbox  # noqa: E402
 import eval_link_guards  # noqa: E402
+import eval_retarget  # noqa: E402
 import eval_rotation  # noqa: E402
 import eval_size  # noqa: E402
 import eval_twoshot  # noqa: E402
@@ -48,6 +49,7 @@ SUITES = {
     "library_search": eval_library.run,
     "body_pose": eval_body_pose.run,
     "body_height": eval_body_height.run,
+    "retarget": eval_retarget.run,
 }
 
 

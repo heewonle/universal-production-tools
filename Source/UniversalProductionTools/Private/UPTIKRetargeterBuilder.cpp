@@ -116,8 +116,37 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     Controller->AssignIKRigToAllOps(ERetargetSourceOrTarget::Source, SourceIKRig);
     Controller->AssignIKRigToAllOps(ERetargetSourceOrTarget::Target, TargetIKRig);
     Controller->AutoMapChains(EAutoMapChainType::Exact, true);
-    // UE 5.7 AutoAlignAllBones는 비표준 Rig의 부분 매핑에서 내부 Assertion을 발생시킬 수 있다.
-    // 체인 리타기팅은 안전하게 생성하고, 자세 보정은 비교 창에서 필요한 체인만 사용자가 적용한다.
+
+    // 레스트 포즈(A-Pose/T-Pose) 차이를 보정하지 않으면 동작은 그대로 옮겨져도 자세가 통째로 틀어진다.
+    // 측정해 보니 Synty→Manny에서 팔이 항상 52.9° 어긋났다(다리는 2.2°). 원인은 이 보정을 건너뛴 것이었다.
+    // AutoAlignAllBones는 비표준 Rig의 부분 매핑에서 내부 Assertion을 낼 수 있으므로 쓰지 않는다.
+    // 대신 실제로 매핑된 체인의 본만 골라 AutoAlignBones를 부른다(팔 52.9° → 0.1°로 줄었고 어설션도 없었다).
+    if (const UIKRigController* TargetRigController = UIKRigController::GetController(TargetIKRig))
+    {
+        // 체인의 시작·끝만 정렬하면 중간 본(lowerarm 등)이 남아 팔이 31.9° 어긋난 채로 남는다.
+        // 끝 본에서 시작 본까지 계층을 거슬러 올라가며 체인 전체를 모은다.
+        const FReferenceSkeleton& TargetRef = TargetMesh->GetRefSkeleton();
+        TArray<FName> BonesToAlign;
+        for (const FBoneChain& Chain : TargetRigController->GetRetargetChains())
+        {
+            const FName StartName = Chain.StartBone.BoneName;
+            const FName EndName = Chain.EndBone.BoneName;
+            if (StartName == NAME_None && EndName == NAME_None) continue;
+            if (StartName != NAME_None) BonesToAlign.AddUnique(StartName);
+            int32 Index = EndName != NAME_None ? TargetRef.FindBoneIndex(EndName) : INDEX_NONE;
+            for (int32 Guard = 0; Index != INDEX_NONE && Guard < 64; ++Guard)
+            {
+                const FName BoneName = TargetRef.GetBoneName(Index);
+                BonesToAlign.AddUnique(BoneName);
+                if (BoneName == StartName) break;
+                Index = TargetRef.GetParentIndex(Index);
+            }
+        }
+        if (BonesToAlign.Num() > 0)
+        {
+            Controller->AutoAlignBones(BonesToAlign, ERetargetAutoAlignMethod::ChainToChain, ERetargetSourceOrTarget::Target);
+        }
+    }
     Controller->CleanAsset();
     Retargeter->MarkPackageDirty();
     return Retargeter;

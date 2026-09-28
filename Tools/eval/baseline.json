@@ -200,5 +200,19 @@
     "worst_dataset_median_pct": {
       "max": 20.0
     }
+  },
+  "retarget": {
+    "length_mismatch": {
+      "equals": 0
+    },
+    "segment_angle_median_deg": {
+      "max": 5.0
+    },
+    "worst_segment_deg": {
+      "max": 14.0
+    },
+    "foot_slide_target": {
+      "max": 0.13
+    }
   }
 }

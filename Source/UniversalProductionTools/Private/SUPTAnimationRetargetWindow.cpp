@@ -16,6 +16,11 @@
 #include "RetargetEditor/IKRetargetBatchOperation.h"
 #include "Retargeter/IKRetargeter.h"
 #include "Rig/IKRigDefinition.h"
+#include "Dom/JsonObject.h"
+#include "HAL/IConsoleManager.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonSerializer.h"
 #include "Styling/CoreStyle.h"
 #include "Subsystems/AssetEditorSubsystem.h"
 #include "Widgets/Input/SButton.h"
@@ -312,6 +317,98 @@ FReply SUPTAnimationRetargetWindow::OpenComparisonRetargeters()
             OpenedCount, *FString::Join(LastSourceAnimationNames, TEXT(", "))), FLinearColor::Green);
     }
     return FReply::Handled();
+}
+
+namespace
+{
+DEFINE_LOG_CATEGORY_STATIC(LogUPTRetarget, Log, All);
+
+// 패널을 거치지 않고 같은 리타기팅 경로를 돌린다. 결과 품질을 스크립트로 재기 위한 진입점이다.
+// 사용: UPT.RetargetE2E <대상 메시 경로> <애니메이션 경로...> [-out=결과.json]
+void RunRetargetE2E(const TArray<FString>& Args, UWorld* World)
+{
+    if (Args.Num() < 2)
+    {
+        UE_LOG(LogUPTRetarget, Error, TEXT("UPT_RETARGET 사용법: UPT.RetargetE2E <대상 메시> <애니메이션...> [-out=경로]"));
+        return;
+    }
+
+    USkeletalMesh* Target = LoadObject<USkeletalMesh>(nullptr, *Args[0]);
+    if (!Target)
+    {
+        UE_LOG(LogUPTRetarget, Error, TEXT("UPT_RETARGET 대상 메시를 열지 못했습니다: %s"), *Args[0]);
+        return;
+    }
+
+    FString OutputFile = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UniversalProductionTools"), TEXT("retarget_manifest.json"));
+    TArray<FAssetData> Selection;
+    for (int32 Index = 1; Index < Args.Num(); ++Index)
+    {
+        if (Args[Index].StartsWith(TEXT("-out="))) { OutputFile = Args[Index].RightChop(5); continue; }
+        UAnimSequence* Animation = LoadObject<UAnimSequence>(nullptr, *Args[Index]);
+        if (!Animation) { UE_LOG(LogUPTRetarget, Warning, TEXT("UPT_RETARGET 애니메이션을 열지 못했습니다: %s"), *Args[Index]); continue; }
+        Selection.Add(FAssetData(Animation));
+    }
+    if (Selection.IsEmpty())
+    {
+        UE_LOG(LogUPTRetarget, Error, TEXT("UPT_RETARGET 변환할 애니메이션이 없습니다."));
+        return;
+    }
+
+    TMap<USkeletalMesh*, TArray<FAssetData>> AssetsBySourceMesh;
+    for (const FAssetData& AssetData : Selection)
+    {
+        UAnimationAsset* Animation = Cast<UAnimationAsset>(AssetData.GetAsset());
+        USkeleton* Skeleton = Animation ? Animation->GetSkeleton() : nullptr;
+        if (Skeleton && Skeleton == Target->GetSkeleton())
+        {
+            UE_LOG(LogUPTRetarget, Log, TEXT("UPT_RETARGET %s 는 대상과 같은 Skeleton이라 변환하지 않습니다."), *AssetData.AssetName.ToString());
+            continue;
+        }
+        USkeletalMesh* SourceMesh = ResolveSourceMesh(Skeleton);
+        if (!SourceMesh) { UE_LOG(LogUPTRetarget, Warning, TEXT("UPT_RETARGET %s 의 원본 메시를 찾지 못했습니다."), *AssetData.AssetName.ToString()); continue; }
+        AssetsBySourceMesh.FindOrAdd(SourceMesh).Add(AssetData);
+    }
+
+    TArray<TSharedPtr<FJsonValue>> Pairs;
+    for (const TPair<USkeletalMesh*, TArray<FAssetData>>& Group : AssetsBySourceMesh)
+    {
+        UIKRetargeter* Retargeter = nullptr;
+        FString Error;
+        if (!BuildRetargeter(Group.Key, Target, Retargeter, Error))
+        {
+            UE_LOG(LogUPTRetarget, Error, TEXT("UPT_RETARGET 리타기터 생성 실패: %s"), *Error);
+            continue;
+        }
+        const FString Suffix = TEXT("_") + Target->GetName();
+        const TArray<FAssetData> Results = UIKRetargetBatchOperation::DuplicateAndRetarget(
+            Group.Value, Group.Key, Target, Retargeter, FString(), FString(), FString(), Suffix, false, false);
+        UE_LOG(LogUPTRetarget, Log, TEXT("UPT_RETARGET %s -> %s : %d개 생성"),
+            *Group.Key->GetName(), *Target->GetName(), Results.Num());
+
+        for (int32 Index = 0; Index < Results.Num() && Index < Group.Value.Num(); ++Index)
+        {
+            TSharedRef<FJsonObject> Row = MakeShared<FJsonObject>();
+            Row->SetStringField(TEXT("source_animation"), Group.Value[Index].GetObjectPathString());
+            Row->SetStringField(TEXT("retargeted_animation"), Results[Index].GetObjectPathString());
+            Row->SetStringField(TEXT("source_mesh"), Group.Key->GetPathName());
+            Row->SetStringField(TEXT("target_mesh"), Target->GetPathName());
+            Pairs.Add(MakeShared<FJsonValueObject>(Row));
+        }
+    }
+
+    TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
+    Root->SetArrayField(TEXT("pairs"), Pairs);
+    FString Text;
+    FJsonSerializer::Serialize(Root, TJsonWriterFactory<>::Create(&Text));
+    FFileHelper::SaveStringToFile(Text, *OutputFile, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+    UE_LOG(LogUPTRetarget, Log, TEXT("UPT_RETARGET_DONE %d쌍 → %s"), Pairs.Num(), *OutputFile);
+}
+
+FAutoConsoleCommandWithWorldAndArgs GUPTRetargetE2ECommand(
+    TEXT("UPT.RetargetE2E"),
+    TEXT("Runs the retarget pipeline without the panel: <TargetMeshPath> <AnimPath...> [-out=manifest.json]"),
+    FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&RunRetargetE2E));
 }
 
 #undef LOCTEXT_NAMESPACE

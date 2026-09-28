@@ -26,6 +26,7 @@ DATASET_PATTERNS = {
     "letterbox": ["letterbox_*"],
     "bodypose": ["bodypose_*"],
     "height": ["height_*"],
+    "retarget": ["retarget_*"],
     "peasant_video": ["peasant_video_*"],
 }
 
