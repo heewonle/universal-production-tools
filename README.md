@@ -1,6 +1,7 @@
 # Universal Production Tools
 
-레퍼런스 영상의 **카메라 구도를 언리얼 시퀀스로 재현하는** 에디터 플러그인입니다. (UE 5.7)
+레퍼런스 영상의 **카메라 구도를 언리얼 시퀀스로 재현하고**, **캐릭터 애니메이션을 자동으로 옮기는**
+에디터 플러그인입니다. (UE 5.7)
 
 영상을 넣으면 샷을 나누고, 각 샷의 인물 위치·크기·앵글을 읽어, 레벨에 있는 캐릭터로 같은 구도의
 Level Sequence를 만듭니다. LLM 없이 로컬 포즈 분석(YOLOX + RTMPose)만으로 동작합니다.
@@ -79,12 +80,46 @@ Tools/eval/
 나빠졌고(레퍼런스 쪽도 같은 추정기로 재기 때문), 체형 보정 한계를 넓힌 개선폭은 재촬영에서 재현되지
 않았습니다. → [BODY_HEIGHT_ESTIMATOR.md](Docs/BODY_HEIGHT_ESTIMATOR.md)
 
+## 캐릭터 애니메이션 파이프라인
+
+구도 재현과 별개로, **애니메이션을 캐릭터 사이로 옮기고 영상에서 만들어 내는** 쪽도 구현돼 있습니다.
+C++ 약 1,100줄 + 에디터 파이썬 스크립트입니다.
+
+**1. 스켈레톤 자동 분석** — `UPTSkeletonAnalyzer` (395줄)
+본 이름·계층·레퍼런스 포즈의 공간 위치를 함께 써서 휴머노이드 역할(골반·척추·양팔·양다리)을 추론하고,
+항목별 신뢰도와 A/B/C 준비도 등급을 냅니다. Twist·손가락·얼굴 보조 본은 따로 분류해 핵심 판정에서 뺍니다.
+`L-Forearm`, `RigLArm1` 같은 비표준 명칭도 역할로 인식합니다.
+
+**2. IK Rig · IK Retargeter 자동 생성** — `UPTIKRigBuilder` (214줄), `UPTIKRetargeterBuilder` (124줄)
+엔진의 Auto Characterizer(`IKRigAutoCharacterizer`)를 1순위로 쓰고, 엔진 템플릿에 없는 구조는 위의 자체
+분석으로 대체합니다. 체인 생성, 손·발 Full Body IK Goal, 팔꿈치·무릎 관절 제한 프리셋까지 만듭니다.
+
+**3. 애니메이션 일괄 리타기팅** — `SUPTAnimationRetargetWindow` (317줄)
+콘텐츠 브라우저에서 대상 메시를 우클릭 → 애니메이션을 여러 개 골라 한 번에 변환합니다.
+Source 스켈레톤별로 Profile·IK Rig·Retargeter를 알아서 준비하고, 상체/하체 모드는 슬롯 Montage까지 만듭니다.
+**준비도 70% 미만이면 자동 변환을 중단하고 수동 검수로 돌립니다** — 조용히 망가진 결과를 내놓지 않습니다.
+
+**4. 영상 한 대로 얼굴 애니메이션** — UE 5.8 MetaHuman Animator → 5.7 이식
+휴대폰으로 찍은 영상(Mono footage, Identity 없이)으로 얼굴 컨트롤 커브를 풀어 냅니다.
+FBX 임포트가 5.7에서 애니메이션을 만들어 주지 않아, **커브 값만 옮겨 5.7에서 AnimSequence를 새로 구웠습니다**
+(`Tools/editor/build_face_anim_57.py`).
+
+![얼굴 커브](Docs/images/face_curves.jpg)
+
+*251개 컨트롤 중 134개가 실제로 움직입니다. 191프레임, 23.976fps, 8.0초.*
+
+막힌 부분도 여기에 적습니다. **몸 동작은 중단했습니다** — 위의 깊이 문제 때문입니다.
+`MetaHumanBodyTracker` 플러그인을 구하면 5.8 경로가 정공법입니다.
+5.8 작업에서 걸린 함정들(프레임 파일명 규칙, `metadata.frame_rate`, 비동기 파이프라인, 엔진 내장
+익스포터의 하드코딩 경로)은 [METAHUMAN_CAPTURE_5_8.md](Docs/METAHUMAN_CAPTURE_5_8.md)에 정리했습니다.
+
 ## 구성
 
 ```
 Source/UniversalProductionTools/   C++ (Slate 패널, 구도 솔버, 시퀀스 생성, 자동화 테스트)
 Tools/                             파이썬 분석기 (포즈 분석, 링크 다운로드, 라이브러리 검색, 검증)
 Tools/eval/                        정답 촬영 + 오차 측정 + 회귀 검사
+Tools/editor/                      5.7 에디터 유틸 (5.8 얼굴 커브 → AnimSequence 굽기)
 Docs/                              작업 기록 (CH5_Project/Docs 사본)
 MetaHumanCapture58/Scripts/        UE 5.8 MetaHuman 얼굴 캡처 스크립트
 ```

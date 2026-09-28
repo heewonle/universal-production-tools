@@ -1,7 +1,7 @@
 # Universal Production Tools
 
 An Unreal Engine 5.7 editor plugin that **reproduces the camera composition of a reference video**
-as a Level Sequence.
+as a Level Sequence, and **moves character animation between skeletons automatically**.
 
 Feed it a video: it splits the footage into shots, reads each shot's subject position, size and
 camera angle, and builds a Level Sequence that frames your level's characters the same way.
@@ -90,12 +90,50 @@ exact geometric height made results worse (the reference side is measured by the
 the improvement from widening a body-proportion clamp did not reproduce on a re-capture.
 → [BODY_HEIGHT_ESTIMATOR.md](Docs/BODY_HEIGHT_ESTIMATOR.md)
 
+## Character animation pipeline
+
+Separate from composition reproduction, the plugin also **moves animation between characters and
+creates it from video**. Roughly 1,100 lines of C++ plus editor Python.
+
+**1. Automatic skeleton analysis** — `UPTSkeletonAnalyzer` (395 lines)
+Combines bone names, hierarchy and reference-pose spatial positions to infer humanoid roles (pelvis,
+spine, both arms, both legs), with per-item confidence and an A/B/C readiness grade. Twist, finger and
+face helper bones are classified separately and excluded from the core judgement. Non-standard naming
+such as `L-Forearm` or `RigLArm1` is recognised.
+
+**2. IK Rig / IK Retargeter generation** — `UPTIKRigBuilder` (214), `UPTIKRetargeterBuilder` (124)
+Uses the engine's Auto Characterizer (`IKRigAutoCharacterizer`) first and falls back to the analysis
+above for hierarchies the engine templates do not cover. Builds chains, hand/foot Full Body IK goals
+and elbow/knee joint-limit presets.
+
+**3. Batch retargeting** — `SUPTAnimationRetargetWindow` (317 lines)
+Right-click a target mesh in the Content Browser, select any number of animations, convert in one go.
+Profiles, IK Rigs and Retargeters are prepared per source skeleton automatically; upper/lower body
+modes also emit slot Montages. **Below 70% readiness the automatic path stops and hands the case back
+for manual review** — it does not quietly emit broken results.
+
+**4. Face animation from a single video** — UE 5.8 MetaHuman Animator → transferred into 5.7
+Solves face control curves from phone footage (mono, no Identity required). FBX import would not
+produce an animation asset in 5.7, so **only the curve values were transferred and the AnimSequence was
+re-baked in 5.7** (`Tools/editor/build_face_anim_57.py`).
+
+![face curves](Docs/images/face_curves.jpg)
+
+*134 of 251 controls actually animate. 191 frames, 23.976 fps, 8.0 s.*
+
+What is blocked is recorded here too. **Body motion is stopped** because of the depth problem above;
+with the `MetaHumanBodyTracker` plugin the UE 5.8 route would be the proper one. The traps hit on the
+5.8 side (frame filename rules, `metadata.frame_rate`, the async pipeline, hardcoded paths inside the
+engine's own exporter) are written up in
+[METAHUMAN_CAPTURE_5_8.md](Docs/METAHUMAN_CAPTURE_5_8.md) (Korean).
+
 ## Layout
 
 ```
 Source/UniversalProductionTools/   C++ (Slate panel, blocking solver, sequence builder, automation tests)
 Tools/                             Python analyzers (pose analysis, link download, library search, verification)
 Tools/eval/                        ground-truth capture + error measurement + regression
+Tools/editor/                      5.7 editor utilities (bake 5.8 face curves into an AnimSequence)
 Docs/                              engineering notes (Korean)
 MetaHumanCapture58/Scripts/        UE 5.8 MetaHuman face capture scripts
 ```
