@@ -1,0 +1,23 @@
+# 빌드 산출물 — 엔진이 다시 만든다
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+
+# 파이썬
+__pycache__/
+*.pyc
+.venv/
+
+# 분석기가 내려받는 모델·캐시 (수백 MB)
+*.onnx
+*.tflite
+*.pt
+
+# 에디터·OS 부산물
+*.VC.db
+*.sdf
+.vs/
+.vscode/
+Thumbs.db
+desktop.ini

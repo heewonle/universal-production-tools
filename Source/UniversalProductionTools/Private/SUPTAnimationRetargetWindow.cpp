@@ -1,0 +1,317 @@
+#include "SUPTAnimationRetargetWindow.h"
+
+#include "UPTIKRetargeterBuilder.h"
+#include "UPTIKRigBuilder.h"
+#include "UPTSkeletonAnalyzer.h"
+#include "UPTSkeletonProfileBuilder.h"
+
+#include "Animation/AnimSequence.h"
+#include "Animation/AnimationAsset.h"
+#include "Animation/Skeleton.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "ContentBrowserModule.h"
+#include "Editor.h"
+#include "Engine/SkeletalMesh.h"
+#include "IContentBrowserSingleton.h"
+#include "RetargetEditor/IKRetargetBatchOperation.h"
+#include "Retargeter/IKRetargeter.h"
+#include "Rig/IKRigDefinition.h"
+#include "Styling/CoreStyle.h"
+#include "Subsystems/AssetEditorSubsystem.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/SWindow.h"
+#include "Widgets/Text/STextBlock.h"
+
+#define LOCTEXT_NAMESPACE "UPTAnimationRetargetWindow"
+
+namespace
+{
+const TCHAR* ManualFixHint = TEXT("Universal Production Tools > 애니메이션 범용화 탭 > '고급: 본 매핑 수동 보정'에서 이 메시를 보정하세요.");
+
+USkeletalMesh* ResolveSourceMesh(USkeleton* Skeleton)
+{
+    if (!Skeleton) return nullptr;
+    if (USkeletalMesh* PreviewMesh = Skeleton->GetPreviewMesh(true)) return PreviewMesh;
+
+    // 일부 외부 애니메이션 팩은 Skeleton Preview Mesh가 비어 있다. 동일 Skeleton을 쓰는 메시를 역검색한다.
+    FARFilter Filter;
+    Filter.ClassPaths.Add(USkeletalMesh::StaticClass()->GetClassPathName());
+    Filter.bRecursiveClasses = true;
+    TArray<FAssetData> MeshAssets;
+    FAssetRegistryModule::GetRegistry().GetAssets(Filter, MeshAssets);
+    for (const FAssetData& MeshAsset : MeshAssets)
+    {
+        USkeletalMesh* Candidate = Cast<USkeletalMesh>(MeshAsset.GetAsset());
+        if (Candidate && Candidate->GetSkeleton() == Skeleton) return Candidate;
+    }
+    return nullptr;
+}
+
+bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRetargeter*& OutRetargeter, FString& OutError)
+{
+    if (!SourceMesh || !TargetMesh) { OutError = TEXT("Source 또는 Target Skeletal Mesh가 없습니다."); return false; }
+
+    const FString SourceOverride = FUPTSkeletonProfileBuilder::FindManualOverride(SourceMesh);
+    const FString TargetOverride = FUPTSkeletonProfileBuilder::FindManualOverride(TargetMesh);
+    const bool bHasManualOverride = !SourceOverride.IsEmpty() || !TargetOverride.IsEmpty();
+
+    // 알려진 UE/MetaHuman/Mixamo 휴머노이드는 엔진 Auto Characterizer가 가장 안정적이다. 사용자가 저장한 수동 보정값이 있으면 그것을 우선한다.
+    FString AutoSourceError = TEXT("수동 보정값 우선");
+    FString AutoTargetError = AutoSourceError;
+    if (!bHasManualOverride)
+    {
+        AutoSourceError.Reset();
+        AutoTargetError.Reset();
+        UIKRigDefinition* AutoSourceRig = FUPTIKRigBuilder::CreateUniversalIKRig(SourceMesh, AutoSourceError);
+        UIKRigDefinition* AutoTargetRig = FUPTIKRigBuilder::CreateUniversalIKRig(TargetMesh, AutoTargetError);
+        if (AutoSourceRig && AutoTargetRig)
+        {
+            OutRetargeter = FUPTIKRetargeterBuilder::CreateIKRetargeter(SourceMesh, AutoSourceRig, TargetMesh, AutoTargetRig, OutError);
+            if (OutRetargeter) return true;
+        }
+    }
+
+    // 알려지지 않은 구조나 수동 보정된 메시는 이름+계층+공간 Semantic Analyzer로 처리한다.
+    const FUPTSkeletonAnalysisData SourceAnalysis = FUPTSkeletonAnalyzer::AnalyzeDetailed(SourceMesh, SourceOverride);
+    const FUPTSkeletonAnalysisData TargetAnalysis = FUPTSkeletonAnalyzer::AnalyzeDetailed(TargetMesh, TargetOverride);
+    if (!SourceAnalysis.bOverridesValid || SourceAnalysis.Readiness < 0.70f)
+    {
+        OutError = FString::Printf(TEXT("원본 '%s' 본 구조 인식 실패 (엔진 인식: %s / 보조 분석 준비도 %.0f%%). %s"),
+            *SourceMesh->GetName(), *AutoSourceError, SourceAnalysis.Readiness * 100.0f, ManualFixHint);
+        return false;
+    }
+    if (!TargetAnalysis.bOverridesValid || TargetAnalysis.Readiness < 0.70f)
+    {
+        OutError = FString::Printf(TEXT("대상 '%s' 본 구조 인식 실패 (엔진 인식: %s / 보조 분석 준비도 %.0f%%). %s"),
+            *TargetMesh->GetName(), *AutoTargetError, TargetAnalysis.Readiness * 100.0f, ManualFixHint);
+        return false;
+    }
+
+    UUPTSkeletonProfile* SourceProfile = FUPTSkeletonProfileBuilder::CreateProfile(SourceMesh, SourceAnalysis, SourceOverride, OutError);
+    if (!SourceProfile) return false;
+    UIKRigDefinition* SourceRig = FUPTIKRigBuilder::CreateIKRig(SourceProfile, OutError);
+    if (!SourceRig) return false;
+    UUPTSkeletonProfile* TargetProfile = FUPTSkeletonProfileBuilder::CreateProfile(TargetMesh, TargetAnalysis, TargetOverride, OutError);
+    if (!TargetProfile) return false;
+    UIKRigDefinition* TargetRig = FUPTIKRigBuilder::CreateIKRig(TargetProfile, OutError);
+    if (!TargetRig) return false;
+
+    OutRetargeter = FUPTIKRetargeterBuilder::CreateIKRetargeter(SourceProfile, SourceRig, TargetProfile, TargetRig, OutError);
+    return OutRetargeter != nullptr;
+}
+}
+
+void SUPTAnimationRetargetWindow::Construct(const FArguments& InArgs)
+{
+    TargetMesh = InArgs._TargetMesh;
+    OwnerWindow = InArgs._OwnerWindow;
+
+    FAssetPickerConfig PickerConfig;
+    PickerConfig.SelectionMode = ESelectionMode::Multi;
+    PickerConfig.Filter.ClassPaths.Add(UAnimSequence::StaticClass()->GetClassPathName());
+    PickerConfig.Filter.bRecursiveClasses = true;
+    PickerConfig.GetCurrentSelectionDelegates.Add(&GetCurrentSelectionDelegate);
+    PickerConfig.InitialAssetViewType = EAssetViewType::Column;
+    PickerConfig.bAllowNullSelection = false;
+    PickerConfig.OnAssetSelected = FOnAssetSelected::CreateLambda([this](const FAssetData&)
+    {
+        if (SelectionSummaryText) SelectionSummaryText->SetText(GetSelectionSummary());
+    });
+
+    FContentBrowserModule& ContentBrowser = FModuleManager::LoadModuleChecked<FContentBrowserModule>(TEXT("ContentBrowser"));
+    const TSharedRef<SWidget> Picker = ContentBrowser.Get().CreateAssetPicker(PickerConfig);
+
+    ChildSlot
+    [
+        SNew(SBorder).Padding(10.0f)
+        [
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 4)
+            [
+                SNew(STextBlock)
+                .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+                .Text(FText::Format(LOCTEXT("TargetMesh", "대상 메시: {0}"), FText::FromString(TargetMesh.IsValid() ? TargetMesh->GetName() : TEXT("없음"))))
+            ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 8)
+            [ SNew(STextBlock).Text(LOCTEXT("Guide", "① 변환할 애니메이션 선택 (Ctrl/Shift로 여러 개)  →  ② 사전 점검  →  ③ 일괄 리타기팅  →  ④ 원본/대상 비교")) ]
+            + SVerticalBox::Slot().FillHeight(1.0f)
+            [ Picker ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 4)
+            [ SAssignNew(SelectionSummaryText, STextBlock).Text(LOCTEXT("NoSelection", "선택된 애니메이션 없음")) ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 4)
+            [ SAssignNew(StatusText, STextBlock).AutoWrapText(true).Text(LOCTEXT("Ready", "준비됨")) ]
+            + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(0, 8, 0, 0)
+            [
+                SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
+                [ SNew(SButton).Text(LOCTEXT("Close", "닫기")).OnClicked_Lambda([this] { if (OwnerWindow.IsValid()) OwnerWindow.Pin()->RequestDestroyWindow(); return FReply::Handled(); }) ]
+                + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
+                [ SNew(SButton).Text(LOCTEXT("Validate", "② 사전 점검")).OnClicked(this, &SUPTAnimationRetargetWindow::ValidatePipeline) ]
+                + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
+                [ SNew(SButton).Text(LOCTEXT("Retarget", "③ 선택 애니메이션 일괄 리타기팅")).OnClicked(this, &SUPTAnimationRetargetWindow::RetargetSelectedAnimations) ]
+                + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
+                [ SNew(SButton).Text(LOCTEXT("OpenResults", "생성 결과 열기")).IsEnabled_Lambda([this] { return !LastGeneratedAssets.IsEmpty(); }).OnClicked(this, &SUPTAnimationRetargetWindow::OpenGeneratedAssets) ]
+                + SHorizontalBox::Slot().AutoWidth()
+                [
+                    SNew(SButton)
+                    .Text(LOCTEXT("Compare", "④ 원본/대상 비교"))
+                    .ToolTipText(LOCTEXT("CompareTooltip", "마지막 리타기팅에 사용한 IK Retargeter를 열어 원본과 대상 동작을 나란히 비교합니다."))
+                    .IsEnabled_Lambda([this] { return !LastRetargeters.IsEmpty(); })
+                    .OnClicked(this, &SUPTAnimationRetargetWindow::OpenComparisonRetargeters)
+                ]
+            ]
+        ]
+    ];
+}
+
+FText SUPTAnimationRetargetWindow::GetSelectionSummary() const
+{
+    const int32 Count = GetCurrentSelectionDelegate.IsBound() ? GetCurrentSelectionDelegate.Execute().Num() : 0;
+    return Count > 0 ? FText::Format(LOCTEXT("SelectionCount", "{0}개 애니메이션 선택됨"), Count) : LOCTEXT("NoSelection2", "선택된 애니메이션 없음");
+}
+
+FReply SUPTAnimationRetargetWindow::ValidatePipeline()
+{
+    USkeletalMesh* Target = TargetMesh.Get();
+    if (!Target || !Target->GetSkeleton())
+    { SetStatus(TEXT("점검 실패: 대상 Skeletal Mesh 또는 Skeleton이 없습니다."), FLinearColor::Red); return FReply::Handled(); }
+    if (!GetCurrentSelectionDelegate.IsBound() || GetCurrentSelectionDelegate.Execute().IsEmpty())
+    { SetStatus(TEXT("점검 실패: 변환할 Animation Sequence를 하나 이상 선택하세요."), FLinearColor::Yellow); return FReply::Handled(); }
+
+    int32 DirectCount = 0;
+    TSet<USkeletalMesh*> SourceMeshes;
+    TArray<FString> Problems;
+    for (const FAssetData& Data : GetCurrentSelectionDelegate.Execute())
+    {
+        UAnimationAsset* Animation = Cast<UAnimationAsset>(Data.GetAsset());
+        USkeleton* Skeleton = Animation ? Animation->GetSkeleton() : nullptr;
+        if (!Skeleton) { Problems.Add(Data.AssetName.ToString() + TEXT(": Skeleton 없음")); continue; }
+        if (Skeleton == Target->GetSkeleton()) { ++DirectCount; continue; }
+        USkeletalMesh* SourceMesh = ResolveSourceMesh(Skeleton);
+        if (!SourceMesh) { Problems.Add(Data.AssetName.ToString() + TEXT(": 원본 캐릭터 메시를 찾지 못함")); continue; }
+        if (SourceMeshes.Contains(SourceMesh)) continue;
+        SourceMeshes.Add(SourceMesh);
+        const FUPTSkeletonAnalysisData Analysis = FUPTSkeletonAnalyzer::AnalyzeDetailed(SourceMesh, FUPTSkeletonProfileBuilder::FindManualOverride(SourceMesh));
+        if (!Analysis.bOverridesValid || Analysis.Readiness < 0.70f)
+        {
+            Problems.Add(FString::Printf(TEXT("%s: 보조 분석 준비도 %.0f%% — 엔진 자동 인식이 실패하면 수동 보정이 필요합니다"), *SourceMesh->GetName(), Analysis.Readiness * 100.0f));
+        }
+    }
+
+    if (!Problems.IsEmpty())
+    {
+        SetStatus(TEXT("확인 필요: ") + FString::Join(Problems, TEXT(" | ")), FLinearColor::Yellow);
+    }
+    else
+    {
+        SetStatus(FString::Printf(TEXT("점검 통과: 그대로 사용 가능 %d개, 변환이 필요한 원본 캐릭터 %d종."), DirectCount, SourceMeshes.Num()), FLinearColor::Green);
+    }
+    return FReply::Handled();
+}
+
+FReply SUPTAnimationRetargetWindow::OpenGeneratedAssets()
+{
+    UAssetEditorSubsystem* AssetEditorSubsystem = GEditor ? GEditor->GetEditorSubsystem<UAssetEditorSubsystem>() : nullptr;
+    if (!AssetEditorSubsystem) { SetStatus(TEXT("Asset Editor Subsystem을 사용할 수 없습니다."), FLinearColor::Red); return FReply::Handled(); }
+    int32 Opened = 0;
+    for (const TWeakObjectPtr<UObject>& Generated : LastGeneratedAssets)
+    {
+        if (UObject* Asset = Generated.Get()) { AssetEditorSubsystem->OpenEditorForAsset(Asset); ++Opened; }
+    }
+    SetStatus(Opened > 0 ? FString::Printf(TEXT("생성 결과 %d개를 열었습니다."), Opened) : TEXT("열 수 있는 생성 결과가 없습니다."), Opened > 0 ? FLinearColor::Green : FLinearColor::Yellow);
+    return FReply::Handled();
+}
+
+void SUPTAnimationRetargetWindow::SetStatus(const FString& Message, const FLinearColor& Color)
+{
+    if (StatusText) { StatusText->SetText(FText::FromString(Message)); StatusText->SetColorAndOpacity(Color); }
+}
+
+FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
+{
+    USkeletalMesh* Target = TargetMesh.Get();
+    if (!Target || !GetCurrentSelectionDelegate.IsBound()) { SetStatus(TEXT("대상 메시 또는 애니메이션 선택기를 사용할 수 없습니다."), FLinearColor::Red); return FReply::Handled(); }
+
+    const TArray<FAssetData> Selection = GetCurrentSelectionDelegate.Execute();
+    if (Selection.IsEmpty()) { SetStatus(TEXT("변환할 Animation Sequence를 하나 이상 선택하세요."), FLinearColor::Yellow); return FReply::Handled(); }
+
+    LastRetargeters.Reset();
+    LastGeneratedAssets.Reset();
+    LastSourceAnimationNames.Reset();
+    TMap<USkeletalMesh*, TArray<FAssetData>> AssetsBySourceMesh;
+    TArray<FString> Skipped;
+    int32 DirectlyCompatible = 0;
+    for (const FAssetData& AssetData : Selection)
+    {
+        UAnimationAsset* Animation = Cast<UAnimationAsset>(AssetData.GetAsset());
+        USkeleton* Skeleton = Animation ? Animation->GetSkeleton() : nullptr;
+        if (Skeleton && Skeleton == Target->GetSkeleton()) { ++DirectlyCompatible; continue; }
+        USkeletalMesh* SourceMesh = ResolveSourceMesh(Skeleton);
+        if (!SourceMesh) { Skipped.Add(AssetData.AssetName.ToString()); continue; }
+        AssetsBySourceMesh.FindOrAdd(SourceMesh).Add(AssetData);
+    }
+
+    int32 CreatedCount = 0;
+    TArray<FString> Errors;
+    for (const TPair<USkeletalMesh*, TArray<FAssetData>>& Pair : AssetsBySourceMesh)
+    {
+        UIKRetargeter* Retargeter = nullptr;
+        FString Error;
+        if (!BuildRetargeter(Pair.Key, Target, Retargeter, Error)) { Errors.Add(Error); continue; }
+        LastRetargeters.Add(Retargeter);
+        for (const FAssetData& SourceAsset : Pair.Value) LastSourceAnimationNames.Add(SourceAsset.AssetName.ToString());
+
+        const FString Suffix = TEXT("_") + Target->GetName();
+        const TArray<FAssetData> Results = UIKRetargetBatchOperation::DuplicateAndRetarget(
+            Pair.Value, Pair.Key, Target, Retargeter, FString(), FString(), FString(), Suffix, false, false);
+        CreatedCount += Results.Num();
+        for (const FAssetData& Result : Results) if (UObject* Asset = Result.GetAsset()) LastGeneratedAssets.Add(Asset);
+    }
+
+    FString Summary = FString::Printf(TEXT("'%s'용 %d개 생성, 그대로 사용 가능 %d개"), *Target->GetName(), CreatedCount, DirectlyCompatible);
+    if (!Skipped.IsEmpty()) Summary += FString::Printf(TEXT(", 원본 메시를 찾지 못해 건너뜀 %d개"), Skipped.Num());
+    if (!Errors.IsEmpty())
+    {
+        SetStatus(Summary + TEXT("\n실패: ") + FString::Join(Errors, TEXT("\n")), FLinearColor::Red);
+    }
+    else
+    {
+        SetStatus(TEXT("완료: ") + Summary + TEXT(". '④ 원본/대상 비교'로 동작을 확인하세요."), FLinearColor::Green);
+    }
+    return FReply::Handled();
+}
+
+FReply SUPTAnimationRetargetWindow::OpenComparisonRetargeters()
+{
+    UAssetEditorSubsystem* AssetEditorSubsystem = GEditor ? GEditor->GetEditorSubsystem<UAssetEditorSubsystem>() : nullptr;
+    if (!AssetEditorSubsystem)
+    {
+        SetStatus(TEXT("Asset Editor Subsystem을 사용할 수 없습니다."), FLinearColor::Red);
+        return FReply::Handled();
+    }
+
+    int32 OpenedCount = 0;
+    for (const TWeakObjectPtr<UIKRetargeter>& Retargeter : LastRetargeters)
+    {
+        if (UIKRetargeter* Asset = Retargeter.Get())
+        {
+            AssetEditorSubsystem->OpenEditorForAsset(Asset);
+            ++OpenedCount;
+        }
+    }
+
+    if (OpenedCount == 0)
+    {
+        SetStatus(TEXT("비교할 결과가 없습니다. 먼저 일괄 리타기팅을 실행하세요."), FLinearColor::Yellow);
+    }
+    else
+    {
+        SetStatus(FString::Printf(TEXT("비교 창 %d개를 열었습니다. IK Retargeter의 Asset Browser에서 원본 애니메이션(%s)을 재생하세요."),
+            OpenedCount, *FString::Join(LastSourceAnimationNames, TEXT(", "))), FLinearColor::Green);
+    }
+    return FReply::Handled();
+}
+
+#undef LOCTEXT_NAMESPACE

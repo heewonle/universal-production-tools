@@ -1,0 +1,204 @@
+{
+  "link_guards": {
+    "failures": {
+      "equals": []
+    }
+  },
+  "framing_video": {
+    "shots_detected": {
+      "equals": 5
+    },
+    "size_hits": {
+      "min": 4
+    },
+    "mean_x_error": {
+      "max": 0.02
+    },
+    "mean_boundary_error": {
+      "max": 0.1
+    },
+    "identities": {
+      "equals": 1
+    },
+    "ots_false": {
+      "equals": 0
+    }
+  },
+  "letterbox_video": {
+    "active_area_found": {
+      "equals": true
+    },
+    "area_height_ratio": {
+      "max": 0.4
+    },
+    "aspect_ratio": {
+      "min": 1.7
+    },
+    "shots_detected": {
+      "equals": 5
+    },
+    "size_hits": {
+      "min": 3
+    }
+  },
+  "motion_video": {
+    "motion_hits": {
+      "min": 5
+    },
+    "mean_x_error": {
+      "max": 0.02
+    },
+    "identities": {
+      "equals": 1
+    },
+    "ots_false": {
+      "equals": 0
+    }
+  },
+  "size_set": {
+    "full.spread": {
+      "max": 0.015
+    },
+    "medium.spread": {
+      "max": 0.035
+    },
+    "medium.position_max": {
+      "max": 0.05
+    },
+    "close_up.found": {
+      "min": 16
+    },
+    "close_up.spread": {
+      "max": 0.095
+    },
+    "close_up.max_deviation": {
+      "max": 0.36
+    },
+    "close_up.position_max": {
+      "max": 0.14
+    },
+    "extreme_close_up.found": {
+      "min": 5
+    },
+    "extreme_close_up.position_max": {
+      "max": 0.1
+    }
+  },
+  "tilted_bodies": {
+    "30.full.focus_error_median": {
+      "max": 0.02
+    },
+    "30.medium.focus_error_median": {
+      "max": 0.06
+    },
+    "60.full.found": {
+      "min": 8
+    },
+    "60.full.focus_error_median": {
+      "max": 0.02
+    },
+    "60.full.spread": {
+      "max": 0.03
+    },
+    "60.medium.focus_error_median": {
+      "max": 0.05
+    },
+    "60.close_up.focus_error_median": {
+      "max": 0.08
+    },
+    "90.full.found": {
+      "min": 8
+    },
+    "90.full.focus_error_median": {
+      "max": 0.02
+    },
+    "90.medium.focus_error_median": {
+      "max": 0.05
+    },
+    "90.medium.spread": {
+      "max": 0.08
+    },
+    "90.close_up.focus_error_median": {
+      "max": 0.08
+    }
+  },
+  "angle_sets": {
+    "train.exact": {
+      "min": 10
+    },
+    "validation.exact": {
+      "min": 14
+    },
+    "test.exact": {
+      "min": 13
+    },
+    "test.adjacent": {
+      "min": 14
+    }
+  },
+  "twoshot_video": {
+    "count_ok": {
+      "min": 5
+    },
+    "mean_abs_dx": {
+      "max": 0.03
+    },
+    "identities": {
+      "equals": 2
+    },
+    "roles_consistent": {
+      "equals": true
+    },
+    "ots_hits": {
+      "min": 1
+    },
+    "ots_false": {
+      "equals": 0
+    }
+  },
+  "library_search": {
+    "passed": {
+      "min": 6
+    },
+    "validator_failures": {
+      "equals": []
+    },
+    "link_entry_found": {
+      "equals": true
+    },
+    "link_entry_has_url": {
+      "equals": true
+    },
+    "link_entry_plan": {
+      "equals": true
+    }
+  },
+  "body_pose": {
+    "frames_without_person": {
+      "equals": 0
+    },
+    "screen_error": {
+      "max": 0.035
+    },
+    "screen_error_body_pct": {
+      "max": 9.0
+    }
+  },
+  "body_height": {
+    "frames_without_person": {
+      "max": 45
+    },
+    "all.median_pct": {
+      "max": 14.0
+    },
+    "full_body.median_pct": {
+      "max": 12.0
+    },
+    "cropped.median_pct": {
+      "max": 17.0
+    },
+    "worst_dataset_median_pct": {
+      "max": 20.0
+    }
+  }
+}

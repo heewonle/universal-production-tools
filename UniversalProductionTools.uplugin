@@ -1,0 +1,19 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.2.0",
+  "FriendlyName": "Universal Production Tools",
+  "Description": "Reference-video and LLM assisted cinematic generation, plus universal animation retargeting.",
+  "Category": "Editor",
+  "CreatedBy": "GoddessSlot Team",
+  "CanContainContent": true,
+  "EnabledByDefault": true,
+  "IsBetaVersion": true,
+  "Modules": [{ "Name": "UniversalProductionTools", "Type": "Editor", "LoadingPhase": "Default" }],
+  "Plugins": [
+    { "Name": "LevelSequenceEditor", "Enabled": true },
+    { "Name": "SequencerScripting", "Enabled": true },
+    { "Name": "IKRig", "Enabled": true },
+    { "Name": "ControlRig", "Enabled": true }
+  ]
+}
