@@ -7,6 +7,11 @@ Level Sequence를 만듭니다. LLM 없이 로컬 포즈 분석(YOLOX + RTMPose)
 
 [English](README.en.md) · [한 장 요약](Docs/PORTFOLIO.md)
 
+![레퍼런스 대 재현](Docs/images/reference_vs_generated.gif)
+
+*왼쪽이 레퍼런스 클립, 오른쪽이 같은 구도로 생성된 언리얼 시퀀스. 샷 분할·인물 크기·카메라 앵글·어깨 너머
+배치가 함께 재현됩니다. (레퍼런스는 평가용으로 만든 5샷 테스트 클립입니다)*
+
 ## 이런 걸 잡습니다
 
 어깨 너머(OTS) 샷. 솔버는 **두 경우 모두 "성공"이라고 보고**했지만, 왼쪽은 앞사람이 프레임 아래로

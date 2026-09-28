@@ -9,6 +9,12 @@ It runs on local pose analysis (YOLOX + RTMPose) — no LLM required.
 
 [한국어](README.md) · [One-page summary](Docs/PORTFOLIO.md) (Korean)
 
+![reference vs generated](Docs/images/reference_vs_generated.gif)
+
+*Left: the reference clip. Right: the Unreal sequence generated from it. Shot segmentation, subject
+size, camera angle and over-the-shoulder placement are reproduced together. (The reference here is a
+five-shot test clip built for the evaluation suite.)*
+
 ## What it catches
 
 Over-the-shoulder shots. The solver reported **success in both cases**, but in the first one the
