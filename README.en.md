@@ -91,6 +91,22 @@ exact geometric height made results worse (the reference side is measured by the
 the improvement from widening a body-proportion clamp did not reproduce on a re-capture.
 → [BODY_HEIGHT_ESTIMATOR.md](Docs/BODY_HEIGHT_ESTIMATOR.md)
 
+
+## What the panel actually does
+
+Separately from verifying the pipeline through console commands, the editor panel itself was driven
+end to end (level selection → JSON input → generate → edit a shot).
+
+![panel walkthrough](Docs/images/panel_walkthrough.gif)
+
+Confirmed: selecting an actor in the level updates the panel immediately; the
+`Shot Plan JSON` mode runs with no video and no API (a three-shot plan produced
+`/Game/Cinematics/Generated/Panel_Test` with lenses 28/50/85 mm and screen positions listed); and
+selecting a shot opens the per-shot editor including the over-the-shoulder controls.
+
+One small issue found on the way: **the over-the-shoulder actor list includes the shot's own subject.**
+The solver rejects that combination, so nothing breaks, but the UI should exclude it up front.
+
 ## Character animation pipeline
 
 Separate from composition reproduction, the plugin also **moves animation between characters and
