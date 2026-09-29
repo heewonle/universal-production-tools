@@ -76,6 +76,17 @@ def foot_slide(frames: list, bones: list, scale: float) -> list:
     return slides
 
 
+def motion_deviation(angles: list) -> float:
+    """각도 오차에서 '움직이는 만큼'만 뽑는다. 중앙값에서 얼마나 흔들리는지(MAD).
+
+    각도 오차는 두 가지가 섞여 있다. 두 스켈레톤의 레스트 포즈가 달라 생기는 **고정 오프셋**과,
+    동작이 실제로 뭉개져 생기는 **변동분**이다. 앞의 것은 시간에 따라 변하지 않으므로 중앙값에 들어가고,
+    뒤의 것만 중앙값 주위의 흩어짐으로 남는다. 동작 보존을 보려면 뒤의 것을 봐야 한다.
+    """
+    values = np.asarray(angles, dtype=np.float64)
+    return round(float(np.median(np.abs(values - np.median(values)))), 2)
+
+
 def compare_pair(pair: dict, segments: list, ground_bones: list, scale_chain: list) -> dict:
     source, target = pair["source_frames"], pair["target_frames"]
     source_scale = leg_length(source, scale_chain)
@@ -83,7 +94,7 @@ def compare_pair(pair: dict, segments: list, ground_bones: list, scale_chain: li
 
     source_dirs = segment_angles(source, segments)
     target_dirs = segment_angles(target, segments)
-    per_segment, all_angles = {}, []
+    per_segment, per_segment_motion, all_angles = {}, {}, []
     for name, source_list in source_dirs.items():
         target_list = target_dirs.get(name, [])
         angles = []
@@ -93,24 +104,51 @@ def compare_pair(pair: dict, segments: list, ground_bones: list, scale_chain: li
             angles.append(math.degrees(math.acos(float(np.clip(np.dot(a, b), -1.0, 1.0)))))
         if angles:
             per_segment[name] = round(float(np.median(angles)), 1)
+            per_segment_motion[name] = motion_deviation(angles)
             all_angles += angles
 
     source_slides = foot_slide(source, ground_bones, source_scale)
     target_slides = foot_slide(target, ground_bones, target_scale)
     return {
         "name": pair["name"],
+        "source_mesh": pair.get("source_mesh", "?"),
+        "target_mesh": pair.get("target_mesh", "?"),
         "length_match": abs(pair["source_length"] - pair["target_length"]) < 0.01,
         "segment_angle_median_deg": round(float(np.median(all_angles)), 1) if all_angles else None,
         "segment_angle_p90_deg": round(float(np.percentile(all_angles, 90)), 1) if all_angles else None,
         "worst_segment": max(per_segment, key=per_segment.get) if per_segment else None,
         "worst_segment_deg": max(per_segment.values()) if per_segment else None,
+        # 고정 오프셋을 뺀, 동작이 실제로 뭉개진 정도
+        "motion_deviation_worst": max(per_segment_motion, key=per_segment_motion.get) if per_segment_motion else None,
+        "motion_deviation_worst_deg": max(per_segment_motion.values()) if per_segment_motion else None,
         "per_segment_deg": per_segment,
+        "per_segment_motion_deg": per_segment_motion,
         "source_leg_length": round(source_scale, 1),
         "target_leg_length": round(target_scale, 1),
         # 원본 자체도 완벽히 고정되지는 않으므로 원본 대비 증가분을 함께 본다.
         "foot_slide_source": round(float(np.median(source_slides)), 4) if source_slides else None,
         "foot_slide_target": round(float(np.median(target_slides)), 4) if target_slides else None,
     }
+
+
+def by_target(rows: list) -> dict:
+    """대상 캐릭터별로 나눠 본다. 전체 중앙값 하나로는 한쪽 체형만 나쁜 경우가 묻힌다."""
+    groups = {}
+    for row in rows:
+        groups.setdefault(row.get("target_mesh", "?"), []).append(row)
+    summary = {}
+    for target, group in groups.items():
+        angles = [row["segment_angle_median_deg"] for row in group if row["segment_angle_median_deg"] is not None]
+        worst = [row["worst_segment_deg"] for row in group if row["worst_segment_deg"] is not None]
+        summary[target] = {
+            "pairs": len(group),
+            "segment_angle_median_deg": round(float(np.median(angles)), 1) if angles else None,
+            "worst_segment_deg": round(float(max(worst)), 1) if worst else None,
+            "worst_segment": max(
+                (row for row in group if row["worst_segment_deg"] is not None),
+                key=lambda row: row["worst_segment_deg"], default={}).get("worst_segment"),
+        }
+    return summary
 
 
 def run(output_dir: str) -> dict:
@@ -129,15 +167,18 @@ def run(output_dir: str) -> dict:
     rows = [compare_pair(pair, segments, data["ground_bones"], data["scale_chain"]) for pair in data["pairs"]]
     angles = [row["segment_angle_median_deg"] for row in rows if row["segment_angle_median_deg"] is not None]
     worst = [row["worst_segment_deg"] for row in rows if row["worst_segment_deg"] is not None]
+    motion = [row["motion_deviation_worst_deg"] for row in rows if row["motion_deviation_worst_deg"] is not None]
     target_slides = [row["foot_slide_target"] for row in rows if row["foot_slide_target"] is not None]
     source_slides = [row["foot_slide_source"] for row in rows if row["foot_slide_source"] is not None]
 
     os.makedirs(output_dir, exist_ok=True)
     metrics = {
         "pairs": len(rows),
+        "targets": by_target(rows),
         "length_mismatch": sum(1 for row in rows if not row["length_match"]),
         "segment_angle_median_deg": round(float(np.median(angles)), 1) if angles else None,
         "worst_segment_deg": round(float(max(worst)), 1) if worst else None,
+        "motion_deviation_worst_deg": round(float(max(motion)), 2) if motion else None,
         "foot_slide_target": round(float(np.median(target_slides)), 4) if target_slides else None,
         "foot_slide_source": round(float(np.median(source_slides)), 4) if source_slides else None,
         "dataset": os.path.basename(data_dir),

@@ -59,7 +59,7 @@ Tools/eval/
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
-| `retarget` | does retargeting preserve the motion | 3.7° segment angle |
+| `retarget` | does retargeting preserve the motion (2 character pairs) | 2.8° motion distortion |
 
 ## What the apparatus actually found
 
@@ -203,7 +203,20 @@ entirely because `AutoAlignAllBones` can assert on partial mappings; the cost of
 been measured.
 
 → Aligning only the bones of mapped chains brought **median 7.8° → 3.7°, worst 58.4° → 10.4°, arms
-52.9° → 0.1°**. Foot sliding stayed at the source level (0.0995 → 0.1049), so retargeting adds none.
+52.9° → 0.1°**. Foot sliding stayed at the source level, so retargeting adds none.
+
+**A second character pair then showed that fix was only correct for one pair.** Pointing it at a
+character with a completely different build and naming scheme (43 bones, `L-Thigh`) **brought the whole
+editor down on an assertion** — the exact assertion the original comment had warned about. The engine's
+`AutoAlignBones` reads an empty array as "align everything", and a single bone that also belongs to an
+unmapped chain kills the process. After three different ways of deciding "is this chain mapped" all
+failed, the alignment is now **restricted to rigs built by the engine's Auto Characterizer** and skipped,
+with a log line, for rigs built by the fallback analyzer.
+
+The cost of that is recorded as a number too: 3.7° where alignment applies, 18.4° where it is skipped.
+But **the pure motion distortion, with the constant offset removed, is under 2.8° for both pairs** —
+had the angle error not been split into "rest-pose difference" and "lost motion", this would have read
+as "the golem is 70° broken".
 
 ## Layout
 

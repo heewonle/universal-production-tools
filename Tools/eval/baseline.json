@@ -205,11 +205,20 @@
     "length_mismatch": {
       "equals": 0
     },
-    "segment_angle_median_deg": {
+    "pairs": {
+      "min": 4
+    },
+    "targets.SKM_Manny.segment_angle_median_deg": {
       "max": 5.0
     },
-    "worst_segment_deg": {
+    "targets.SKM_Manny.worst_segment_deg": {
       "max": 14.0
+    },
+    "targets.Forest_Golem_1_PolyArt.segment_angle_median_deg": {
+      "max": 22.0
+    },
+    "motion_deviation_worst_deg": {
+      "max": 3.5
     },
     "foot_slide_target": {
       "max": 0.13

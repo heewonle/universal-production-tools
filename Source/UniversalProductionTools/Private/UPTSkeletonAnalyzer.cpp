@@ -398,6 +398,15 @@ FUPTSkeletonAnalysisData FUPTSkeletonAnalyzer::AnalyzeDetailed(USkeletalMesh* Sk
         }
     }
 
+    // 이름에 아무 단서가 없는데 위치·계층만으로 배정된 역할은 추측이다.
+    // 이런 역할을 '준비됨'으로 세면 준비도가 부풀어 부분 메시가 자동 경로로 새어 들어간다.
+    // 실제로 SK_FANT_KNGT_08(팔꿈치 부착물)이 LeftHand ← elbowAttach_l(0.72) 두 개로 B등급을 받고 있었다.
+    // 1,691개 전부에 적용해 보니 등급이 바뀌는 것은 그 한 개뿐이다.
+    auto IsForcedGuess = [](const FRoleMatch& Match)
+    {
+        return Match.BoneIndex != INDEX_NONE && !Match.bManual && Match.NameScore <= 0.0f;
+    };
+
     int32 RequiredCount = 0;
     int32 ReadyCount = 0;
     int32 HighConfidenceCount = 0;
@@ -406,6 +415,7 @@ FUPTSkeletonAnalysisData FUPTSkeletonAnalyzer::AnalyzeDetailed(USkeletalMesh* Sk
         if (!Spec.bRequired) continue;
         ++RequiredCount;
         const FRoleMatch& Match = Matches.FindChecked(Spec.Role);
+        if (IsForcedGuess(Match)) continue;
         if (Match.Confidence >= 0.55f) ++ReadyCount;
         if (Match.Confidence >= 0.80f) ++HighConfidenceCount;
     }
@@ -428,19 +438,39 @@ FUPTSkeletonAnalysisData FUPTSkeletonAnalyzer::AnalyzeDetailed(USkeletalMesh* Sk
     }
 
     Report += TEXT("Semantic mapping\n");
+    TArray<FString> ForcedLines;
     for (const FRoleSpec& Spec : Specs)
     {
         const FRoleMatch& Match = Matches.FindChecked(Spec.Role);
         const FString BoneName = Match.BoneIndex == INDEX_NONE ? TEXT("<not found>") : Ref.GetBoneName(Match.BoneIndex).ToString();
+        // 이름 근거가 전혀 없는데도 배정된 것은 "가장 그럴듯한 위치"를 고른 추측이다.
+        // 낮은 신뢰도만으로는 이름이 애매해 낮은 것과 구분되지 않아, 따로 표시한다.
+        const bool bForced = IsForcedGuess(Match);
         if (Match.BoneIndex != INDEX_NONE)
         {
             Result.BoneMappings.Add(Spec.Role, Ref.GetBoneName(Match.BoneIndex));
             Result.Confidences.Add(Spec.Role, Match.Confidence);
+            if (bForced)
+            {
+                Result.ForcedRoles.Add(Spec.Role);
+                ForcedLines.Add(FString::Printf(TEXT("%s ← %s (이름 근거 없음, 위치 %.0f / 계층 %.0f로만 배정)"),
+                    *Spec.Role, *BoneName, Match.SpatialScore * 100.0f, Match.HierarchyScore * 100.0f));
+            }
         }
-        const TCHAR* State = Match.bManual ? TEXT("MANUAL") : Match.Confidence >= 0.80f ? TEXT("OK") : Match.Confidence >= 0.55f ? TEXT("CHECK") : TEXT("LOW");
+        const TCHAR* State = Match.bManual ? TEXT("MANUAL") : bForced ? TEXT("GUESS")
+            : Match.Confidence >= 0.80f ? TEXT("OK") : Match.Confidence >= 0.55f ? TEXT("CHECK") : TEXT("LOW");
         Report += FString::Printf(TEXT("%-16s %-28s %3.0f%%  %-6s  [name %.0f / spatial %.0f / hierarchy %.0f]\n"),
             *Spec.Role, *BoneName, Match.Confidence * 100.0f, State,
             Match.NameScore * 100.0f, Match.SpatialScore * 100.0f, Match.HierarchyScore * 100.0f);
+    }
+
+    if (ForcedLines.Num() > 0)
+    {
+        Report += FString::Printf(TEXT("\nForced assignments (이름 근거 없이 배정된 %d개)\n"), ForcedLines.Num());
+        for (const FString& Line : ForcedLines) Report += FString::Printf(TEXT("  ? %s\n"), *Line);
+        Report += TEXT("  이 역할들은 뼈 이름에 아무 단서가 없어 남은 본 중 위치가 가장 그럴듯한 것을 고른 결과입니다.\n"
+                       "  몸의 일부만 있는 메시(망토·머리 부착물 등)에서는 엉뚱한 본이 잡히므로 그대로 쓰지 마세요.\n"
+                       "  준비도 계산에서는 제외됩니다(추측을 '준비됨'으로 세면 등급이 부풀기 때문).\n");
     }
 
     Report += FString::Printf(TEXT("\nAuxiliary bones\nTwist/Roll: %d\nFinger: %d\nFace: %d\n"), TwistBones.Num(), FingerBones.Num(), FaceBones.Num());

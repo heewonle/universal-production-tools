@@ -341,6 +341,7 @@ void RunSkeletonAudit(const TArray<FString>& Args, UWorld* World)
         Row->SetStringField(TEXT("tier"), Tier);
         Row->SetNumberField(TEXT("mapped_roles"), Result.BoneMappings.Num());
         Row->SetNumberField(TEXT("low_confidence_roles"), LowConfidence);
+        Row->SetNumberField(TEXT("forced_roles"), Result.ForcedRoles.Num());
         Row->SetNumberField(TEXT("twist_bones"), Result.TwistBones.Num());
         Row->SetNumberField(TEXT("finger_bones"), Result.FingerBones.Num());
         Row->SetNumberField(TEXT("face_bones"), Result.FaceBones.Num());
@@ -352,6 +353,7 @@ void RunSkeletonAudit(const TArray<FString>& Args, UWorld* World)
             Role->SetStringField(TEXT("bone"), Pair.Value.ToString());
             const float* Confidence = Result.Confidences.Find(Pair.Key);
             Role->SetNumberField(TEXT("confidence"), Confidence ? *Confidence : 0.0f);
+            Role->SetBoolField(TEXT("forced"), Result.ForcedRoles.Contains(Pair.Key));
             Roles.Add(MakeShared<FJsonValueObject>(Role));
         }
         Row->SetArrayField(TEXT("roles"), Roles);

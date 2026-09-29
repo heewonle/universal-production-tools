@@ -72,30 +72,163 @@ Synty 고블린 애니메이션 → UE 마네킹(SKM_Manny) 리타기팅. 다리
 
 발 미끄러짐은 원본과 거의 같다. 리타기팅이 미끄러짐을 **더 만들지 않았다**는 뜻이다.
 
+## 추가 측정 (2026-09-29): 10.4°의 정체 — 고정 오프셋과 동작 왜곡을 갈라내기
+
+위 표의 "최악 뼈마디 `calf→foot` 10.4°"를 그대로 두면 **동작이 10° 뭉개졌다**고 읽힌다.
+그런데 각도 오차에는 성격이 다른 두 가지가 섞여 있다.
+
+- 두 스켈레톤의 **레스트 포즈가 달라 생기는 고정 오프셋** — 시간에 따라 변하지 않는다
+- **동작이 실제로 뭉개져 생기는 변동분** — 시간에 따라 흔들린다
+
+24표본의 각도를 프레임별로 펼쳐 보니 갈라졌다.
+
+| 뼈마디 | 중앙값(전체) | 중앙값 주위 흩어짐(표준편차) | 최소~최대 |
+|---|---|---|---|
+| `pelvis → spine_01` | 7.8° | **0.01°** | 7.7 ~ 7.8 |
+| `neck_01 → head` | 8.7° | **0.00°** | 8.7 ~ 8.8 |
+| `calf_r → foot_r` | 10.0° | 1.84° | 6.4 ~ 13.1 |
+| `calf_l → foot_l` | 9.4° | 2.32° | 5.7 ~ 13.1 |
+| `lowerarm → hand` | 4.7° | 0.6° | 3.4 ~ 5.9 |
+| `thigh → calf` | 0.1° | 0.00° | 0.1 ~ 0.1 |
+
+`pelvis→spine_01`과 `neck_01→head`는 **흩어짐이 0.0°다.** 동작은 완벽히 옮겨졌고, 두 캐릭터가
+그 마디를 원래 다른 각도로 들고 있을 뿐이다. `calf→foot`도 10° 중 약 8.6°가 고정 오프셋이고
+실제로 흔들리는 폭은 **1.8°**다.
+
+그래서 지표를 하나 더 넣었다. 중앙값에서의 **중앙절대편차(MAD)** 를 `motion_deviation_worst_deg`로 보고한다.
+
+```
+worst_segment_deg          10.4   (고정 오프셋 + 동작 왜곡)
+motion_deviation_worst_deg  1.81  (동작 왜곡만)
+```
+
+**왜 이게 중요한가.** 고정 오프셋은 체인 정렬로 더 줄일 여지가 있지만, 줄이면 다른 마디가 틀어질 수
+있는 상충 관계다(한 본의 회전이 그 본과 자식 사이 방향을 정하므로, 어느 마디를 맞출지 선택해야 한다).
+반면 동작 왜곡은 순수한 손실이라 무조건 작아야 한다. **두 값을 한 숫자로 합쳐 두면 어느 쪽이 나빠졌는지
+구분할 수 없다.** 실제로 이 분해를 하기 전까지 "최악 10.4°"는 나쁜 값처럼 읽히고 있었다.
+
+회귀 기준에 `motion_deviation_worst_deg <= 3.0`을 추가했다.
+
+### 한 가지 경계
+
+고정 오프셋을 0으로 만드는 방향의 "개선"은 조심해야 한다. 지금 재는 지표가 바로 그 마디의 각도이므로,
+그 마디만 맞추도록 정렬 규칙을 바꾸면 **지표에 맞춰 튜닝하는 것**이 된다. 여기서는 오프셋을 줄이는
+수정을 하지 않고, 두 값을 갈라 보고하는 데까지만 했다.
+
+## 두 번째 캐릭터 쌍을 넣자마자 에디터가 죽었다 (2026-09-29)
+
+위 "남은 것"의 첫 항목이다. 표본이 **캐릭터 쌍 1개**뿐이라 이 기준이 일반적인지 알 수 없었다.
+그래서 체형과 명명 규칙이 모두 다른 쌍을 하나 더 넣었다.
+
+| | 대상 | 본 수 | 명명 | IK Rig 생성 경로 |
+|---|---|---|---|---|
+| 기존 | `SKM_Manny` | 164 | `thigh_l` | 엔진 Auto Characterizer |
+| 추가 | `Forest_Golem_1_PolyArt` | 43 | `L-Thigh` | 자체 분석(폴백) |
+
+먼저 측정 장치부터 고쳐야 했다. 정답 촬영 스크립트가 `thigh_l` 같은 **UE 표준 뼈 이름을 그대로 박아
+두고** 있어서 다른 명명 규칙에서는 아무것도 못 읽는다. `UPT.SkeletonAudit`으로 메시마다
+**역할 → 뼈 이름**을 받아 오고, 저장하는 JSON의 키도 뼈 이름이 아니라 **역할 이름**으로 바꿨다.
+이제 명명 규칙이 달라도 그대로 비교된다.
+
+그리고 골렘을 대상으로 `UPT.RetargetE2E`를 돌리자 **에디터가 통째로 내려갔다.**
+
+```
+Assertion failed: ChainToMatch != NAME_None
+IKRigEditor/Private/RetargetEditor/IKRetargeterPoseGenerator.cpp:118
+"Bone should never be retargeted and not in a mapped chain."
+```
+
+**원래 코드의 주석이 경고하던 바로 그 어설션이다.** 자세 정렬을 건너뛰던 이유가 이것이었고,
+내가 "매핑된 체인의 본만 고르면 안전하다"고 고쳐 놓은 것은 **Synty→Manny 한 쌍에서만 참**이었다.
+
+### 무엇이 문제였나
+
+엔진 소스를 읽어 보니 `AutoAlignBones`에 함정이 둘 있다.
+
+1. **빈 배열을 넘기면 "전부 정렬"로 해석한다.** `AutoAlignAllBones`와 같아진다.
+   매핑 판정을 잘못해 목록이 비면, 안전해지는 게 아니라 가장 위험한 호출이 된다.
+2. `AlignBone`은 `IsBoneInAMappedChain`으로 한 번 거르지만, 그 뒤 `GetChainNameForBone`이
+   **그 본이 속한 다른(매핑되지 않은) 체인**을 돌려주면 그대로 `checkf`에 걸린다.
+   손목처럼 팔 체인의 끝이면서 손가락 체인의 시작이기도 한 본이 여기 해당한다.
+
+매핑 여부를 세 가지 방법으로 판정해 봤고 모두 실패했다.
+
+| 시도 | 결과 |
+|---|---|
+| `Controller->GetChainMapping()` (인자 없이) | 비어 있는 op의 매핑을 돌려줘 **전부 미매핑**으로 판정 → 정렬이 통째로 꺼지고 Manny가 수정 전 수치(58.4°)로 되돌아감 |
+| 원본 Rig에 같은 이름의 체인이 있는지 | Manny가 어설션 |
+| op를 훑어 실제 체인 매핑을 읽기 + 다중 소속 본 제외 + 루트/펠비스 제외 | Manny는 통과, **골렘은 여전히 어설션** |
+
+### 그래서 어떻게 했나
+
+정렬을 **엔진 Auto Characterizer가 만든 Rig에서만** 수행하고, 자체 분석(폴백)으로 만든 Rig에서는
+건너뛰면서 로그로 알린다.
+
+```
+UPT_RETARGET 'Forest_Golem_1_PolyArt' 는 자체 분석으로 만든 IK Rig이라
+레스트 포즈 자동 정렬을 건너뜁니다. A-Pose/T-Pose 차이가 남을 수 있습니다.
+```
+
+원래 주석이 옳았다. 내 수정이 틀린 게 아니라 **적용 범위를 확인하지 않은 것**이 틀렸다.
+
+### 지금 수치
+
+| 대상 | 뼈마디 각도 중앙 | 최악 뼈마디 | 정렬 |
+|---|---|---|---|
+| `SKM_Manny` | **3.7°** | 10.4° (`calf_r→foot_r`) | 적용 |
+| `Forest_Golem_1_PolyArt` | **18.4°** | 70.0° (`lowerarm_r→hand_r`) | 건너뜀 |
+| 동작 왜곡(고정 오프셋 제외) | — | **2.77°** | 두 쌍 공통 |
+| 발 미끄러짐 (원본 0.0995) | — | **0.0841** | 두 쌍 공통 |
+
+골렘의 70°는 **레스트 포즈 차이**다. 고정 오프셋을 뺀 동작 왜곡은 2.77°로,
+정렬이 적용된 Manny와 큰 차이가 없다. **동작 자체는 옮겨졌고 자세만 틀어져 있다** —
+`motion_deviation_worst_deg`를 따로 재지 않았다면 "골렘 리타기팅은 70° 망가진다"로 잘못 읽었을 것이다.
+
+### 회귀 기준을 쌍별로 나눴다
+
+두 쌍의 성격이 다르므로(한쪽은 정렬, 한쪽은 미정렬) 합친 중앙값 하나로는 의미가 없다.
+
+```
+length_mismatch                                  == 0
+pairs                                            >= 4
+targets.SKM_Manny.segment_angle_median_deg       <= 5.0
+targets.SKM_Manny.worst_segment_deg              <= 14.0
+targets.Forest_Golem_1_PolyArt.segment_angle_median_deg <= 22.0
+motion_deviation_worst_deg                       <= 3.5
+foot_slide_target                                <= 0.13
+```
+
+골렘 쪽 기준은 "고치겠다"가 아니라 **"더 나빠지면 안다"** 는 뜻이다.
+
 ## 회귀 기준
 
-```
-length_mismatch           == 0
-segment_angle_median_deg  <= 5.0
-worst_segment_deg         <= 14.0
-foot_slide_target         <= 0.13
-```
-
-`run_regression.py --only retarget`으로 돌린다. 전체 12개 스위트 모두 통과 상태다.
+위 "회귀 기준을 쌍별로 나눴다" 절 참고. `run_regression.py --only retarget`으로 돌린다.
+전체 12개 스위트 모두 통과 상태다.
 
 ## 남은 것
 
-- 최악 뼈마디가 `calf→foot` 10.0°다. 발 본의 기준 방향 차이로 보이는데, 접지·발 각도에 영향을 줄 수 있어
-  한 번 더 볼 가치가 있다.
-- 측정 표본이 **애니메이션 2개 · 캐릭터 쌍 1개**뿐이다. Mixamo처럼 체형·명명이 크게 다른 조합을 넣어야
-  이 기준이 일반적인지 알 수 있다.
+- **자체 분석으로 만든 IK Rig에서는 레스트 포즈 정렬을 못 쓴다.** 엔진 어설션을 피하려고 건너뛰고 있고,
+  그 비용이 골렘 쌍의 18.4°다. 정렬을 직접 계산해(엔진 API를 거치지 않고 체인 방향으로 회전을 풀어)
+  적용하는 것이 다음 개선이다.
+- 표본이 여전히 **애니메이션 2개 · 캐릭터 2쌍**이다. 둘 다 원본이 Synty 고블린 로코모션이라
+  동작 종류가 걷기·달리기뿐이다. 회전·점프·공격처럼 축이 크게 도는 동작을 넣어야 한다.
 - 리타기팅 산출물이 `/Game` 루트에 생성된다. `DuplicateAndRetarget`에 폴더를 비워 넘기기 때문인데,
   문서에는 "원본과 같은 폴더에 생성"이라고 적혀 있어 실제와 다르다.
 
 ## 다시 돌리는 법
 
 ```
-UPT.RetargetE2E <대상 메시 경로> <애니메이션 경로...> [-out=manifest.json]
-py "<플러그인>/Tools/eval/editor/upt_capture_retarget_poses.py"
+UPT.RetargetE2E /Game/.../SKM_Manny.SKM_Manny <애니메이션...> -out=<Saved>/retarget_manifest.json
+UPT.RetargetE2E /Game/.../Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt <애니메이션...> -out=<Saved>/retarget_manifest_golem.json
+```
+
+정답 촬영은 manifest를 여러 개 받는다(에디터 Python).
+
+```python
+import upt_capture_retarget_poses as m
+m.main([r"<Saved>etarget_manifest.json", r"<Saved>etarget_manifest_golem.json"])
+```
+
+```
 run_regression.py --only retarget
 ```
