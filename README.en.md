@@ -107,6 +107,39 @@ selecting a shot opens the per-shot editor including the over-the-shoulder contr
 One small issue found on the way: **the over-the-shoulder actor list includes the shot's own subject.**
 The solver rejects that combination, so nothing breaks, but the UI should exclude it up front.
 
+### The over-the-shoulder edit, driven end to end from the panel
+
+Picking a foreground actor and pressing **apply to this shot and update the sequence** was verified
+twice, with the two characters placed differently each time.
+
+**1. Foreground not in front of the subject — the apply is refused**
+
+![over-the-shoulder guard](Docs/images/panel_ots_guard.jpg)
+
+With `AutoHero2` standing beside the subject rather than in front of it, applying leaves the sequence
+untouched and only warns. Rather than quietly producing a shot where the camera swings behind the
+subject, it stops. The shot row still reads 50 mm and the azimuth is still 12.99°.
+
+**2. Move the foreground in front — the same sequence is updated in place**
+
+![over-the-shoulder applied](Docs/images/panel_ots_applied.jpg)
+
+Moved `AutoHero2` in front of the subject and re-applied: it passes, and the shot is recomputed to
+**50 → 44.67 mm, azimuth 12.99 → 24.13°, distance 266.8 → 233.3 cm**. Re-solving the camera height
+for the over-the-shoulder framing also flipped the angle label from eye level to high angle.
+**No new asset is created and the shot count stays at 2** — the same sequence is edited where it is.
+
+The actual camera preview:
+
+![over-the-shoulder preview](Docs/images/panel_ots_preview.jpg)
+
+*The subject on the left, the foreground person's shoulder filling the right edge.*
+
+One more thing surfaced here. **Composition check** rates this shot
+`LOW 15/100 | full-body vertical occupancy 170%, head top y=0.02 / not enough headroom`.
+Cropping the full body is the intended framing for an over-the-shoulder medium shot, yet it still
+scores low — **the checker does not take shot size into account**, and that is on the fix list.
+
 ## Character animation pipeline
 
 Separate from composition reproduction, the plugin also **moves animation between characters and
