@@ -3,6 +3,7 @@
 #include "UPTIKRetargeterBuilder.h"
 #include "UPTIKRigBuilder.h"
 #include "UPTSkeletonAnalyzer.h"
+#include "UPTSettings.h"
 #include "UPTSkeletonProfileBuilder.h"
 
 #include "Animation/AnimSequence.h"
@@ -52,6 +53,51 @@ USkeletalMesh* ResolveSourceMesh(USkeleton* Skeleton)
         if (Candidate && Candidate->GetSkeleton() == Skeleton) return Candidate;
     }
     return nullptr;
+}
+
+// 엔진의 DuplicateAndRetarget 편의 함수는 출력 폴더를 받지 않아 결과가 FNameDuplicationRule의
+// 기본값인 /Game 루트에 떨어진다. 설정의 폴더로 떨어지도록 컨텍스트를 직접 채워 돌린다.
+TArray<FAssetData> RetargetIntoSettingsFolder(
+    const TArray<FAssetData>& AssetsToRetarget, USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh,
+    UIKRetargeter* Retargeter, const FString& Suffix)
+{
+    FIKRetargetBatchOperationContext Context;
+    for (const FAssetData& Asset : AssetsToRetarget)
+    {
+        if (UObject* Object = Asset.GetAsset()) Context.AssetsToRetarget.Add(Object);
+    }
+    Context.SourceMesh = SourceMesh;
+    Context.TargetMesh = TargetMesh;
+    Context.IKRetargetAsset = Retargeter;
+    Context.NameRule.Suffix = Suffix;
+    Context.bIncludeReferencedAssets = false;
+    Context.bOverwriteExistingFiles = false;
+
+    FString Folder = GetDefault<UUPTSettings>()->DefaultRetargetedAnimationPath;
+    if (!Folder.IsEmpty()) Context.NameRule.FolderPath = Folder;
+
+    // 결과는 생성 전후의 폴더 내용을 비교해 찾는다(엔진이 이름 충돌 시 번호를 붙이므로 예측하지 않는다).
+    const FAssetRegistryModule& Registry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+    TSet<FName> Before;
+    {
+        TArray<FAssetData> Existing;
+        Registry.Get().GetAssetsByPath(FName(*Context.NameRule.FolderPath), Existing, true);
+        for (const FAssetData& Asset : Existing) Before.Add(Asset.PackageName);
+    }
+
+    UIKRetargetBatchOperation* BatchOperation = NewObject<UIKRetargetBatchOperation>();
+    BatchOperation->AddToRoot();
+    BatchOperation->RunRetarget(Context);
+    BatchOperation->RemoveFromRoot();
+
+    TArray<FAssetData> After;
+    Registry.Get().GetAssetsByPath(FName(*Context.NameRule.FolderPath), After, true);
+    TArray<FAssetData> Results;
+    for (const FAssetData& Asset : After)
+    {
+        if (!Before.Contains(Asset.PackageName)) Results.Add(Asset);
+    }
+    return Results;
 }
 
 bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRetargeter*& OutRetargeter, FString& OutError)
@@ -269,8 +315,7 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
         for (const FAssetData& SourceAsset : Pair.Value) LastSourceAnimationNames.Add(SourceAsset.AssetName.ToString());
 
         const FString Suffix = TEXT("_") + Target->GetName();
-        const TArray<FAssetData> Results = UIKRetargetBatchOperation::DuplicateAndRetarget(
-            Pair.Value, Pair.Key, Target, Retargeter, FString(), FString(), FString(), Suffix, false, false);
+        const TArray<FAssetData> Results = RetargetIntoSettingsFolder(Pair.Value, Pair.Key, Target, Retargeter, Suffix);
         CreatedCount += Results.Num();
         for (const FAssetData& Result : Results) if (UObject* Asset = Result.GetAsset()) LastGeneratedAssets.Add(Asset);
     }
@@ -381,8 +426,7 @@ void RunRetargetE2E(const TArray<FString>& Args, UWorld* World)
             continue;
         }
         const FString Suffix = TEXT("_") + Target->GetName();
-        const TArray<FAssetData> Results = UIKRetargetBatchOperation::DuplicateAndRetarget(
-            Group.Value, Group.Key, Target, Retargeter, FString(), FString(), FString(), Suffix, false, false);
+        const TArray<FAssetData> Results = RetargetIntoSettingsFolder(Group.Value, Group.Key, Target, Retargeter, Suffix);
         UE_LOG(LogUPTRetarget, Log, TEXT("UPT_RETARGET %s -> %s : %d개 생성"),
             *Group.Key->GetName(), *Target->GetName(), Results.Num());
 

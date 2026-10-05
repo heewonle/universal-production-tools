@@ -206,19 +206,22 @@
       "equals": 0
     },
     "pairs": {
-      "min": 4
+      "min": 10
     },
     "targets.SKM_Manny.segment_angle_median_deg": {
-      "max": 5.0
+      "max": 6.0
     },
     "targets.SKM_Manny.worst_segment_deg": {
       "max": 14.0
     },
     "targets.Forest_Golem_1_PolyArt.segment_angle_median_deg": {
-      "max": 22.0
+      "max": 8.0
+    },
+    "targets.Forest_Golem_1_PolyArt.worst_segment_deg": {
+      "max": 16.0
     },
     "motion_deviation_worst_deg": {
-      "max": 3.5
+      "max": 4.0
     },
     "foot_slide_target": {
       "max": 0.13

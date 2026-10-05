@@ -200,20 +200,104 @@ foot_slide_target                                <= 0.13
 
 골렘 쪽 기준은 "고치겠다"가 아니라 **"더 나빠지면 안다"** 는 뜻이다.
 
+## 레스트 포즈 정렬을 직접 계산했다 (2026-10-06)
+
+폴백 Rig에서 정렬을 건너뛴 대가가 골렘 쌍의 18.4°였다. 엔진 `AutoAlignBones`는 못 쓰니
+**같은 보정을 직접 계산해** 리타기팅 포즈에 써 넣었다(`UPTRestPoseAligner.cpp`).
+
+엔진이 리타기팅 포즈 오프셋을 어떻게 적용하는지부터 확인했다.
+
+```cpp
+// IKRetargetProcessor.cpp
+const FQuat LocalBoneRotation = RefPoseLocal[BoneIndex].GetRotation() * BoneDelta.Value;
+```
+
+로컬 회전에 **뒤에서 곱한다.** 그래서 컴포넌트 공간에서 `Align`만큼 돌리려면 부모 회전으로 감싸
+로컬로 되돌려야 한다.
+
+```
+Delta = RefLocal⁻¹ · Parent⁻¹ · Align · Parent · RefLocal
+```
+
+맞출 방향은 체인의 **누적 길이 비율**로 대응시킨다. 원본은 트위스트 본이 끼어 본 개수가 다르지만,
+"체인의 몇 %지점"으로 짝지으면 그대로 맞는다. 본 하나를 돌릴 때마다 아래쪽 위치가 바뀌므로
+마디마다 컴포넌트 포즈를 다시 계산한다.
+
+### 결과
+
+| 대상 | 정렬 방식 | 각도 중앙 | 최악 뼈마디 |
+|---|---|---|---|
+| `Forest_Golem_1_PolyArt` | 없음(이전) | 18.4° | 70.0° |
+| `Forest_Golem_1_PolyArt` | **직접 계산** | **6.5°** | **13.3°** |
+
+본 14개를 정렬했고, 어설션 없이 에디터가 살아 있다.
+
+### 엔진 정렬을 완전히 대체할 수 있는지도 재 봤다 — 없었다
+
+직접 계산한 정렬이 엔진 것을 대신할 수 있으면 어설션 나는 API를 아예 안 써도 된다.
+그래서 Manny 쪽도 직접 계산으로 바꿔 측정했다.
+
+| Manny 쌍 | 각도 중앙 | 최악 |
+|---|---|---|
+| 엔진 `AutoAlignBones` | **4.7°** | **11.5°** |
+| 직접 계산 | 7.2° | 14.0° |
+
+**엔진이 더 낫다.** 되돌리고 두 경로를 그대로 뒀다. 엔진 Auto Characterizer가 만든 Rig에는 엔진 정렬,
+자체 분석 Rig에는 직접 계산한 정렬을 쓴다. 코드는 한 줄 더 복잡해지지만 수치가 그렇게 말한다.
+
+## 동작 표본을 늘렸다
+
+걷기·달리기뿐이던 표본에 **180도 제자리 회전 · 달리며 점프 · 팔 휘두르기**를 넣어
+캐릭터 2쌍 × 애니메이션 5개 = **10쌍**으로 만들었다.
+
+| 애니메이션 | Manny | 골렘 |
+|---|---|---|
+| `Walk_F` | 2.6° | 8.6° |
+| `Run_F` | 4.7° | 6.4° |
+| `Turn_Standing_180L` | 4.2° | 7.0° |
+| `Jump_Running` | 4.7° | 6.5° |
+| `Idle_Fidget_Swipe` | 5.1° | 4.5° |
+
+이전에 보고하던 "3.7°"는 걷기·달리기 두 개의 중앙값이었다(2.6과 4.7의 중앙). **표본을 늘리니 4.7°가 됐다.**
+수치가 나빠진 게 아니라 **쉬운 동작만 재고 있었던 것**이다.
+
+최악 뼈마디는 10개 전부 `calf→foot`으로 10~13°다. 앞 절에서 본 대로 대부분 고정 오프셋이고,
+동작 왜곡은 가장 큰 경우(골렘 팔 휘두르기)가 3.57°다.
+
+## 리타기팅 결과물 폴더를 고쳤다
+
+문서에는 "원본과 같은 폴더에 생성"이라 적혀 있었지만 실제로는 `/Game` 루트에 쏟아지고 있었다.
+엔진의 편의 함수 `DuplicateAndRetarget`이 출력 폴더를 인자로 받지 않아
+`FNameDuplicationRule`의 기본값(`/Game`)이 그대로 쓰이기 때문이었다.
+
+배치 컨텍스트를 직접 채워 `NameRule.FolderPath`를 설정값으로 지정하도록 바꿨다.
+새 설정 `DefaultRetargetedAnimationPath`(기본 `/Game/Animation/UPT/Retargeted`)로 조정한다.
+생성된 에셋 목록은 **폴더의 생성 전후를 비교해** 찾는다(이름 충돌 시 엔진이 번호를 붙이므로 예측하지 않는다).
+
 ## 회귀 기준
 
-위 "회귀 기준을 쌍별로 나눴다" 절 참고. `run_regression.py --only retarget`으로 돌린다.
+```
+length_mismatch                                         == 0
+pairs                                                   >= 10
+targets.SKM_Manny.segment_angle_median_deg              <= 6.0
+targets.SKM_Manny.worst_segment_deg                     <= 14.0
+targets.Forest_Golem_1_PolyArt.segment_angle_median_deg <= 8.0
+targets.Forest_Golem_1_PolyArt.worst_segment_deg        <= 16.0
+motion_deviation_worst_deg                              <= 4.0
+foot_slide_target                                       <= 0.13
+```
+ `run_regression.py --only retarget`으로 돌린다.
 전체 12개 스위트 모두 통과 상태다.
 
 ## 남은 것
 
-- **자체 분석으로 만든 IK Rig에서는 레스트 포즈 정렬을 못 쓴다.** 엔진 어설션을 피하려고 건너뛰고 있고,
-  그 비용이 골렘 쌍의 18.4°다. 정렬을 직접 계산해(엔진 API를 거치지 않고 체인 방향으로 회전을 풀어)
-  적용하는 것이 다음 개선이다.
-- 표본이 여전히 **애니메이션 2개 · 캐릭터 2쌍**이다. 둘 다 원본이 Synty 고블린 로코모션이라
-  동작 종류가 걷기·달리기뿐이다. 회전·점프·공격처럼 축이 크게 도는 동작을 넣어야 한다.
-- 리타기팅 산출물이 `/Game` 루트에 생성된다. `DuplicateAndRetarget`에 폴더를 비워 넘기기 때문인데,
-  문서에는 "원본과 같은 폴더에 생성"이라고 적혀 있어 실제와 다르다.
+- 최악 뼈마디가 10쌍 전부 `calf→foot` 10~13°다. 대부분 고정 오프셋이지만, 발만은 **접지 판정에
+  직접 영향**을 주므로 체인 끝 마디를 따로 맞추는 처리를 볼 가치가 있다. 다만 지금 재는 지표가
+  바로 그 마디라 "지표에 맞춰 튜닝"이 되기 쉬워, 별도의 접지 지표를 먼저 만들어야 한다.
+- 원본이 모두 **Synty 고블린 한 벌**이다. 체형이 다른 원본(예: UE 마네킹 원본 → 골렘)을 넣어
+  방향을 뒤집어 봐야 원본 쪽 편향이 없는지 안다.
+- 직접 계산한 정렬이 엔진보다 2.5° 나쁘다(7.2° vs 4.7°). 길이 비율 대응 대신 체인 접선을
+  보간하는 쪽이 엔진이 쓰는 방식에 가깝다.
 
 ## 다시 돌리는 법
 
@@ -226,7 +310,9 @@ UPT.RetargetE2E /Game/.../Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt <애니�
 
 ```python
 import upt_capture_retarget_poses as m
-m.main([r"<Saved>etarget_manifest.json", r"<Saved>etarget_manifest_golem.json"])
+m.main([r"<Saved>
+etarget_manifest.json", r"<Saved>
+etarget_manifest_golem.json"])
 ```
 
 ```

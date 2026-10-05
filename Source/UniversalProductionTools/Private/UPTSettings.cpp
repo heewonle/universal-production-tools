@@ -10,6 +10,7 @@ UUPTSettings::UUPTSettings()
     DefaultSkeletonProfilePath = TEXT("/Game/Animation/UPT/Profiles");
     DefaultIKRigPath = TEXT("/Game/Animation/UPT/IKRigs");
     DefaultRetargeterPath = TEXT("/Game/Animation/UPT/Retargeters");
+    DefaultRetargetedAnimationPath = TEXT("/Game/Animation/UPT/Retargeted");
     FFmpegExecutablePath = TEXT("ffmpeg.exe");
     VisionApiEndpoint = TEXT("https://api.openai.com/v1/responses");
     VisionModel = TEXT("gpt-5.6-sol");

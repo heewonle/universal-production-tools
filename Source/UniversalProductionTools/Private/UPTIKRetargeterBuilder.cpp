@@ -1,6 +1,7 @@
 #include "UPTIKRetargeterBuilder.h"
 
 #include "UPTSettings.h"
+#include "UPTRestPoseAligner.h"
 #include "UPTSkeletonProfile.h"
 
 #include "AssetToolsModule.h"
@@ -65,7 +66,7 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     USkeletalMesh* SourceMesh = SourceProfile->SourceMesh.LoadSynchronous();
     USkeletalMesh* TargetMesh = TargetProfile->SourceMesh.LoadSynchronous();
     // 자체 분석으로 만든 Rig 경로다. 여기서는 레스트 포즈 자동 정렬을 쓰지 않는다(위 헤더 주석 참고).
-    return CreateIKRetargeter(SourceMesh, SourceIKRig, TargetMesh, TargetIKRig, OutError, false);
+    return CreateIKRetargeter(SourceMesh, SourceIKRig, TargetMesh, TargetIKRig, OutError, false);  // 폴백 경로
 }
 
 UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
@@ -131,14 +132,8 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     // 리타기터가 실제로 들고 있는 체인 매핑에서 읽는다. 체인 매핑은 op마다 따로 있고
     // 인자 없는 GetChainMapping()은 비어 있는 op의 것을 돌려줄 수 있으므로, op를 모두 훑어
     // 체인을 가진 매핑만 본다.
-    if (!bAlignRestPose)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("UPT_RETARGET '%s' 는 자체 분석으로 만든 IK Rig이라 레스트 포즈 자동 정렬을 건너뜁니다. "
-            "A-Pose/T-Pose 차이가 남을 수 있습니다."), *TargetMesh->GetName());
-    }
-
     TSet<FName> MappedChainNames;
-    for (int32 OpIndex = 0; bAlignRestPose && OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
+    for (int32 OpIndex = 0; OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
     {
         const FRetargetChainMapping* OpMapping = Controller->GetChainMapping(Controller->GetOpName(OpIndex));
         if (!OpMapping || !OpMapping->HasAnyChains()) continue;
@@ -149,6 +144,12 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
                 MappedChainNames.Add(ChainName);
             }
         }
+    }
+
+    if (!bAlignRestPose)
+    {
+        // 엔진 AutoAlignBones는 이 조합에서 어설션으로 에디터를 내린다. 같은 보정을 직접 계산해 넣는다.
+        FUPTRestPoseAligner::AlignTargetToSource(Controller, SourceMesh, SourceIKRig, TargetMesh, TargetIKRig, MappedChainNames);
     }
 
     if (const UIKRigController* TargetRigController = bAlignRestPose ? UIKRigController::GetController(TargetIKRig) : nullptr)

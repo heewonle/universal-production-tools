@@ -59,7 +59,7 @@ Tools/eval/
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
-| `retarget` | does retargeting preserve the motion (2 character pairs) | 2.8° motion distortion |
+| `retarget` | does retargeting preserve the motion (2 pairs x 5 motions) | 3.6° motion distortion |
 
 ## What the apparatus actually found
 
@@ -213,10 +213,20 @@ unmapped chain kills the process. After three different ways of deciding "is thi
 failed, the alignment is now **restricted to rigs built by the engine's Auto Characterizer** and skipped,
 with a log line, for rigs built by the fallback analyzer.
 
-The cost of that is recorded as a number too: 3.7° where alignment applies, 18.4° where it is skipped.
-But **the pure motion distortion, with the constant offset removed, is under 2.8° for both pairs** —
-had the angle error not been split into "rest-pose difference" and "lost motion", this would have read
-as "the golem is 70° broken".
+**Then that cost was paid back directly.** Reading how the engine applies a retarget-pose offset
+(`LocalRotation = RefLocal · Delta`), the same correction is now **computed by hand, without the engine
+API**, and written into the retarget pose. Positions are matched by cumulative length along the chain,
+so differing bone counts (twist bones present or not) still line up.
+→ golem **18.4° → 6.5°, worst 70.0° → 13.3°**, no assertion.
+
+**Whether the hand-rolled version could replace the engine's was measured too — it could not.**
+Switching the Manny pair to it moved 4.7° → 7.2°, so it was reverted. Both paths stay: the engine's
+alignment for engine-built rigs, the hand-rolled one for fallback rigs.
+
+The sample grew as well: **a 180° turn, a running jump and an arm swipe** joined walking and running,
+for 2 character pairs × 5 animations = **10 pairs**. The 3.7° reported earlier was **the median of two
+easy motions**; with the wider sample it is 4.7°. Motion distortion with the constant offset removed
+peaks at 3.6°.
 
 ## Layout
 

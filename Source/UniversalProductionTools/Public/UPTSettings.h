@@ -20,6 +20,8 @@ public:
     UPROPERTY(Config, EditAnywhere, Category="Skeleton") FString DefaultSkeletonProfilePath;
     UPROPERTY(Config, EditAnywhere, Category="Skeleton") FString DefaultIKRigPath;
     UPROPERTY(Config, EditAnywhere, Category="Skeleton") FString DefaultRetargeterPath;
+    // 리타기팅된 애니메이션이 생성될 폴더. 비워 두면 엔진 기본값(/Game 루트)으로 떨어진다.
+    UPROPERTY(Config, EditAnywhere, Category="Skeleton") FString DefaultRetargetedAnimationPath;
     UPROPERTY(Config, EditAnywhere, Category="Reference Video", meta=(DisplayName="FFmpeg Executable")) FString FFmpegExecutablePath;
     UPROPERTY(Config, EditAnywhere, Category="Reference Video", meta=(ClampMin="0.1", ClampMax="10.0")) float ReferenceFrameIntervalSeconds = 1.0f;
     UPROPERTY(Config, EditAnywhere, Category="Reference Video", meta=(ClampMin="1", ClampMax="300")) int32 MaxReferenceFrames = 120;
