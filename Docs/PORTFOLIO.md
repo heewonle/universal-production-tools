@@ -39,7 +39,7 @@ Tools/eval/run_regression.py         전체 실행 + baseline.json 기준 비교
 
 | 기능 | 구현 | 핵심 |
 |---|---|---|
-| 스켈레톤 자동 분석 | `UPTSkeletonAnalyzer` 522줄 | 이름·계층·레퍼런스 포즈 공간 위치를 결합해 휴머노이드 역할 추론, 신뢰도·준비도 등급. `L-Forearm`·`RigLArm1` 같은 비표준 명칭 인식 |
+| 스켈레톤 자동 분석 | `UPTSkeletonAnalyzer` 600줄 | 이름·계층·레퍼런스 포즈 공간 위치를 결합해 휴머노이드 역할 추론, 신뢰도·준비도 등급. `L-Forearm`·`RigLArm1` 같은 비표준 명칭 인식. **자세 판정**으로 사족보행을 거부(늑대는 이름 매핑이 전부 성공해 A등급 93.8%로 통과하므로 준비도만으로는 막히지 않는다) |
 | IK Rig / Retargeter 생성 | `UPTIKRigBuilder` 443줄, `UPTIKRetargeterBuilder` 349줄 | 엔진 Auto Characterizer 1순위, 템플릿 밖 구조는 자체 분석으로 대체. 체인 + 리타기팅 루트 + 역할 축 레스트 포즈 보정. **IK Goal/FBIK는 기본 끔**(켜면 각도·접지가 모두 나빠짐, 측정값은 RETARGET_QUALITY.md). 관절 제한은 미구현 |
 | 애니메이션 일괄 리타기팅 | `SUPTAnimationRetargetWindow` 496줄 | 메시 우클릭 → 다중 선택 → Source 스켈레톤별 자동 준비·변환 (상·하체 분리 모드와 슬롯 Montage는 미구현) |
 | 영상 → 얼굴 애니메이션 | UE 5.8 MetaHuman Animator → 5.7 이식 | 휴대폰 영상 한 대(Identity 없이)로 컨트롤 커브 해석 |

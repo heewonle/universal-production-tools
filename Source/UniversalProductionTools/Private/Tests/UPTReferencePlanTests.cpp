@@ -5,6 +5,8 @@
 #include "UPTEndpoint.h"
 #include "UPTFraming.h"
 #include "UPTPlanParser.h"
+#include "UPTSkeletonAnalyzer.h"
+#include "Engine/SkeletalMesh.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUPTReferencePlanRoundTripTest, "UniversalProductionTools.ReferencePlan.RoundTrip", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -72,6 +74,44 @@ bool FUPTCameraMotionAmountTest::RunTest(const FString& Parameters)
         const float Wide = UPTFraming::ScreenDeltaToRotationDegrees(0.2f, 18.0f, UPTFraming::SensorWidthMm, 1);
         const float Tele = UPTFraming::ScreenDeltaToRotationDegrees(0.2f, 85.0f, UPTFraming::SensorWidthMm, 1);
         TestTrue(TEXT("광각이 망원보다 큰 회전각"), Wide > Tele * 3.0f);
+    }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUPTSkeletonPostureTest, "UniversalProductionTools.Skeleton.Posture", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FUPTSkeletonPostureTest::RunTest(const FString& Parameters)
+{
+    // 역할 이름만 보면 늑대도 완벽한 휴머노이드다. 리거가 앞다리를 L_UpperArm·L_Forearm·L_Hand로
+    // 이름 붙여 두어 **모든 역할이 신뢰도 1.00으로 매핑되고 준비도 94%(A등급)로 통과한다.**
+    // 준비도 70% 가드가 발동하지 않으니, 그대로 두면 사람 애니메이션이 늑대에 조용히 옮겨진다.
+    // 레퍼런스 포즈의 기하는 다른 답을 준다 — 늑대는 앞발도 땅에 있다.
+    auto Analyze = [](const TCHAR* Path) -> FUPTSkeletonAnalysisData
+    {
+        USkeletalMesh* Mesh = LoadObject<USkeletalMesh>(nullptr, Path);
+        return Mesh ? FUPTSkeletonAnalyzer::AnalyzeDetailed(Mesh, FString()) : FUPTSkeletonAnalysisData();
+    };
+
+    const FUPTSkeletonAnalysisData Wolf = Analyze(TEXT("/Game/External/3D_ModelsCharactersAnimals/Wolf_PA/Wolf_Pa_v2.Wolf_Pa_v2"));
+    if (!Wolf.BoneMappings.IsEmpty())
+    {
+        // 이름 기반 매핑은 늑대에서도 성공한다는 것을 먼저 고정한다. 이게 문제의 핵심이다.
+        TestTrue(FString::Printf(TEXT("늑대 준비도 %.2f는 70%% 가드를 통과한다"), Wolf.Readiness), Wolf.Readiness >= 0.70f);
+        TestFalse(FString::Printf(TEXT("늑대는 직립 이족이 아니다 (손 높이 %.2f)"), Wolf.HandAboveFootRatio), Wolf.bUprightBiped);
+        TestTrue(TEXT("늑대는 앞발이 뒷발과 거의 같은 높이다"), Wolf.HandAboveFootRatio < 0.25f);
+    }
+
+    // 직립 캐릭터는 통과해야 한다. 비인간(골렘)도 마찬가지다 — 막아야 할 것은 체형이 아니라 자세다.
+    const TCHAR* UprightMeshes[] = {
+        TEXT("/Game/Retrieve/Character/Heroes/Mannequin/Meshes/SKM_Manny.SKM_Manny"),
+        TEXT("/Game/External/ForestGolems/Meshes/Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt"),
+        TEXT("/Game/Retrieve/Retargeter/Mixamo/Character/X_Bot.X_Bot"),
+        TEXT("/Game/External/PolygonDarkFantasy/Meshes/Characters/SK_Chr_Gargoyle_01.SK_Chr_Gargoyle_01"),
+    };
+    for (const TCHAR* Path : UprightMeshes)
+    {
+        const FUPTSkeletonAnalysisData Data = Analyze(Path);
+        if (Data.BoneMappings.IsEmpty()) continue;  // 에셋이 없는 환경에서는 건너뛴다
+        TestTrue(FString::Printf(TEXT("%s는 직립 이족 (손 높이 %.2f)"), Path, Data.HandAboveFootRatio), Data.bUprightBiped);
     }
     return true;
 }

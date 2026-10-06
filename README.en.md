@@ -173,6 +173,28 @@ Profiles, IK Rigs and Retargeters are prepared per source skeleton automatically
 the automatic path stops and hands the case back for manual review** — it does not quietly emit broken
 results. (Upper/lower body split modes and slot Montage generation are not implemented.)
 
+**That guard did not stop a quadruped.** Run the wolf through the analyzer and it passes at **tier A,
+93.8%** — the rigger named the front legs `L_UpperArm`, `L_Forearm`, `L_Hand`, so every role maps at
+confidence 1.00. The readiness guard never fires, and a human animation would be retargeted onto a
+wolf in silence. The sentence above was not true for quadrupeds.
+
+Names cannot catch it. **A role name is the rigger's declaration; how the body actually stands is in
+the reference pose.** The role graph already supplies the structure — how far the hands sit above the
+feet, and how vertical pelvis→neck is.
+
+| mesh | readiness | hand height | spine vertical | verdict |
+|---|---|---|---|---|
+| Wolf_Pa_v2 (quadruped) | 0.938 A | **0.144** | **0.040** | rejected |
+| Forest_Golem (non-human) | 1.000 A | 0.418 | 0.969 | accepted |
+| SK_Chr_Gargoyle (non-human) | 1.000 A | 0.830 | 0.999 | accepted |
+| Retrieve_DefaultWoman | 1.000 A | 0.862 | 1.000 | accepted |
+
+Hand height separates by **2.9×** and spine verticality by **24×**, putting both thresholds in the
+middle of an empty band. **What is rejected is the posture, not the body type** — the golem and the
+gargoyle are not human but stand upright, so they pass. It is kept separate from readiness: readiness
+means "the role mapping is complete", posture means "that role graph fits this body".
+→ [SKELETON_AUDIT.md](Docs/SKELETON_AUDIT.md)
+
 **4. Face animation from a single video** — UE 5.8 MetaHuman Animator → transferred into 5.7
 Solves face control curves from phone footage (mono, no Identity required). FBX import would not
 produce an animation asset in 5.7, so **only the curve values were transferred and the AnimSequence was

@@ -342,6 +342,10 @@ void RunSkeletonAudit(const TArray<FString>& Args, UWorld* World)
         Row->SetNumberField(TEXT("mapped_roles"), Result.BoneMappings.Num());
         Row->SetNumberField(TEXT("low_confidence_roles"), LowConfidence);
         Row->SetNumberField(TEXT("forced_roles"), Result.ForcedRoles.Num());
+        // 이름만으로는 사족보행을 가릴 수 없어 기하 판정도 같이 남긴다.
+        Row->SetBoolField(TEXT("upright_biped"), Result.bUprightBiped);
+        Row->SetNumberField(TEXT("hand_above_foot"), Result.HandAboveFootRatio);
+        Row->SetNumberField(TEXT("spine_upright"), Result.SpineUpright);
         Row->SetNumberField(TEXT("twist_bones"), Result.TwistBones.Num());
         Row->SetNumberField(TEXT("finger_bones"), Result.FingerBones.Num());
         Row->SetNumberField(TEXT("face_bones"), Result.FaceBones.Num());

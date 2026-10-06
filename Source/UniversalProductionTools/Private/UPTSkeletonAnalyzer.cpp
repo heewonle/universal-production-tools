@@ -78,6 +78,76 @@ TArray<FTransform> BuildComponentPose(const FReferenceSkeleton& Ref)
     return ComponentPose;
 }
 
+/**
+ * 레퍼런스 포즈의 기하로 **직립 이족인지** 판정한다.
+ *
+ * 역할 이름만 보면 늑대도 완벽한 휴머노이드다 — 앞다리가 `L_UpperArm`·`L_Forearm`·`L_Hand`로
+ * 이름 붙어 있어 모든 역할이 신뢰도 1.00으로 매핑되고 A등급으로 통과한다. 이름은 리거의
+ * 선언일 뿐이고, 몸이 실제로 어떻게 서 있는지는 레퍼런스 포즈가 말해 준다.
+ *
+ * 두 가지를 본다. 둘 다 몸 높이로 정규화해서 크기와 무관하다.
+ *  - 손이 발보다 얼마나 위에 있는가: 이족은 허리 높이(0.4 이상), 사족은 앞발도 땅이라 0 근처.
+ *  - 펠비스→목 방향의 수직 성분: 이족은 1에 가깝고, 사족은 몸통이 누워 있어 작다.
+ */
+void ClassifyPosture(const FReferenceSkeleton& Ref, const TArray<FTransform>& Pose,
+    const TMap<FString, FName>& Roles, FUPTSkeletonAnalysisData& Result)
+{
+    auto HeightOf = [&Ref, &Pose, &Roles](const TCHAR* Role, double& OutZ) -> bool
+    {
+        const FName* Bone = Roles.Find(Role);
+        if (!Bone) return false;
+        const int32 Index = Ref.FindBoneIndex(*Bone);
+        if (Index == INDEX_NONE || !Pose.IsValidIndex(Index)) return false;
+        OutZ = Pose[Index].GetLocation().Z;
+        return true;
+    };
+
+    double LeftFoot = 0, RightFoot = 0, LeftHand = 0, RightHand = 0, Head = 0, Pelvis = 0, Neck = 0;
+    const bool bFeet = HeightOf(TEXT("LeftFoot"), LeftFoot) && HeightOf(TEXT("RightFoot"), RightFoot);
+    const bool bHands = HeightOf(TEXT("LeftHand"), LeftHand) && HeightOf(TEXT("RightHand"), RightHand);
+    const bool bSpine = HeightOf(TEXT("Pelvis"), Pelvis) && HeightOf(TEXT("Neck"), Neck);
+    if (!HeightOf(TEXT("Head"), Head)) Head = Neck;
+
+    const double FootZ = bFeet ? 0.5 * (LeftFoot + RightFoot) : 0.0;
+    const double HandZ = bHands ? 0.5 * (LeftHand + RightHand) : 0.0;
+    const double BodyHeight = Head - FootZ;
+    if (!bFeet || !bHands || BodyHeight <= KINDA_SMALL_NUMBER)
+    {
+        // 판정할 근거가 없으면 막지 않는다. 막는 쪽이 틀렸을 때의 대가가 더 크다.
+        Result.bUprightBiped = true;
+        return;
+    }
+    Result.HandAboveFootRatio = static_cast<float>((HandZ - FootZ) / BodyHeight);
+
+    bool bSpineMeasured = false;
+    if (bSpine)
+    {
+        const FName* PelvisBone = Roles.Find(TEXT("Pelvis"));
+        const FName* NeckBone = Roles.Find(TEXT("Neck"));
+        const int32 PelvisIndex = PelvisBone ? Ref.FindBoneIndex(*PelvisBone) : INDEX_NONE;
+        const int32 NeckIndex = NeckBone ? Ref.FindBoneIndex(*NeckBone) : INDEX_NONE;
+        if (PelvisIndex != INDEX_NONE && NeckIndex != INDEX_NONE)
+        {
+            const FVector Spine = Pose[NeckIndex].GetLocation() - Pose[PelvisIndex].GetLocation();
+            Result.SpineUpright = Spine.IsNearlyZero() ? 0.0f : static_cast<float>(FMath::Abs(Spine.GetSafeNormal().Z));
+            bSpineMeasured = !Spine.IsNearlyZero();
+        }
+    }
+
+    // 두 신호를 모두 요구한다. 실측값(2026-10-07):
+    //                      손 높이   척추 수직
+    //   늑대(성체/새끼)     0.144 / 0.137   0.040
+    //   Forest Golem        0.418           0.969   <- 이족 중 가장 낮다
+    //   SKM_Manny           0.623           0.998
+    //   Gargoyle(비인간)    0.830           0.999
+    //   Retrieve_DefaultWoman 0.862         1.000
+    // 손 높이는 0.144 ↔ 0.418로 2.9배, 척추 수직은 0.040 ↔ 0.969로 24배 벌어진다.
+    // 경계(0.25 / 0.5)는 둘 다 그 빈 구간 한가운데에 있다.
+    // 척추는 목 역할이 없으면 재지 못하므로, 쟀을 때만 조건에 넣는다.
+    Result.bUprightBiped = Result.HandAboveFootRatio >= 0.25f
+        && (!bSpineMeasured || Result.SpineUpright >= 0.5f);
+}
+
 int32 GetBoneDepth(const FReferenceSkeleton& Ref, int32 BoneIndex)
 {
     int32 Depth = 0;
@@ -507,6 +577,20 @@ FUPTSkeletonAnalysisData FUPTSkeletonAnalyzer::AnalyzeDetailed(USkeletalMesh* Sk
     if (!TwistBones.IsEmpty()) Report += TEXT("- Twist: ") + FString::Join(TwistBones, TEXT(", ")) + TEXT("\n");
     if (!FingerBones.IsEmpty()) Report += TEXT("- Finger: ") + FString::Join(FingerBones, TEXT(", ")) + TEXT("\n");
     if (!FaceBones.IsEmpty()) Report += TEXT("- Face: ") + FString::Join(FaceBones, TEXT(", ")) + TEXT("\n");
+
+    // 역할 매핑이 다 끝난 뒤에 기하로 자세를 본다. 이름만으로는 사족보행을 막을 수 없다.
+    ClassifyPosture(Ref, ComponentPose, Result.BoneMappings, Result);
+
+    Report += TEXT("\nPosture\n");
+    Report += FString::Printf(TEXT("손 높이(몸 높이 대비): %.2f / 척추 수직 성분: %.2f -> %s\n"),
+        Result.HandAboveFootRatio, Result.SpineUpright,
+        Result.bUprightBiped ? TEXT("직립 이족") : TEXT("**직립 이족 아님**"));
+    if (!Result.bUprightBiped)
+    {
+        Report += TEXT("- 손이 발과 거의 같은 높이입니다. 사족보행이거나 휴머노이드 역할 그래프가 맞지 않는 구조입니다.\n"
+                       "  역할 이름은 전부 매핑될 수 있습니다(리거가 앞다리를 UpperArm/Hand로 이름 붙이면 신뢰도 1.00으로 잡힙니다).\n"
+                       "  이름은 리거의 선언일 뿐이라 준비도만으로는 막히지 않으므로, 휴머노이드 리타기팅에는 쓰지 마세요.\n");
+    }
 
     Report += TEXT("\nDiagnostics\n");
     if (Readiness >= 0.90f) Report += TEXT("- IK Rig 체인 초안 생성에 사용할 수 있는 수준입니다. 생성 전 CHECK/LOW 항목을 검수하세요.\n");

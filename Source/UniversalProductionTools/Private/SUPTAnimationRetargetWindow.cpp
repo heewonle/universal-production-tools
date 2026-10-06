@@ -162,6 +162,22 @@ bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRe
         return false;
     }
 
+    // 준비도만으로는 사족보행을 막지 못한다. 늑대는 리거가 앞다리를 UpperArm·Forearm·Hand로
+    // 이름 붙여 두어 **모든 역할이 신뢰도 1.00으로 매핑되고 준비도 94%로 통과한다.**
+    // 역할 이름은 리거의 선언이고, 몸이 어떻게 서 있는지는 레퍼런스 포즈가 말해 준다.
+    auto RejectIfNotBiped = [&OutError](const FUPTSkeletonAnalysisData& Analysis, USkeletalMesh* Mesh, const TCHAR* Side) -> bool
+    {
+        if (Analysis.bUprightBiped) return false;
+        OutError = FString::Printf(
+            TEXT("%s '%s'는 직립 이족이 아닙니다 (손 높이 %.2f, 척추 수직 %.2f). "
+                 "역할 이름은 모두 매핑되지만 휴머노이드 역할 그래프가 맞지 않아 결과가 망가집니다. "
+                 "사족보행·비정형 리그는 전용 리타기터가 필요합니다."),
+            Side, *Mesh->GetName(), Analysis.HandAboveFootRatio, Analysis.SpineUpright);
+        return true;
+    };
+    if (RejectIfNotBiped(SourceAnalysis, SourceMesh, TEXT("원본"))) return false;
+    if (RejectIfNotBiped(TargetAnalysis, TargetMesh, TEXT("대상"))) return false;
+
     // 쪽마다 더 나은 Rig을 고르는(한쪽은 엔진 Rig, 다른 쪽은 폴백 Rig) 방식도 만들어 재 봤는데
     // 전면적으로 나빠졌다(골렘 5.6° → 31.0°, X_Bot 3.8° → 31.1°). 두 Rig의 체인 **이름 규칙**이
     // 달라져 AutoMapChains(Exact)가 거의 아무것도 짝짓지 못하기 때문이다.
@@ -274,6 +290,11 @@ FReply SUPTAnimationRetargetWindow::ValidatePipeline()
         if (!Analysis.bOverridesValid || Analysis.Readiness < 0.70f)
         {
             Problems.Add(FString::Printf(TEXT("%s: 보조 분석 준비도 %.0f%% — 엔진 자동 인식이 실패하면 수동 보정이 필요합니다"), *SourceMesh->GetName(), Analysis.Readiness * 100.0f));
+        }
+        else if (!Analysis.bUprightBiped)
+        {
+            Problems.Add(FString::Printf(TEXT("%s: 직립 이족이 아닙니다(손 높이 %.2f) — 역할 이름은 다 맞지만 휴머노이드 리타기팅 대상이 아닙니다"),
+                *SourceMesh->GetName(), Analysis.HandAboveFootRatio));
         }
     }
 
