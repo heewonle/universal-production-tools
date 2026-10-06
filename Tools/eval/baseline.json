@@ -215,13 +215,13 @@
       "max": 10.0
     },
     "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
-      "max": 8.0
+      "max": 2.0
     },
     "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.worst_segment_deg": {
-      "max": 13.0
+      "max": 10.0
     },
     "targets.Retrieve_DefaultWoman->X_Bot.segment_angle_median_deg": {
-      "max": 4.5
+      "max": 2.0
     },
     "targets.Retrieve_DefaultWoman->X_Bot.worst_segment_deg": {
       "max": 9.0
@@ -233,7 +233,7 @@
       "max": 7.0
     },
     "motion_deviation_worst_deg": {
-      "max": 4.0
+      "max": 3.0
     },
     "foot_slide_target": {
       "max": 0.06

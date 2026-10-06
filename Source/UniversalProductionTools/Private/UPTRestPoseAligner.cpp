@@ -170,8 +170,42 @@ int32 FUPTRestPoseAligner::AlignTargetToSource(
         const FBoneChain* const* SourceChainPtr = SourceChains.Find(TargetChain.ChainName);
         if (!SourceChainPtr || !*SourceChainPtr) continue;
 
-        const TArray<FName> TargetBones = CollectChainBones(TargetRef, TargetChain);
-        const TArray<FName> SourceBones = CollectChainBones(SourceRef, **SourceChainPtr);
+        TArray<FName> TargetBones = CollectChainBones(TargetRef, TargetChain);
+        TArray<FName> SourceBones = CollectChainBones(SourceRef, **SourceChainPtr);
+
+        // 본이 하나뿐인 체인은 방향을 만들 수 없어 그대로 두면 정렬에서 빠진다.
+        // 엔진 관례대로 체인을 끊으면 `Neck → Neck`, `Head → Head` 같은 한 본 체인이 생기는데,
+        // 그러면 목 정렬이 통째로 빠져 `neck→head`가 31.6°까지 벌어졌다.
+        // 바로 아래로 이어지는 **다른 매핑된 체인의 시작 본**까지 한 칸 늘려 방향을 만든다.
+        // 양쪽 모두 같은 이름의 체인을 쓰므로 대응이 어긋나지 않는다.
+        auto ExtendSingleBoneChain = [&](const FBoneChain& Chain, const FReferenceSkeleton& Ref,
+                                         const UIKRigController* Rig, TArray<FName>& Bones) -> FName
+        {
+            if (Bones.Num() != 1) return NAME_None;
+            const int32 EndIndex = Ref.FindBoneIndex(Bones.Last());
+            if (EndIndex == INDEX_NONE) return NAME_None;
+            for (const FBoneChain& Other : Rig->GetRetargetChains())
+            {
+                if (Other.ChainName == Chain.ChainName) continue;
+                if (!MappedChainNames.Contains(Other.ChainName)) continue;
+                const int32 OtherStart = Ref.FindBoneIndex(Other.StartBone.BoneName);
+                if (OtherStart == INDEX_NONE || Ref.GetParentIndex(OtherStart) != EndIndex) continue;
+                Bones.Add(Other.StartBone.BoneName);
+                return Other.ChainName;
+            }
+            return NAME_None;
+        };
+        const FName TargetExtendedBy = ExtendSingleBoneChain(TargetChain, TargetRef, TargetRig, TargetBones);
+        if (TargetExtendedBy != NAME_None)
+        {
+            // 원본도 **같은 이름의 체인**으로 늘려야 대응이 맞는다.
+            for (const FBoneChain& Other : SourceRig->GetRetargetChains())
+            {
+                if (Other.ChainName != TargetExtendedBy) continue;
+                SourceBones.Add(Other.StartBone.BoneName);
+                break;
+            }
+        }
         if (TargetBones.Num() < 2 || SourceBones.Num() < 2) continue;
 
         const TArray<FChainSegment> SourceSegments = BuildSegments(SourceRef, SourcePose, SourceBones);

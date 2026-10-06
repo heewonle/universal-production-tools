@@ -137,7 +137,8 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateIKRig(UUPTSkeletonProfile* Profile, FS
     // 같은 메시(SKM_Manny)에 두 Rig을 각각 써서 확인했다 — 엔진 Rig은 진폭 11.2, 폴백은 0.00이었다.
     const TArray<FUPTChainSpec> Specs = {
         {TEXT("Root"), TEXT("Root"), TEXT("Root"), true},
-        {TEXT("Spine"), TEXT("Spine"), TEXT("Head"), true},
+        {TEXT("Spine"), TEXT("Spine"), TEXT("Head"), true},   // 끝 본은 아래에서 목 바로 앞까지로 줄인다
+        {TEXT("Head"), TEXT("Head"), TEXT("Head"), false},
         {TEXT("LeftArm"), TEXT("LeftUpperArm"), TEXT("LeftHand"), true},
         {TEXT("RightArm"), TEXT("RightUpperArm"), TEXT("RightHand"), true},
         {TEXT("LeftLeg"), TEXT("LeftThigh"), TEXT("LeftFoot"), true},
@@ -167,6 +168,38 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateIKRig(UUPTSkeletonProfile* Profile, FS
         { OutError = FString::Printf(TEXT("체인 %s의 %s → %s 계층이 연결되지 않습니다."), *Spec.ChainName.ToString(), *StartBone.ToString(), *EndBone.ToString()); return nullptr; }
         Chains.Add({Spec.ChainName, StartBone, EndBone});
     }
+
+    // Spine과 Neck의 끝을 '다음 체인 시작 본의 부모'까지로 줄인다.
+    //
+    // 전에는 둘 다 Head에서 끝나 **같은 본이 세 체인에 동시에 들어갔다**
+    // (Spine: spine_01→head, Neck: neck_01→head, 그리고 Head 자체).
+    // 엔진 Auto Characterizer는 `spine_01→spine_05`, `neck_01→neck_02`, `head→head`로 끊는다.
+    // 한 본이 여러 체인에 걸치면 레스트 포즈 정렬에서도 제외해야 해서(엔진 어설션 회피),
+    // 정렬이 닿지 않는 본이 늘어난다.
+    auto TrimChainEnd = [&Ref, &Chains](const FName ChainName, const FName NextChainStart)
+    {
+        const int32 NextIndex = Ref.FindBoneIndex(NextChainStart);
+        if (NextIndex == INDEX_NONE) return;
+        const int32 ParentIndex = Ref.GetParentIndex(NextIndex);
+        if (ParentIndex == INDEX_NONE) return;
+        FResolvedChain* Chain = Chains.FindByPredicate([ChainName](const FResolvedChain& Candidate)
+        {
+            return Candidate.Name == ChainName;
+        });
+        if (!Chain) return;
+        const int32 StartIndex = Ref.FindBoneIndex(Chain->Start);
+        // 줄인 끝이 여전히 시작 본과 연결돼 있어야 한다.
+        if (StartIndex == INDEX_NONE) return;
+        if (ParentIndex != StartIndex && !Ref.BoneIsChildOf(ParentIndex, StartIndex)) return;
+        Chain->End = Ref.GetBoneName(ParentIndex);
+    };
+
+    FName NeckBone, HeadBone;
+    const bool bHasNeck = ResolveBone(Profile, TEXT("Neck"), NeckBone);
+    const bool bHasHead = ResolveBone(Profile, TEXT("Head"), HeadBone);
+    if (bHasNeck) TrimChainEnd(TEXT("Spine"), NeckBone);
+    else if (bHasHead) TrimChainEnd(TEXT("Spine"), HeadBone);
+    if (bHasHead) TrimChainEnd(TEXT("Neck"), HeadBone);
 
     FString SafeName = ObjectTools::SanitizeObjectName(Mesh->GetName());
     if (SafeName.IsEmpty()) SafeName = TEXT("Skeleton");
