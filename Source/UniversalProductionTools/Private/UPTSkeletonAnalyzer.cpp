@@ -223,53 +223,83 @@ FUPTSkeletonAnalysisData FUPTSkeletonAnalyzer::AnalyzeDetailed(USkeletalMesh* Sk
     TMap<FString, FRoleMatch> Matches;
     TSet<int32> UsedBones;
 
-    for (const FRoleSpec& Spec : Specs)
+    // 두 번에 나눠 배정한다.
+    //  1차: 뼈 이름에 근거가 있는 후보만 본다.
+    //  2차: 남은 역할을 이름·위치·계층 점수 합으로 배정한다.
+    //
+    // 한 번에 돌리면 **이름 근거가 없는 역할이 다른 역할의 정확한 본을 먼저 가져간다.**
+    // Mixamo가 그 경우였다. 최상위 본 `Hips`는 Pelvis 토큰과 정확히 맞는데,
+    // Root가 "부모 없는 본" 가산점(0.50)만으로 먼저 집어 가 버린다. 그러면 Pelvis는
+    // 남은 것 중 공간상 그럴듯한 `LeftUpLeg`를 집고, 그 아래 왼쪽 다리가 통째로 한 칸씩 밀린다
+    // (LeftThigh←LeftLeg, LeftCalf←LeftFoot, LeftFoot←LeftToeBase).
+    // Polygonal_Golem도 똑같이 Root가 `RigPelvis`를 가져가며 왼쪽 다리가 밀렸다.
+    for (int32 Pass = 0; Pass < 2; ++Pass)
     {
-        FRoleMatch Best;
-        const FRoleMatch* ParentMatch = Spec.ParentRole.IsEmpty() ? nullptr : Matches.Find(Spec.ParentRole);
-        for (int32 BoneIndex = 0; BoneIndex < Ref.GetNum(); ++BoneIndex)
+        for (const FRoleSpec& Spec : Specs)
         {
-            if (UsedBones.Contains(BoneIndex)) continue;
-            const float NameScore = GetNameScore(Ref.GetBoneName(BoneIndex).ToString(), Spec.Tokens);
-            const float SpatialScore = GetSpatialScore(Spec.Zone, Spec.Side, ComponentPose[BoneIndex].GetLocation(), Bounds, LateralAxis, LeftSign);
-            float HierarchyScore = 0.0f;
-            if (Spec.Role == TEXT("Root") && Ref.GetParentIndex(BoneIndex) == INDEX_NONE) HierarchyScore = 0.50f;
-            else if (ParentMatch && ParentMatch->BoneIndex != INDEX_NONE)
+            const FRoleMatch* Existing = Matches.Find(Spec.Role);
+            if (Existing && Existing->BoneIndex != INDEX_NONE) continue;
+
+            FRoleMatch Best;
+            const FRoleMatch* ParentMatch = Spec.ParentRole.IsEmpty() ? nullptr : Matches.Find(Spec.ParentRole);
+            for (int32 BoneIndex = 0; BoneIndex < Ref.GetNum(); ++BoneIndex)
             {
-                // 이름이 전혀 없는 커스텀 Rig도 몸의 연결 구조만으로 판정할 수 있도록
-                // 부모 역할 아래의 연속 체인에 높은 가중치를 둡니다.
-                if (Ref.BoneIsChildOf(BoneIndex, ParentMatch->BoneIndex))
+                if (UsedBones.Contains(BoneIndex)) continue;
+                const float NameScore = GetNameScore(Ref.GetBoneName(BoneIndex).ToString(), Spec.Tokens);
+                if (Pass == 0 && NameScore <= 0.0f) continue;  // 1차는 이름 근거가 있는 후보만
+                const float SpatialScore = GetSpatialScore(Spec.Zone, Spec.Side, ComponentPose[BoneIndex].GetLocation(), Bounds, LateralAxis, LeftSign);
+                float HierarchyScore = 0.0f;
+                if (Spec.Role == TEXT("Root") && Ref.GetParentIndex(BoneIndex) == INDEX_NONE) HierarchyScore = 0.50f;
+                else if (ParentMatch && ParentMatch->BoneIndex != INDEX_NONE)
                 {
-                    const int32 Distance = GetDescendantDistance(Ref, BoneIndex, ParentMatch->BoneIndex);
-                    HierarchyScore = FMath::Clamp(0.44f - FMath::Max(0, Distance - 1) * 0.05f, 0.20f, 0.44f);
+                    // 이름이 전혀 없는 커스텀 Rig도 몸의 연결 구조만으로 판정할 수 있도록
+                    // 부모 역할 아래의 연속 체인에 높은 가중치를 둡니다.
+                    if (Ref.BoneIsChildOf(BoneIndex, ParentMatch->BoneIndex))
+                    {
+                        const int32 Distance = GetDescendantDistance(Ref, BoneIndex, ParentMatch->BoneIndex);
+                        HierarchyScore = FMath::Clamp(0.44f - FMath::Max(0, Distance - 1) * 0.05f, 0.20f, 0.44f);
+                    }
+                    else HierarchyScore = -0.18f;
                 }
-                else HierarchyScore = -0.18f;
-            }
-            if (Spec.Role == TEXT("Pelvis"))
-            {
-                TArray<int32> Children;
-                if (Ref.GetDirectChildBones(BoneIndex, Children) >= 3) HierarchyScore += 0.08f;
+                if (Spec.Role == TEXT("Pelvis"))
+                {
+                    TArray<int32> Children;
+                    if (Ref.GetDirectChildBones(BoneIndex, Children) >= 3) HierarchyScore += 0.08f;
+                }
+
+                const float Total = FMath::Clamp(NameScore + SpatialScore + HierarchyScore, 0.0f, 1.0f);
+                if (Total > Best.Confidence)
+                {
+                    Best = {BoneIndex, Total, NameScore, SpatialScore, HierarchyScore, false};
+                }
             }
 
-            const float Total = FMath::Clamp(NameScore + SpatialScore + HierarchyScore, 0.0f, 1.0f);
-            if (Total > Best.Confidence)
+            // Spatial-only guesses remain visible but deliberately low-confidence.
+            // Clavicle/Neck은 생략 가능한 중간 본이다. 이름 근거 없이 공간만으로 강제 배정하면
+            // 실제 UpperArm/Head를 먼저 소비하므로 비표준 구조에서는 비워 둔다.
+            const bool bOptionalWithoutNameEvidence = !Spec.bRequired && Best.NameScore <= 0.0f;
+            if (Best.Confidence >= 0.20f && !bOptionalWithoutNameEvidence)
             {
-                Best = {BoneIndex, Total, NameScore, SpatialScore, HierarchyScore, false};
+                Matches.Add(Spec.Role, Best);
+                UsedBones.Add(Best.BoneIndex);
+            }
+            else if (Pass == 1)
+            {
+                Matches.Add(Spec.Role, FRoleMatch());
             }
         }
+    }
 
-        // Spatial-only guesses remain visible but deliberately low-confidence.
-        // Clavicle/Neck은 생략 가능한 중간 본이다. 이름 근거 없이 공간만으로 강제 배정하면
-        // 실제 UpperArm/Head를 먼저 소비하므로 비표준 구조에서는 비워 둔다.
-        const bool bOptionalWithoutNameEvidence = !Spec.bRequired && Best.NameScore <= 0.0f;
-        if (Best.Confidence >= 0.20f && !bOptionalWithoutNameEvidence)
+    // Mixamo처럼 루트와 펠비스가 같은 본인 리그가 있다. 위에서 Pelvis가 그 본을 이름으로 가져가면
+    // Root가 빈 채로 남는데, 그건 구조를 잘못 읽은 게 아니라 본이 하나뿐인 것이다. 공유를 허용한다.
+    if (FRoleMatch* RootMatch = Matches.Find(TEXT("Root")))
+    {
+        const FRoleMatch* PelvisMatch = Matches.Find(TEXT("Pelvis"));
+        // Root가 이름 근거 없이 아무 본이나 집은 경우도 포함한다(X_Bot은 Root←RightToeBase를 집었다).
+        if (RootMatch->NameScore <= 0.0f && PelvisMatch && PelvisMatch->BoneIndex != INDEX_NONE
+            && Ref.GetParentIndex(PelvisMatch->BoneIndex) == INDEX_NONE)
         {
-            Matches.Add(Spec.Role, Best);
-            UsedBones.Add(Best.BoneIndex);
-        }
-        else
-        {
-            Matches.Add(Spec.Role, FRoleMatch());
+            *RootMatch = *PelvisMatch;
         }
     }
 

@@ -195,6 +195,17 @@ left/right pairs at the same depth). Exactly **3 of 1,691** meshes changed tier 
 with zero false positives. One earlier version was too strict and demoted 10 Sidekick meshes; an exception
 for strong name evidence (asymmetric rigs are an asset trait) fixed that.
 
+**Then detection was turned into repair.** The shifted left leg was not a leg problem — it was `Pelvis`.
+Mixamo has no separate root bone: the topmost bone `Hips` *is* the pelvis, and it matches the Pelvis
+tokens exactly. But roles were assigned in spec order, so **`Root`, with no name evidence at all, took
+`Hips` on a "parentless bone" bonus alone.** The displaced `Pelvis` then grabbed `LeftUpLeg`, and
+everything below it shifted by one joint.
+→ Name-backed assignments now run **first**, and a rig whose root and pelvis are the same bone is allowed
+to share it. Across 1,691 meshes **exactly 3 changed tier, all upward**, none down: `X_Bot`,
+`Look_Around` and `Polygonal_Golem` went **C 0.44 → A 0.94**, with every limb at confidence 1.00.
+Rather than stop at the grade, the fix was measured end to end: **X_Bot now retargets at 5.2°**, on par
+with the mannequin's 4.7°. That combination used to be blocked from the automatic path entirely.
+
 **Retargeting quality measured.** Joint positions cannot be compared across body types, so the suite
 measures **segment directions** and **foot sliding**. The first run showed legs at 2.2° but **arms off by
 52.9°**, with a standard deviation of **0.0** across all 24 samples — the motion transferred exactly, but
