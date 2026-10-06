@@ -140,6 +140,10 @@ bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRe
         return false;
     }
 
+    // 쪽마다 더 나은 Rig을 고르는(한쪽은 엔진 Rig, 다른 쪽은 폴백 Rig) 방식도 만들어 재 봤는데
+    // 전면적으로 나빠졌다(골렘 5.6° → 31.0°, X_Bot 3.8° → 31.1°). 두 Rig의 체인 **이름 규칙**이
+    // 달라져 AutoMapChains(Exact)가 거의 아무것도 짝짓지 못하기 때문이다.
+    // 한쪽이 폴백이면 양쪽 다 폴백으로 가는 지금 구조가 맞다.
     UUPTSkeletonProfile* SourceProfile = FUPTSkeletonProfileBuilder::CreateProfile(SourceMesh, SourceAnalysis, SourceOverride, OutError);
     if (!SourceProfile) return false;
     UIKRigDefinition* SourceRig = FUPTIKRigBuilder::CreateIKRig(SourceProfile, OutError);
