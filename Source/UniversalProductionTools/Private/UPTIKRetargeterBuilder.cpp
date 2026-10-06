@@ -16,8 +16,11 @@
 
 namespace
 {
+    // Root 체인은 필수가 아니다. 엔진 Auto Characterizer도 Mixamo처럼 별도 루트 본이 없는 리그에서는
+    // Root 체인을 만들지 않는다(X_Bot 확인). 필수로 걸어 두면 그런 리그가 엔진 Rig을 못 쓰고
+    // 폴백으로 내려가고, 폴백은 `Hips → Hips` 체인을 만들어 리타기팅 루트를 FK 체인에 가둔다.
 const TArray<FName> RequiredChains = {
-    TEXT("Root"), TEXT("Spine"), TEXT("LeftArm"), TEXT("RightArm"), TEXT("LeftLeg"), TEXT("RightLeg")
+    TEXT("Spine"), TEXT("LeftArm"), TEXT("RightArm"), TEXT("LeftLeg"), TEXT("RightLeg")
 };
 }
 

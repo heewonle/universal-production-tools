@@ -221,7 +221,7 @@
       "max": 13.0
     },
     "targets.Retrieve_DefaultWoman->X_Bot.segment_angle_median_deg": {
-      "max": 5.0
+      "max": 4.5
     },
     "targets.Retrieve_DefaultWoman->X_Bot.worst_segment_deg": {
       "max": 9.0

@@ -59,6 +59,20 @@ UIKRigDefinition* AcquireIKRig(const FString& AssetName)
 }
 }
 
+FName FUPTIKRigBuilder::ResolveMotionBone(const FReferenceSkeleton& Ref, const FName PelvisBone)
+{
+    int32 Index = Ref.FindBoneIndex(PelvisBone);
+    for (int32 Guard = 0; Index != INDEX_NONE && Guard < 8; ++Guard)
+    {
+        if (Ref.GetRefBonePose()[Index].GetTranslation().SizeSquared() > 1.0) break;  // 1cm 이상이면 이 본이 높이를 든다
+        const int32 Parent = Ref.GetParentIndex(Index);
+        if (Parent == INDEX_NONE) break;                     // 스켈레톤 루트
+        if (Ref.GetParentIndex(Parent) == INDEX_NONE) break;  // 부모가 루트면 더 올라가지 않는다
+        Index = Parent;
+    }
+    return Index == INDEX_NONE ? PelvisBone : Ref.GetBoneName(Index);
+}
+
 UIKRigDefinition* FUPTIKRigBuilder::CreateUniversalIKRig(USkeletalMesh* Mesh, FString& OutError)
 {
     if (!Mesh) { OutError = TEXT("Skeletal Mesh가 없습니다."); return nullptr; }
@@ -83,8 +97,11 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateUniversalIKRig(USkeletalMesh* Mesh, FS
         return nullptr;
     }
 
+    // Root 체인은 필수가 아니다. 엔진 Auto Characterizer도 Mixamo처럼 별도 루트 본이 없는 리그에서는
+    // Root 체인을 만들지 않는다(X_Bot 확인). 필수로 걸어 두면 그런 리그가 엔진 Rig을 못 쓰고
+    // 폴백으로 내려가고, 폴백은 `Hips → Hips` 체인을 만들어 리타기팅 루트를 FK 체인에 가둔다.
     const TArray<FName> RequiredChains = {
-        TEXT("Root"), TEXT("Spine"), TEXT("LeftArm"), TEXT("RightArm"), TEXT("LeftLeg"), TEXT("RightLeg")
+        TEXT("Spine"), TEXT("LeftArm"), TEXT("RightArm"), TEXT("LeftLeg"), TEXT("RightLeg")
     };
     for (const FName ChainName : RequiredChains)
     {
@@ -113,8 +130,13 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateIKRig(UUPTSkeletonProfile* Profile, FS
     FName RetargetRoot;
     if (!ResolveBone(Profile, TEXT("Pelvis"), RetargetRoot)) { OutError = TEXT("필수 Pelvis Mapping이 없습니다."); return nullptr; }
 
+    // Root 체인을 `Root → Pelvis`로 잡으면 **펠비스가 FK 체인 안에 들어간다.**
+    // FK 체인 리타기팅은 회전만 옮기므로 펠비스 이동이 레스트 포즈 값으로 덮이고,
+    // 그 결과 몸이 위아래로 전혀 움직이지 않아 발이 바닥에서 떴다.
+    // 엔진 Auto Characterizer는 `root → root`로 잡고 펠비스는 Pelvis Motion op에 맡긴다.
+    // 같은 메시(SKM_Manny)에 두 Rig을 각각 써서 확인했다 — 엔진 Rig은 진폭 11.2, 폴백은 0.00이었다.
     const TArray<FUPTChainSpec> Specs = {
-        {TEXT("Root"), TEXT("Root"), TEXT("Pelvis"), true},
+        {TEXT("Root"), TEXT("Root"), TEXT("Root"), true},
         {TEXT("Spine"), TEXT("Spine"), TEXT("Head"), true},
         {TEXT("LeftArm"), TEXT("LeftUpperArm"), TEXT("LeftHand"), true},
         {TEXT("RightArm"), TEXT("RightUpperArm"), TEXT("RightHand"), true},
@@ -153,10 +175,20 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateIKRig(UUPTSkeletonProfile* Profile, FS
 
     UIKRigController* Controller = UIKRigController::GetController(IKRig);
     if (!Controller || !Controller->SetSkeletalMesh(Mesh)) { OutError = TEXT("IK Rig에 Source Mesh를 설정하지 못했습니다."); return nullptr; }
-    if (!Controller->SetRetargetRoot(RetargetRoot)) { OutError = TEXT("Retarget Root 설정에 실패했습니다."); return nullptr; }
+    // 분석기의 Pelvis가 아니라 **실제로 높이를 드는 본**을 리타기팅 루트로 잡는다(위 헤더 주석 참고).
+    const FName MotionBone = ResolveMotionBone(Mesh->GetRefSkeleton(), RetargetRoot);
+    if (!Controller->SetRetargetRoot(MotionBone)) { OutError = TEXT("Retarget Root 설정에 실패했습니다."); return nullptr; }
 
     for (const FResolvedChain& Chain : Chains)
     {
+        // 리타기팅 루트를 FK 체인에 넣으면 그 본의 이동이 회전 전용 리타기팅에 덮여 사라진다.
+        // Mixamo처럼 루트와 펠비스가 같은 본이면 Root 체인이 바로 그 경우가 된다. 만들지 않는다.
+        if (Chain.Start == MotionBone && Chain.End == MotionBone)
+        {
+            UE_LOG(LogTemp, Log, TEXT("UPT_IKRIG 체인 %s는 리타기팅 루트(%s) 하나뿐이라 만들지 않습니다."),
+                *Chain.Name.ToString(), *MotionBone.ToString());
+            continue;
+        }
         const FName CreatedName = Controller->AddRetargetChain(Chain.Name, Chain.Start, Chain.End, NAME_None);
         if (CreatedName.IsNone()) { OutError = FString::Printf(TEXT("IK Rig 체인 %s 생성에 실패했습니다."), *Chain.Name.ToString()); return nullptr; }
     }

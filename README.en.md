@@ -287,6 +287,23 @@ from **which bone's rotation changes**).
 **Feet that hovered up to 19% of leg length now sit at 4%**, and not one angle moved — which is exactly
 what should happen when only translation is touched, and is the check that it was.
 
+**And the cause did turn up in the end.** Every comparison until then had been **confounded by using
+different meshes**. A switch that forces the fallback rig on the *same* mesh settled it in one run:
+engine rig 11.2, fallback rig **0.00**. Not the engine, not the retargeter — **our rig construction**.
+Diffing the two rigs showed it immediately: our `Root` chain ran `root → pelvis`, which **traps the
+pelvis inside an FK chain**, and FK chain retargeting carries rotation only, so the pelvis translation
+gets overwritten by the rest pose.
+
+Three fixes — shrink the `Root` chain to the root bone alone, pick the retarget root as the bone that
+**actually carries the body's height** (`CG` on the golem), and drop `Root` from the required-chain list
+(that requirement was **pushing Mixamo rigs off the engine path onto the fallback**). All three
+combinations now move the pelvis correctly, and **the post-process baker stands down and writes nothing.**
+
+In hindsight, the baker built as "fix the symptom since the cause is out of reach" is what opened the
+door: the **"which bone carries the height" rule** written for it became the core of the second fix, and
+the fact that the baker's numbers and the engine op's numbers **agree to the decimal** is the check that
+both are right.
+
 ## Layout
 
 ```

@@ -115,13 +115,20 @@ TArray<FAssetData> RetargetIntoSettingsFolder(
     return Results;
 }
 
+// 같은 메시로 '엔진 Characterize Rig'과 '자체 분석 Rig'을 비교하기 위한 스위치.
+// 메시가 다르면 비교가 오염되므로, 같은 메시에 폴백 경로를 강제할 수단이 필요하다.
+static TAutoConsoleVariable<int32> CVarForceFallbackRig(
+    TEXT("UPT.ForceFallbackRig"), 0,
+    TEXT("1이면 엔진 Auto Characterizer가 성공해도 자체 분석 Rig을 쓴다(비교용)."));
+
 bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRetargeter*& OutRetargeter, FString& OutError)
 {
     if (!SourceMesh || !TargetMesh) { OutError = TEXT("Source 또는 Target Skeletal Mesh가 없습니다."); return false; }
 
     const FString SourceOverride = FUPTSkeletonProfileBuilder::FindManualOverride(SourceMesh);
     const FString TargetOverride = FUPTSkeletonProfileBuilder::FindManualOverride(TargetMesh);
-    const bool bHasManualOverride = !SourceOverride.IsEmpty() || !TargetOverride.IsEmpty();
+    const bool bHasManualOverride = !SourceOverride.IsEmpty() || !TargetOverride.IsEmpty()
+        || CVarForceFallbackRig.GetValueOnAnyThread() != 0;
 
     // 알려진 UE/MetaHuman/Mixamo 휴머노이드는 엔진 Auto Characterizer가 가장 안정적이다. 사용자가 저장한 수동 보정값이 있으면 그것을 우선한다.
     FString AutoSourceError = TEXT("수동 보정값 우선");

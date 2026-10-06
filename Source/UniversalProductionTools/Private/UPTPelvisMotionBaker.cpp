@@ -1,5 +1,6 @@
 #include "UPTPelvisMotionBaker.h"
 
+#include "UPTIKRigBuilder.h"
 #include "UPTSkeletonAnalyzer.h"
 
 #include "Animation/AnimSequence.h"
@@ -31,32 +32,6 @@ FName FindPelvisBone(USkeletalMesh* Mesh)
         return *Found;
     }
     return NAME_None;
-}
-
-/**
- * 실제로 '몸 높이'를 드는 본을 고른다.
- *
- * 분석기가 Pelvis로 뽑은 본이 항상 높이를 들고 있지는 않다. Forest Golem은 계층이
- * `Root → CG → Pelvis`이고 **`Pelvis`의 로컬 이동이 (0,0,0)** 이다. 높이는 `CG`가 든다.
- * 실제로 리타기터도 `CG`의 회전을 구동하고 `Pelvis`는 건드리지 않는다.
- * 그런 본에 이동을 써 봐야 몸은 움직이지 않는다.
- *
- * 그래서 레퍼런스 포즈에서 로컬 이동이 거의 0인 동안 부모로 거슬러 올라간다.
- * UE 마네킹(`root → pelvis`, 로컬 z=95.9)이나 Mixamo(`Hips`가 최상위)는 그대로 유지된다.
- */
-FName ResolveMotionBone(const FReferenceSkeleton& Ref, const FName PelvisBone)
-{
-    int32 Index = Ref.FindBoneIndex(PelvisBone);
-    for (int32 Guard = 0; Index != INDEX_NONE && Guard < 8; ++Guard)
-    {
-        const FVector LocalOffset = Ref.GetRefBonePose()[Index].GetTranslation();
-        if (LocalOffset.SizeSquared() > 1.0) break;  // 1cm 이상이면 이 본이 높이를 든다
-        const int32 Parent = Ref.GetParentIndex(Index);
-        if (Parent == INDEX_NONE) break;                       // 스켈레톤 루트까지 왔다
-        if (Ref.GetParentIndex(Parent) == INDEX_NONE) break;    // 부모가 루트면 더 올라가지 않는다
-        Index = Parent;
-    }
-    return Index == INDEX_NONE ? PelvisBone : Ref.GetBoneName(Index);
 }
 
 /** 본에서 루트까지의 사슬(루트 → … → 본 순서). */
@@ -179,7 +154,7 @@ bool FUPTPelvisMotionBaker::BakeIfMissing(
     const FReferenceSkeleton& TargetRef = TargetMesh->GetRefSkeleton();
 
     // 대상은 '높이를 드는 본'에 써야 몸이 실제로 움직인다.
-    const FName TargetMotionBone = ResolveMotionBone(TargetRef, TargetPelvis);
+    const FName TargetMotionBone = FUPTIKRigBuilder::ResolveMotionBone(TargetRef, TargetPelvis);
     if (TargetMotionBone != TargetPelvis)
     {
         UE_LOG(LogUPTPelvisBake, Log, TEXT("UPT_PELVISBAKE '%s'의 로컬 이동이 0이라 부모 '%s'에 씁니다."),
