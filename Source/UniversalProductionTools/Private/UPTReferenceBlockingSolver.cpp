@@ -470,6 +470,13 @@ bool FUPTReferenceBlockingSolver::BuildPlan(const FUPTReferencePlan& ReferencePl
         Shot.SubjectScreenY = FMath::Clamp(static_cast<float>(ReferenceShot.SubjectScreenPosition.Y), 0.05f, 0.95f);
         ApplyShotFraming(Shot, ReferenceShot.ShotSize, ReferenceShot.CameraAngle, SubjectHeightCm, ReferenceShot.SubjectScreenSize.Y, OutPlan.AspectRatio);
         Shot.CameraMotion = ReferenceShot.CameraMotion;
+        Shot.bHasMotionAmount = ReferenceShot.MotionAmount.bHasAmount;
+        Shot.MotionScreenDX = ReferenceShot.MotionAmount.ScreenDX;
+        Shot.MotionScreenDY = ReferenceShot.MotionAmount.ScreenDY;
+        Shot.MotionBackgroundScale = ReferenceShot.MotionAmount.BackgroundScale;
+        Shot.MotionSubjectScale = ReferenceShot.MotionAmount.SubjectScale;
+        Shot.MotionPath = ReferenceShot.MotionAmount.Path;
+        Shot.MotionSteps = ReferenceShot.MotionAmount.Steps;
 
         float AnchorScreenHeight = ReferenceShot.SubjectScreenSize.Y;
         for (const FUPTReferenceSubject& ReferenceSubject : ReferenceShot.Subjects)

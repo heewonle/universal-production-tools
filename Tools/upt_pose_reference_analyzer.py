@@ -907,11 +907,28 @@ def classify_motion(pairs: list[dict], samples: list[dict]) -> tuple[str, dict]:
         half = len(values) // 2
         return float(np.median(values[-half:]) / np.median(values[:half]))
 
+    def full_span_ratio(values: list[float]) -> float | None:
+        """샷 **처음부터 끝까지**의 크기비. 분류에 쓰는 half_ratio와 목적이 다르다.
+
+        half_ratio는 앞 절반과 뒤 절반의 중앙값을 비교하므로 실제로는 샷의 **가운데 절반**만 잰다.
+        분류에는 그게 더 안전하지만(한 장의 잡음에 안 뒤집힌다), 크기를 그대로 쓰면 적게 나온다.
+        돌리 정답(거리 700 → 380, 비 1.842)에서 half_ratio는 1.427로 23% 낮게 나왔다.
+        log 크기를 시간에 대해 최소제곱 직선으로 맞춰 0~1 구간으로 외삽한다. 한 장이 튀어도
+        직선이 끌려가는 정도로만 영향을 받는다.
+        """
+        if len(values) < 3 or min(values) <= 0:
+            return None
+        t = np.linspace(0.0, 1.0, len(values))
+        slope = float(np.polyfit(t, np.log(values), 1)[0])
+        return float(math.exp(slope))
+
     subject_scale = half_ratio([s["main"].height_px for s in detected])
+    subject_scale_full = full_span_ratio([s["main"].height_px for s in detected])
     # 검출 박스 높이는 관절 기반 키보다 거칠지만 잡음의 원인이 달라, 두 값이 같은 방향으로 변할 때만 인물 크기 변화로 믿는다.
     box_scale = half_ratio([float(s["main"].box[3] - s["main"].box[1]) for s in detected])
     subject_dx = subject_xs[-1] - subject_xs[0] if len(subject_xs) >= 2 else None
     info.update(net_scale=round(net_scale, 3), net_tx=round(net_tx, 3), net_ty=round(net_ty, 3), path=round(path, 3),
+                subject_scale_full=None if subject_scale_full is None else round(subject_scale_full, 3),
                 subject_scale=None if subject_scale is None else round(subject_scale, 3),
                 box_scale=None if box_scale is None else round(box_scale, 3),
                 subject_dx=None if subject_dx is None else round(subject_dx, 3))
@@ -942,6 +959,35 @@ def classify_motion(pairs: list[dict], samples: list[dict]) -> tuple[str, dict]:
             return "tracking", info
         return ("pan" if abs(net_tx) >= abs(net_ty) else "tilt"), info
     return "static", info
+
+
+def motion_amount(motion: str, info: dict) -> dict:
+    """분류한 모션의 **크기**를 화면 비율로 내보낸다.
+
+    전에는 종류만 내보내고 크기는 시퀀스 빌더가 상수로 박아 넣었다(`pan`이면 무조건 25°).
+    레퍼런스가 10° 패닝이든 60° 패닝이든 결과가 같아서 "재현"이라 부르기 어려웠다.
+    크기는 이미 `classify_motion`이 계산해 두고 진단 정보로만 버리던 값이다.
+
+    각도(도)로 바꾸지 않고 **화면 비율로 남기는** 이유: 레퍼런스 카메라의 화각을 모른다.
+    같은 화면 이동량을 만들려면 생성하는 카메라의 화각으로 역산해야 하고, 그 화각은
+    언리얼 쪽이 알고 있다. 여기서는 측정한 그대로만 넘긴다.
+    """
+    if motion in ("", "static"):
+        return {}
+    amount = {
+        "screen_dx": round(float(info.get("net_tx") or 0.0), 4),
+        "screen_dy": round(float(info.get("net_ty") or 0.0), 4),
+        "background_scale": round(float(info.get("net_scale") or 1.0), 4),
+        "path": round(float(info.get("path") or 0.0), 4),
+        # 구간 수. 화면 이동을 각도로 되돌릴 때 **구간마다 변환해 더해야** 한다.
+        # 한 번에 변환하면 tan이 볼록해서 적게 나온다(패닝 정답 18°에서 15.96°, -11%).
+        "steps": int(info.get("pairs") or 1),
+    }
+    # 돌리 거리비는 샷 전체 구간 값을 쓴다(분류용 half_ratio는 가운데 절반만 잰다).
+    subject_scale = info.get("subject_scale_full") or info.get("subject_scale")
+    if subject_scale:
+        amount["subject_scale"] = round(float(subject_scale), 4)
+    return amount
 
 
 def classify_composition(main_x: float, subject_xs: list[float]) -> str:
@@ -1108,6 +1154,7 @@ def build_shot(shot_index: int, start: float, end: float, samples: list, pairs: 
         "shot_size": shot_size,
         "camera_angle": camera_angle,
         "camera_motion": motion,
+        "camera_motion_amount": motion_amount(motion, motion_info),
         "subject_screen_position": {"x": clamp01(focus_x), "y": clamp01(focus_y)},
         "subject_screen_size": {"width": clamp01(box_width), "height": clamp01(VISIBLE_BODY_RATIO[shot_size] * full_body_height)},
         "subjects": subjects,

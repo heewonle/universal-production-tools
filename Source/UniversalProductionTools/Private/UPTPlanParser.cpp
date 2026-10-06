@@ -51,6 +51,25 @@ bool FUPTPlanParser::Parse(const FString& JsonText, FUPTCinematicPlan& OutPlan, 
         ShotObject->TryGetStringField(TEXT("speaker"), Shot.Speaker); ShotObject->TryGetStringField(TEXT("dialogue"), Shot.Dialogue);
         ShotObject->TryGetStringField(TEXT("lip_sync_animation_id"), Shot.LipSyncAnimationId);
         ShotObject->TryGetStringField(TEXT("camera_motion"), Shot.CameraMotion);
+        // 레퍼런스에서 재어 온 모션 크기. 없으면 상수 폭으로 되돌아간다.
+        const TSharedPtr<FJsonObject>* MotionAmount = nullptr;
+        if (ShotObject->TryGetObjectField(TEXT("camera_motion_amount"), MotionAmount) && MotionAmount && MotionAmount->IsValid())
+        {
+            double DX = 0, DY = 0, Scale = 1, SubjectScale = 0, Path = 0;
+            (*MotionAmount)->TryGetNumberField(TEXT("screen_dx"), DX);
+            (*MotionAmount)->TryGetNumberField(TEXT("screen_dy"), DY);
+            (*MotionAmount)->TryGetNumberField(TEXT("background_scale"), Scale);
+            (*MotionAmount)->TryGetNumberField(TEXT("subject_scale"), SubjectScale);
+            (*MotionAmount)->TryGetNumberField(TEXT("path"), Path);
+            int32 Steps = 1; (*MotionAmount)->TryGetNumberField(TEXT("steps"), Steps);
+            Shot.MotionSteps = FMath::Max(1, Steps);
+            Shot.bHasMotionAmount = true;
+            Shot.MotionScreenDX = DX;
+            Shot.MotionScreenDY = DY;
+            Shot.MotionBackgroundScale = Scale > 0.0 ? Scale : 1.0;
+            Shot.MotionSubjectScale = SubjectScale;
+            Shot.MotionPath = Path;
+        }
         double Duration = 0, FocalLength = 50, Distance = 300, Height = 60, Side = 0;
         ShotObject->TryGetNumberField(TEXT("duration_seconds"), Duration); ShotObject->TryGetNumberField(TEXT("focal_length"), FocalLength);
         ShotObject->TryGetNumberField(TEXT("distance_cm"), Distance); ShotObject->TryGetNumberField(TEXT("height_cm"), Height); ShotObject->TryGetNumberField(TEXT("side_cm"), Side);
@@ -149,6 +168,17 @@ FString FUPTPlanParser::ToJson(const FUPTCinematicPlan& Plan)
         Object->SetNumberField(TEXT("focus_height"), Shot.FocusHeightRatio);
         Object->SetNumberField(TEXT("subject_screen_x"), Shot.SubjectScreenX); Object->SetNumberField(TEXT("subject_screen_y"), Shot.SubjectScreenY);
         Object->SetStringField(TEXT("camera_motion"), Shot.CameraMotion); Object->SetNumberField(TEXT("camera_roll"), Shot.CameraRollDegrees);
+        if (Shot.bHasMotionAmount)
+        {
+            TSharedRef<FJsonObject> MotionAmount = MakeShared<FJsonObject>();
+            MotionAmount->SetNumberField(TEXT("screen_dx"), Shot.MotionScreenDX);
+            MotionAmount->SetNumberField(TEXT("screen_dy"), Shot.MotionScreenDY);
+            MotionAmount->SetNumberField(TEXT("background_scale"), Shot.MotionBackgroundScale);
+            if (Shot.MotionSubjectScale > 0.0f) MotionAmount->SetNumberField(TEXT("subject_scale"), Shot.MotionSubjectScale);
+            MotionAmount->SetNumberField(TEXT("path"), Shot.MotionPath);
+            MotionAmount->SetNumberField(TEXT("steps"), Shot.MotionSteps);
+            Object->SetObjectField(TEXT("camera_motion_amount"), MotionAmount);
+        }
         TSharedRef<FJsonObject> Location = MakeShared<FJsonObject>();
         Location->SetNumberField(TEXT("x"), Shot.CameraLocation.X); Location->SetNumberField(TEXT("y"), Shot.CameraLocation.Y); Location->SetNumberField(TEXT("z"), Shot.CameraLocation.Z);
         Object->SetObjectField(TEXT("camera_location"), Location);

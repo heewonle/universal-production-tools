@@ -43,6 +43,25 @@ bool FUPTReferencePlanParser::Parse(const FString& Json, FUPTReferencePlan& OutP
         double Start = 0, End = 0, Confidence = 0;
         Object->TryGetNumberField(TEXT("start_seconds"), Start); Object->TryGetNumberField(TEXT("end_seconds"), End); Object->TryGetNumberField(TEXT("confidence"), Confidence);
         Shot.StartSeconds = Start; Shot.EndSeconds = End; Shot.Confidence = FMath::Clamp(static_cast<float>(Confidence), 0.0f, 1.0f);
+        // 모션 크기. 없으면 bHasAmount가 false로 남고 시퀀스 빌더가 상수 폭으로 되돌아간다.
+        const TSharedPtr<FJsonObject>* Amount = nullptr;
+        if (Object->TryGetObjectField(TEXT("camera_motion_amount"), Amount) && Amount && Amount->IsValid())
+        {
+            double DX = 0, DY = 0, Scale = 1, SubjectScale = 0, Path = 0;
+            (*Amount)->TryGetNumberField(TEXT("screen_dx"), DX);
+            (*Amount)->TryGetNumberField(TEXT("screen_dy"), DY);
+            (*Amount)->TryGetNumberField(TEXT("background_scale"), Scale);
+            (*Amount)->TryGetNumberField(TEXT("subject_scale"), SubjectScale);
+            (*Amount)->TryGetNumberField(TEXT("path"), Path);
+            int32 Steps = 1; (*Amount)->TryGetNumberField(TEXT("steps"), Steps);
+            Shot.MotionAmount.Steps = FMath::Max(1, Steps);
+            Shot.MotionAmount.bHasAmount = true;
+            Shot.MotionAmount.ScreenDX = DX;
+            Shot.MotionAmount.ScreenDY = DY;
+            Shot.MotionAmount.BackgroundScale = Scale > 0.0 ? Scale : 1.0;
+            Shot.MotionAmount.SubjectScale = SubjectScale;
+            Shot.MotionAmount.Path = Path;
+        }
         const TSharedPtr<FJsonObject>* Position = nullptr;
         if (Object->TryGetObjectField(TEXT("subject_screen_position"), Position) && Position && Position->IsValid())
         { double X = .5, Y = .5; (*Position)->TryGetNumberField(TEXT("x"), X); (*Position)->TryGetNumberField(TEXT("y"), Y); Shot.SubjectScreenPosition = FVector2D(X, Y); }
@@ -129,6 +148,17 @@ bool FUPTReferencePlanParser::ToJson(const FUPTReferencePlan& Plan, FString& Out
         Object->SetStringField(TEXT("shot_size"), Shot.ShotSize);
         Object->SetStringField(TEXT("camera_angle"), Shot.CameraAngle);
         Object->SetStringField(TEXT("camera_motion"), Shot.CameraMotion);
+        if (Shot.MotionAmount.bHasAmount)
+        {
+            TSharedRef<FJsonObject> Amount = MakeShared<FJsonObject>();
+            Amount->SetNumberField(TEXT("screen_dx"), Shot.MotionAmount.ScreenDX);
+            Amount->SetNumberField(TEXT("screen_dy"), Shot.MotionAmount.ScreenDY);
+            Amount->SetNumberField(TEXT("background_scale"), Shot.MotionAmount.BackgroundScale);
+            if (Shot.MotionAmount.SubjectScale > 0.0f) Amount->SetNumberField(TEXT("subject_scale"), Shot.MotionAmount.SubjectScale);
+            Amount->SetNumberField(TEXT("path"), Shot.MotionAmount.Path);
+            Amount->SetNumberField(TEXT("steps"), Shot.MotionAmount.Steps);
+            Object->SetObjectField(TEXT("camera_motion_amount"), Amount);
+        }
         Object->SetStringField(TEXT("composition"), Shot.Composition);
         Object->SetNumberField(TEXT("confidence"), Shot.Confidence);
         TSharedRef<FJsonObject> Position = MakeShared<FJsonObject>();

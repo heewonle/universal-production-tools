@@ -37,6 +37,45 @@ bool FUPTReferencePlanStrictValidationTest::RunTest(const FString& Parameters)
     Error.Reset(); TestFalse(TEXT("Overlapping shots rejected"), FUPTReferencePlanParser::Parse(Overlap, Parsed, Error)); return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUPTCameraMotionAmountTest, "UniversalProductionTools.CameraMotion.MeasuredAmount", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FUPTCameraMotionAmountTest::RunTest(const FString& Parameters)
+{
+    // 모션 정답 영상(Saved/.../motion_*)은 에디터가 **알려진 크기로** 만든 것이라 추정값을 정답과 직접 비교할 수 있다.
+    //   MT_02_Pan     yaw -9° → +9°      = 18.0°,   35mm 렌즈
+    //   MT_03_DollyIn 거리 700 → 380cm   = 비 1.842
+    //   MT_04_ZoomIn  초점 30 → 55mm     = 비 1.833
+    // 아래 측정값은 그 영상을 분석기에 넣어 나온 실제 출력이다(2026-10-07).
+    {
+        // 패닝: 배경이 화면 가로로 -0.278 움직였고 측정 구간은 7개였다.
+        const float Degrees = FMath::Abs(UPTFraming::ScreenDeltaToRotationDegrees(-0.278f, 35.0f, UPTFraming::SensorWidthMm, 7));
+        TestTrue(FString::Printf(TEXT("패닝 18° 추정 %.2f° (오차 10%% 안)"), Degrees), FMath::Abs(Degrees - 18.0f) < 1.8f);
+        // 구간을 나누지 않으면 더 적게 나온다. 그 차이가 실제로 있다는 것을 고정한다.
+        const float OneStep = FMath::Abs(UPTFraming::ScreenDeltaToRotationDegrees(-0.278f, 35.0f, UPTFraming::SensorWidthMm, 1));
+        TestTrue(TEXT("구간별 합산이 한 번에 환산한 값보다 크다"), Degrees > OneStep + 0.2f);
+        // 예전 상수는 25°였다. 측정값이 그보다 정답에 가깝다.
+        TestTrue(TEXT("측정값이 상수 25°보다 정답에 가깝다"), FMath::Abs(Degrees - 18.0f) < FMath::Abs(25.0f - 18.0f));
+    }
+    {
+        // 돌리: 인물 크기비 1.688 → 끝 거리 = 700 / 1.688. 정답 380cm.
+        const float EndDistance = 700.0f / 1.688f;
+        TestTrue(FString::Printf(TEXT("돌리 끝 거리 %.0fcm (정답 380cm, 오차 10%% 안)"), EndDistance), FMath::Abs(EndDistance - 380.0f) < 38.0f);
+        TestTrue(TEXT("측정값이 상수 0.65배(455cm)보다 정답에 가깝다"), FMath::Abs(EndDistance - 380.0f) < FMath::Abs(700.0f * 0.65f - 380.0f));
+    }
+    {
+        // 줌: 배경 배율 1.633이 곧 초점거리 비. 정답 55mm.
+        const float EndFocal = 30.0f * 1.633f;
+        TestTrue(FString::Printf(TEXT("줌 끝 초점거리 %.1fmm (정답 55mm, 오차 12%% 안)"), EndFocal), FMath::Abs(EndFocal - 55.0f) < 6.6f);
+        TestTrue(TEXT("측정값이 상수 1.45배(43.5mm)보다 정답에 가깝다"), FMath::Abs(EndFocal - 55.0f) < FMath::Abs(30.0f * 1.45f - 55.0f));
+    }
+    {
+        // 같은 화면 이동이라도 렌즈가 좁으면 회전각이 작아야 한다(화각이 좁으므로).
+        const float Wide = UPTFraming::ScreenDeltaToRotationDegrees(0.2f, 18.0f, UPTFraming::SensorWidthMm, 1);
+        const float Tele = UPTFraming::ScreenDeltaToRotationDegrees(0.2f, 85.0f, UPTFraming::SensorWidthMm, 1);
+        TestTrue(TEXT("광각이 망원보다 큰 회전각"), Wide > Tele * 3.0f);
+    }
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUPTReferenceRoleCapacityTest, "UniversalProductionTools.ReferencePlan.RoleCapacity", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FUPTReferenceRoleCapacityTest::RunTest(const FString& Parameters)
 {

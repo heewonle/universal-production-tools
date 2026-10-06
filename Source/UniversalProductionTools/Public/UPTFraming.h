@@ -18,6 +18,19 @@ constexpr float SensorWidthMm = 36.0f;
 
 float GetSensorHeightMm(float AspectRatio);
 float GetFieldOfViewDegrees(float SensorSizeMm, float FocalLengthMm);
+
+/**
+ * 화면에서 잰 이동 비율을 카메라 회전각(도)으로 되돌린다.
+ *
+ * 정지한 배경이 화면에서 ScreenDelta(프레임 폭/높이 비율)만큼 움직였다면 회전각 α는
+ * tan α = ScreenDelta · 2 · tan(화각/2) 이다. 레퍼런스 카메라의 화각은 몰라도 되고,
+ * **같은 화면 이동을 만드는** 우리 카메라의 화각만 있으면 된다.
+ *
+ * Steps는 측정 구간 수다. 측정값은 구간별 이동량의 **합**이고 tan은 볼록하므로
+ * Σtan(αᵢ) < tan(Σαᵢ)다. 한 번에 환산하면 정답 18° 패닝이 15.96°로 나왔다(-11%).
+ * 구간마다 환산해 더하면 16.37°(-9%)가 된다.
+ */
+float ScreenDeltaToRotationDegrees(float ScreenDelta, float FocalLengthMm, float SensorSizeMm, int32 Steps);
 FBox GetSubjectBounds(const AActor* Actor);
 FVector GetFocusPoint(const AActor* Actor, float HeightRatio);
 void GetSubjectBasis(const AActor* Actor, FVector& OutForward, FVector& OutRight);

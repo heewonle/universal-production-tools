@@ -11,6 +11,8 @@ UE 5.7용 Editor 전용 프로토타입 플러그인입니다.
 - 각 Shot의 Cine Camera Actor와 Camera Cut Track을 포함한 Level Sequence 생성
 - 레벨에서 선택한 Actor를 이름 기반 등장인물 컨텍스트로 전달
 - Subject Actor 기준 거리·높이·측면 오프셋 카메라 프레이밍
+- 레퍼런스 영상에서 잰 **카메라 모션 크기**를 시퀀스 키로 재현(패닝·틸트 각도, 줌 배율, 돌리 거리, 핸드헬드 폭).
+  측정값이 없는 플랜(LLM 생성, 구버전 JSON)은 예전 상수 폭으로 되돌아갑니다.
 - Look-at Actor의 Bounds 중심을 향하는 카메라 회전 자동 계산
 - Visibility Sphere Sweep 기반 벽·지형 내부 카메라 보정
 - 선택한 Animation/Audio 에셋을 안전한 임시 ID로 LLM에 제공

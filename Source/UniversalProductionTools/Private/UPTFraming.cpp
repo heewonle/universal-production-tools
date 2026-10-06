@@ -23,6 +23,13 @@ float GetFieldOfViewDegrees(const float SensorSizeMm, const float FocalLengthMm)
     return FMath::RadiansToDegrees(2.0f * FMath::Atan(SensorSizeMm / (2.0f * FMath::Max(1.0f, FocalLengthMm))));
 }
 
+float ScreenDeltaToRotationDegrees(const float ScreenDelta, const float FocalLengthMm, const float SensorSizeMm, const int32 Steps)
+{
+    const float TanHalf = FMath::Tan(FMath::DegreesToRadians(GetFieldOfViewDegrees(SensorSizeMm, FocalLengthMm)) * 0.5f);
+    const int32 SafeSteps = FMath::Max(1, Steps);
+    return SafeSteps * FMath::RadiansToDegrees(FMath::Atan(ScreenDelta / SafeSteps * 2.0f * TanHalf));
+}
+
 FBox GetSubjectBounds(const AActor* Actor)
 {
     if (!Actor) return FBox(ForceInit);

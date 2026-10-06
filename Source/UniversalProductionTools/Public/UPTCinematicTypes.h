@@ -33,6 +33,15 @@ struct FUPTCinematicShot
     UPROPERTY() float HeightCm = 60.0f;
     UPROPERTY() float SideCm = 0.0f;
     UPROPERTY() FString CameraMotion;
+    // 레퍼런스에서 재어 온 모션 크기(화면 비율). 0/1 기본값이면 상수 폭으로 되돌아간다.
+    // 각도가 아니라 화면 비율인 이유는 FUPTCameraMotionAmount 주석 참고.
+    UPROPERTY() bool bHasMotionAmount = false;
+    UPROPERTY() float MotionScreenDX = 0.0f;
+    UPROPERTY() float MotionScreenDY = 0.0f;
+    UPROPERTY() float MotionBackgroundScale = 1.0f;
+    UPROPERTY() float MotionSubjectScale = 0.0f;
+    UPROPERTY() float MotionPath = 0.0f;
+    UPROPERTY() int32 MotionSteps = 1;
     UPROPERTY() float CameraRollDegrees = 0.0f;
     UPROPERTY() float SubjectScreenX = 0.5f;
     UPROPERTY() float SubjectScreenY = 0.5f;
