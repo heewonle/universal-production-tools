@@ -50,7 +50,7 @@ Tools/eval/
   run_regression.py         run every suite, compare against baseline.json
 ```
 
-**12 suites** currently run. A sample:
+**13 suites** currently run. A sample:
 
 | Suite | What it protects | Current |
 |---|---|---|
@@ -60,6 +60,7 @@ Tools/eval/
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
 | `retarget` | does retargeting preserve the motion (2 sources x 3 targets, 19 pairs) | 0.1° median angle |
+| `motion_roundtrip` | does the **generated** sequence carry the reference's camera-motion magnitude | 0.014 screen error |
 
 ## What the apparatus actually found
 
@@ -389,6 +390,52 @@ discriminating. The contact metrics exist precisely because angles were found no
 and they just did their job.
 → `UPT.FKOneToOne` stays off by default and remains available as a switch. Getting both would mean
 pairing `One to One` with a floor-constraint or speed-planting op and measuring that separately.
+
+## Camera motion: the type was reproduced, the magnitude was a constant
+
+Found while auditing what the plugin is actually worth. The motion **type** is classified correctly
+from the reference (5/5 on the ground-truth video), but the **magnitude** used when building the
+sequence was hard-coded — `pan` always meant 25°, `dolly_in` always meant distance ×0.65. A 10°
+reference pan and a 60° one produced the same result.
+
+The numbers needed were **already being computed and thrown away as diagnostics** (background
+translation and scale, subject size ratio, accumulated path). They now travel in the plan, as screen
+ratios rather than angles: the reference camera's field of view is unknown, but the goal is to produce
+the same on-screen movement, so the field of view of the camera **we generate** is what matters.
+
+The ground-truth video was made by the editor at known magnitudes, so it could be compared directly —
+and **two mistakes surfaced.** Screen translation was converted to an angle in one step (tan is
+convex, so 18° came out as 15.96°; it has to be converted per interval and summed), and the dolly
+distance ratio used the classifier's value, which only measures the middle half of the shot (23% low).
+
+| quantity | truth | after the fix | old constant |
+|---|---|---|---|
+| pan end angle | 18.0° | **16.4° (−9%)** | 25.0° (+39%) |
+| dolly end distance | 380cm | **415cm (+9%)** | 455cm (+20%) |
+| zoom end focal length | 55mm | **49.0mm (−11%)** | 43.5mm (−21%) |
+
+**A suite that re-measures the generated result was added too.** Of 13 suites only `retarget` measured
+output, which is why "right type, constant magnitude" kept passing. The E2E captured one frame per
+shot; motion shots now capture the end frame as well, with the end camera resolved by the **same
+function** the sequence builder uses — implementing it twice would mean the check measures something
+other than what is built.
+
+The pixel path failed on all four shots: `L_SlotArena` has no background features (the same reason the
+ground-truth capture script spawns temporary cubes). So a geometric path was added, re-projecting
+static world points through the generated camera. That measurement was wrong once too — taking scale
+from "spread about the screen centre" reported a scale change for a **pure rotation** (2.33× on a 16° pan).
+
+| shot | generated | reference measurement | difference |
+|---|---|---|---|
+| pan | dx −0.2915 | −0.278 | **0.0135** |
+| dolly | subject scale 1.6875 | 1.688 | **×0.9997** |
+| zoom | background scale 1.633 | 1.633 | **×1.0000** |
+
+What this suite guarantees is not accuracy but **self-consistency of the chain**. Accuracy is measured
+against the ground-truth video above; they are different claims and both are needed. Tilt has no shot
+in the ground-truth video, so **its sign is unverified**, and orbit radius cannot be separated from a
+lateral move by screen displacement alone, so it keeps its constant.
+→ [CAMERA_MOTION.md](Docs/CAMERA_MOTION.md)
 
 ### The IK pass had been running empty the whole time
 

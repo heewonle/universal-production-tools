@@ -17,7 +17,8 @@ if TOOLS_DIR not in sys.path:
 # 데이터셋별 폴더 이름 패턴. 앞쪽 패턴이 우선하며, 초기 구도 정답지는 접두사 없이 날짜로만 저장돼 있다.
 DATASET_PATTERNS = {
     "framing": ["framing_*", "20[0-9][0-9][0-9][0-9][0-9][0-9]_*"],
-    "motion": ["motion_*"],
+    # motion_* 로 두면 아래 motion_roundtrip_* 까지 잡아 모션 영상 스위트가 엉뚱한 폴더를 읽는다.
+    "motion": ["motion_2*"],
     "size": ["size_2*"],
     "angle_train": ["angle_2*"],
     "angle_val": ["angleval_*"],
@@ -27,6 +28,7 @@ DATASET_PATTERNS = {
     "bodypose": ["bodypose_*"],
     "height": ["height_*"],
     "retarget": ["retarget_*"],
+    "motion_roundtrip": ["motion_roundtrip_*"],
     "peasant_video": ["peasant_video_*"],
 }
 

@@ -124,6 +124,28 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def measure_generated_motion(start_path: str, end_path: str, person_boxes) -> dict | None:
+    """생성된 시작·끝 프레임에서 **카메라가 실제로 얼마나 움직였는지** 되잰다.
+
+    레퍼런스 분석과 **같은 추정기**(배경 특징점 + RANSAC 어파인)를 쓴다. 다른 방법으로 재면
+    두 수치가 같은 단위가 아니게 되고, 그러면 비교가 아무것도 보장하지 않는다.
+
+    이게 없으면 모션 크기 재현은 회귀로 보호되지 않는다. 실제로 시작 프레임 한 장만 찍고 있었고,
+    그래서 "모션 종류는 맞는데 크기는 상수"인 상태가 오래 드러나지 않았다.
+    """
+    def load(path: str):
+        if not path or not os.path.isfile(path):
+            return None
+        return cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
+
+    start, end = load(start_path), load(end_path)
+    if start is None or end is None:
+        return None
+    # 인물은 카메라와 함께 움직이지 않으므로 특징점에서 뺀다(레퍼런스 분석과 같은 처리).
+    boxes = [list(person.box) for person in person_boxes] if person_boxes else []
+    return analyzer.background_motion(start, end, boxes, boxes)
+
+
 def main() -> int:
     args = parse_args()
     with open(args.reference, encoding="utf-8") as handle:
@@ -167,7 +189,8 @@ def main() -> int:
     rows, scores = [], []
     reference_shots = reference.get("shots", [])
     for index, (entry, image, raw, person_boxes) in enumerate(captures):
-        row = {"name": entry.get("name", f"Shot_{index + 1:02d}"), "image": entry["image"]}
+        row = {"name": entry.get("name", f"Shot_{index + 1:02d}"), "image": entry["image"],
+               "camera_motion": entry.get("camera_motion", "")}
         ref = reference_shots[index] if index < len(reference_shots) else None
         if ref is None or not ref.get("subject_role"):
             row.update(status="skipped", note="레퍼런스 샷에 인물이 없어 비교하지 않음")
@@ -239,8 +262,44 @@ def main() -> int:
             error_x=round(focus_x - ref_x, 3), error_y=round(focus_y - ref_y, 3),
             height_ratio=None if height_ratio is None else round(height_ratio, 3),
             reference_size=reference_size, render_size=analyzer.classify_shot_size(render_height),
-            note="모션 샷은 시작 프레임 기준 비교" if moving else "",
+            note="" if not moving else ("모션 끝 프레임까지 비교" if entry.get("end_image") else "모션 샷은 시작 프레임 기준 비교"),
         )
+        if moving and entry.get("end_image"):
+            generated = measure_generated_motion(entry.get("image", ""), entry["end_image"], people)
+            expected = (ref or {}).get("camera_motion_amount") or {}
+            if generated is not None:
+                row["motion_generated"] = {k: round(float(generated[k]), 4) for k in ("tx", "ty", "scale")}
+                if expected:
+                    # 레퍼런스에서 잰 값과 생성 결과에서 되잰 값의 차. 같은 추정기로 잰 같은 단위다.
+                    row["motion_dx_error"] = round(abs(generated["tx"] - float(expected.get("screen_dx", 0.0))), 4)
+                    row["motion_dy_error"] = round(abs(generated["ty"] - float(expected.get("screen_dy", 0.0))), 4)
+                    ref_scale = float(expected.get("background_scale", 1.0)) or 1.0
+                    row["motion_scale_ratio"] = round(float(generated["scale"]) / ref_scale, 4)
+            else:
+                row["motion_generated"] = None
+                row["motion_note"] = "끝 프레임에서 배경 특징점을 찾지 못했습니다"
+            # 픽셀로 못 재는 레벨(배경에 무늬가 없는 경우)에서는 엔진이 기하로 잰 값을 쓴다.
+            # 생성된 카메라로 정적 월드 점을 다시 투영한 값이라 레퍼런스와 같은 화면 비율 단위다.
+            geometry = entry.get("generated_motion_geometry") or {}
+            if expected and geometry:
+                motion = entry.get("camera_motion")
+                row["motion_source"] = "pixels" if generated is not None else "geometry"
+                if motion in ("pan", "tilt", "truck_left", "truck_right", "tracking", "pedestal", "handheld", "orbit"):
+                    got_dx, got_dy = geometry.get("background_dx"), geometry.get("background_dy")
+                    if got_dx is not None:
+                        row["motion_dx_error"] = round(abs(got_dx - float(expected.get("screen_dx", 0.0))), 4)
+                        row["motion_dy_error"] = round(abs(got_dy - float(expected.get("screen_dy", 0.0))), 4)
+                elif motion in ("zoom_in", "zoom_out"):
+                    got = geometry.get("background_scale")
+                    want = float(expected.get("background_scale", 1.0)) or 1.0
+                    if got:
+                        row["motion_scale_ratio"] = round(float(got) / want, 4)
+                elif motion in ("dolly_in", "dolly_out"):
+                    got = geometry.get("subject_scale")
+                    want = float(expected.get("subject_scale", 1.0)) or 1.0
+                    if got:
+                        row["motion_scale_ratio"] = round(float(got) / want, 4)
+                row["motion_geometry"] = {k: round(float(v), 4) for k, v in geometry.items()}
         foreground = []
         if ref.get("over_the_shoulder"):
             row["over_shoulder_expected"] = ref["over_the_shoulder"]["side"]
@@ -269,9 +328,17 @@ def main() -> int:
                 cv2.rectangle(canvas, (int(f["x0"] * image_w), int(f["y0"] * image_h)), (int(f["x1"] * image_w) - 1, int(f["y1"] * image_h) - 1), (255, 0, 255), 3)
             analyzer.write_image(os.path.join(args.debug_dir, f"{row['name']}_verify.jpg"), canvas)
 
+    motion_dx = [r["motion_dx_error"] for r in rows if r.get("motion_dx_error") is not None]
+    motion_scale = [abs(math.log(r["motion_scale_ratio"])) for r in rows
+                    if r.get("motion_scale_ratio") not in (None, 0)]
     report = {
         "overall_score": round(float(np.mean(scores)), 1) if scores else 0.0,
         "compared_shots": len(scores),
+        # 모션 크기 재현 오차. 화면 비율 단위이고, 비교 대상이 없으면 None이다.
+        "motion_shots_compared": len(motion_dx),
+        "motion_dx_error_median": round(float(np.median(motion_dx)), 4) if motion_dx else None,
+        "motion_dx_error_worst": round(float(max(motion_dx)), 4) if motion_dx else None,
+        "motion_scale_log_error_median": round(float(np.median(motion_scale)), 4) if motion_scale else None,
         "render_calibration": calibration,
         "output_directory": os.path.dirname(os.path.abspath(args.manifest)),
         "shots": rows,

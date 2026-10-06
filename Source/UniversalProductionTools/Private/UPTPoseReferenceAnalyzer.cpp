@@ -361,7 +361,9 @@ void FUPTPoseReferenceAnalyzer::VerifyGeneratedCinematic(const FUPTCinematicPlan
     Capture->bCaptureEveryFrame = false;
     Capture->bCaptureOnMovement = false;
 
-    // 샷 시작 시점의 카메라(시퀀스 생성과 같은 프레이밍 계산)로 캡처한다. 모션 샷은 시작 프레임 기준 비교가 된다.
+    // 샷 시작 시점의 카메라(시퀀스 생성과 같은 프레이밍 계산)로 캡처한다.
+    // 모션 샷은 **끝 시점도 한 장 더** 찍는다. 시작 한 장만으로는 카메라가 얼마나 움직였는지
+    // 생성 결과에서 되잴 수 없고, 그러면 모션 크기 재현이 회귀로 보호되지 않는다.
     TArray<TSharedPtr<FJsonValue>> Entries;
     // 샷별 액터 배치(ActorPlacements)는 시퀀스 재생 때만 적용되므로, 캡처하는 동안만 적용했다가 끝나면 원래 자리로 되돌린다.
     TMap<TWeakObjectPtr<AActor>, FTransform> OriginalTransforms;
@@ -393,6 +395,84 @@ void FUPTPoseReferenceAnalyzer::VerifyGeneratedCinematic(const FUPTCinematicPlan
         Entry->SetStringField(TEXT("name"), Shot.Name);
         Entry->SetStringField(TEXT("image"), FPaths::ConvertRelativePathToFull(FPaths::Combine(OutputDirectory, FileName)));
         Entry->SetStringField(TEXT("camera_motion"), Shot.CameraMotion);
+        if (!Shot.CameraMotion.IsEmpty() && Shot.CameraMotion != TEXT("static"))
+        {
+            // 끝 카메라는 시퀀스 빌더가 키를 넣을 때 쓰는 것과 **같은 함수**로 구한다.
+            FVector EndLocation;
+            FRotator EndRotation;
+            UPTFraming::ResolveShotCameraEnd(World, Shot, Plan.AspectRatio, SceneActors, Location, Rotation, EndLocation, EndRotation);
+            const float EndFocalLength = UPTFraming::ResolveShotEndFocalLength(Shot);
+            CaptureActor->SetActorLocationAndRotation(EndLocation, EndRotation);
+            Capture->FOVAngle = UPTFraming::GetFieldOfViewDegrees(UPTFraming::SensorWidthMm, EndFocalLength);
+            for (int32 Warmup = 0; Warmup < 3; ++Warmup) Capture->CaptureScene();
+            const FString EndFileName = FString::Printf(TEXT("shot_%02d_end.png"), Index + 1);
+            UKismetRenderingLibrary::ExportRenderTarget(World, RenderTarget, OutputDirectory, EndFileName);
+            Entry->SetStringField(TEXT("end_image"), FPaths::ConvertRelativePathToFull(FPaths::Combine(OutputDirectory, EndFileName)));
+            Entry->SetNumberField(TEXT("end_focal_length"), EndFocalLength);
+
+            // 픽셀로만 재면 **배경에 특징이 없는 레벨에서 아무것도 못 잰다**(여기 L_SlotArena가 그렇다.
+            // 정답 촬영 스크립트가 임시 배경 큐브를 세우는 이유도 같다). 그래서 기하로도 잰다.
+            // 시작 카메라 기준으로 정적 월드 점을 잡고 **생성된 끝 카메라**에 다시 투영해, 화면에서
+            // 얼마나 밀렸는지 본다. 레퍼런스에서 잰 screen_dx와 같은 단위가 된다.
+            // 두 깊이에서 잰다 — 먼 점은 배경(패닝·줌), 피사체 거리 점은 시차가 섞인 값(돌리)이다.
+            auto MeasureScreenShift = [&](const float DepthCm, double& OutDX, double& OutDY, double& OutScale) -> bool
+            {
+                const FVector Forward = Rotation.Vector();
+                const FVector Right = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+                const FVector Up = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Z);
+                const float TanHalfH = FMath::Tan(FMath::DegreesToRadians(UPTFraming::GetFieldOfViewDegrees(UPTFraming::SensorWidthMm, Shot.FocalLength)) * 0.5f);
+                const float TanHalfV = FMath::Tan(FMath::DegreesToRadians(UPTFraming::GetFieldOfViewDegrees(UPTFraming::GetSensorHeightMm(Plan.AspectRatio), Shot.FocalLength)) * 0.5f);
+                // 화면 (±0.25, ±0.25)에 해당하는 네 점을 DepthCm 거리에 둔다.
+                const double Offsets[4][2] = {{-0.25, 0.0}, {0.25, 0.0}, {0.0, -0.25}, {0.0, 0.25}};
+                double SumDX = 0.0, SumDY = 0.0;
+                int32 Valid = 0;
+                // 배율은 **두 점 사이 거리**의 비로 잰다. 화면 중앙에서 떨어진 정도로 재면
+                // 순수 회전에서도 배율이 바뀐 것처럼 나온다(16° 패닝에서 2.33배로 찍혔다).
+                FVector2D StartLeft, StartRight, EndLeft, EndRight;
+                bool bHaveSeparation = false;
+                for (const double (&Offset)[2] : Offsets)
+                {
+                    const FVector WorldPoint = Location + Forward * DepthCm
+                        + Right * (Offset[0] * 2.0 * TanHalfH * DepthCm)
+                        + Up * (-Offset[1] * 2.0 * TanHalfV * DepthCm);
+                    FVector2D StartScreen, EndScreen;
+                    if (!UPTFraming::ProjectToScreen(Location, Rotation, WorldPoint, Shot.FocalLength, Plan.AspectRatio, StartScreen)) continue;
+                    if (!UPTFraming::ProjectToScreen(EndLocation, EndRotation, WorldPoint, EndFocalLength, Plan.AspectRatio, EndScreen)) continue;
+                    SumDX += EndScreen.X - StartScreen.X;
+                    SumDY += EndScreen.Y - StartScreen.Y;
+                    if (Valid == 0) { StartLeft = StartScreen; EndLeft = EndScreen; }
+                    else if (Valid == 1) { StartRight = StartScreen; EndRight = EndScreen; bHaveSeparation = true; }
+                    ++Valid;
+                }
+                if (Valid == 0) return false;
+                OutDX = SumDX / Valid;
+                OutDY = SumDY / Valid;
+                const double StartSeparation = bHaveSeparation ? FMath::Abs(StartRight.X - StartLeft.X) : 0.0;
+                const double EndSeparation = bHaveSeparation ? FMath::Abs(EndRight.X - EndLeft.X) : 0.0;
+                OutScale = StartSeparation > KINDA_SMALL_NUMBER ? EndSeparation / StartSeparation : 1.0;
+                return true;
+            };
+            const float SubjectDepth = FMath::Max(50.0f, Shot.DistanceCm);
+            double DX = 0, DY = 0, Scale = 1;
+            TSharedRef<FJsonObject> Geometry = MakeShared<FJsonObject>();
+            if (MeasureScreenShift(SubjectDepth * 20.0f, DX, DY, Scale))
+            {
+                Geometry->SetNumberField(TEXT("background_dx"), DX);
+                Geometry->SetNumberField(TEXT("background_dy"), DY);
+                Geometry->SetNumberField(TEXT("background_scale"), Scale);
+            }
+            if (MeasureScreenShift(SubjectDepth, DX, DY, Scale))
+            {
+                Geometry->SetNumberField(TEXT("subject_dx"), DX);
+                Geometry->SetNumberField(TEXT("subject_dy"), DY);
+                Geometry->SetNumberField(TEXT("subject_scale"), Scale);
+            }
+            Entry->SetObjectField(TEXT("generated_motion_geometry"), Geometry);
+            // 되돌려 놓는다. 아래의 어깨 너머 캡처가 시작 카메라를 쓴다.
+            CaptureActor->SetActorLocationAndRotation(Location, Rotation);
+            Capture->FOVAngle = UPTFraming::GetFieldOfViewDegrees(UPTFraming::SensorWidthMm, Shot.FocalLength);
+            for (int32 Warmup = 0; Warmup < 3; ++Warmup) Capture->CaptureScene();
+        }
         // 주 피사체 Actor의 조준점이 이 캡처 화면의 어디에 오는지 알려 주면, 검증 스크립트가 여러 인물 중 실제 주 피사체를 고른다.
         const TWeakObjectPtr<AActor>* SubjectPtr = SceneActors.Find(Shot.Subject);
         FVector2D SubjectScreen;
@@ -476,6 +556,17 @@ void FUPTPoseReferenceAnalyzer::VerifyGeneratedCinematic(const FUPTCinematicPlan
             {
                 Error = FString::Printf(TEXT("구도 검증 실패 (code %d): %s"), ReturnCode, *(StdErr.IsEmpty() ? StdOut : StdErr).Right(1000));
             }
+        }
+        // 회귀 검사가 쓸 수 있도록 다른 스위트의 정답 데이터와 **같은 자리**에도 남긴다.
+        // 리포트 원본은 플랜 옆에 생기는데, 플랜 위치는 매번 달라 스위트가 찾을 수 없다.
+        if (Error.IsEmpty() && !Report.IsEmpty())
+        {
+            const FString SuiteDirectory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UniversalProductionTools"),
+                TEXT("GroundTruth"), TEXT("motion_roundtrip_") + FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S")));
+            IFileManager::Get().MakeDirectory(*SuiteDirectory, true);
+            // 기본 인코딩은 UTF-16이라 파이썬 json이 읽지 못한다(0xff로 시작해 바로 터졌다).
+            FFileHelper::SaveStringToFile(Report, *FPaths::Combine(SuiteDirectory, TEXT("verify_report.json")),
+                FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
         }
         bPoseAnalysisRunning = false;
         AsyncTask(ENamedThreads::GameThread, [Completion, Report, Error]()

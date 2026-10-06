@@ -43,4 +43,17 @@ void DecomposeCameraOffset(const AActor* Subject, float HeightRatio, const FVect
     float& OutDistanceCm, float& OutSideCm, float& OutHeightCm);
 void ResolveShotCamera(UWorld* World, const FUPTCinematicShot& Shot, float AspectRatio,
     const TMap<FString, TWeakObjectPtr<AActor>>& SceneActors, FVector& OutLocation, FRotator& OutRotation);
+
+/**
+ * 모션 샷의 **끝 시점** 카메라. 시작 카메라에 레퍼런스에서 잰 모션 크기를 적용한 결과다.
+ *
+ * 시퀀스 빌더가 키를 넣을 때와 생성 결과를 되재는 검증이 **같은 계산을 쓰도록** 여기에 둔다.
+ * 따로 구현하면 검증이 빌더와 다른 것을 재게 되고, 그러면 라운드트립이 아무것도 보장하지 않는다.
+ */
+void ResolveShotCameraEnd(UWorld* World, const FUPTCinematicShot& Shot, float AspectRatio,
+    const TMap<FString, TWeakObjectPtr<AActor>>& SceneActors,
+    const FVector& StartLocation, const FRotator& StartRotation, FVector& OutLocation, FRotator& OutRotation);
+
+/** 모션 샷의 끝 시점 초점거리(줌만 바뀐다). 줌이 아니면 시작값 그대로. */
+float ResolveShotEndFocalLength(const FUPTCinematicShot& Shot);
 }

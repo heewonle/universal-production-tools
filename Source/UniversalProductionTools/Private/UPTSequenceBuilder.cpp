@@ -41,91 +41,6 @@
 
 namespace
 {
-void ResolveCameraEndTransform(
-    UWorld* World,
-    const FUPTCinematicShot& Shot,
-    const float AspectRatio,
-    const TMap<FString, TWeakObjectPtr<AActor>>& SceneActors,
-    const FVector& StartLocation,
-    const FRotator& StartRotation,
-    FVector& OutLocation,
-    FRotator& OutRotation)
-{
-    OutLocation = StartLocation;
-    OutRotation = StartRotation;
-    if (Shot.CameraMotion.IsEmpty() || Shot.CameraMotion == TEXT("static")) return;
-
-    // 화면에서 잰 이동 비율을 **생성하는 카메라의 화각으로** 각도로 되돌린다.
-    // 레퍼런스 카메라의 화각은 모르지만, 같은 화면 이동을 만드는 것이 목적이므로 알 필요가 없다.
-    // 정지한 배경이 화면 가로로 Dx(프레임 폭 비율)만큼 움직였다면 회전각 α는 tan α = Dx·2·tan(hfov/2)이다.
-    //
-    // 한 번에 환산하면 안 된다. 측정값은 **구간별 이동량의 합**이고 tan은 볼록하므로
-    // Σtan(αᵢ) < tan(Σαᵢ)다. 한 번에 환산했더니 정답 18° 패닝이 15.96°로 나왔다(-11%).
-    // 구간마다 환산해 더하면 16.37°(-9%)가 된다.
-    const float TanHalfH = FMath::Tan(FMath::DegreesToRadians(
-        UPTFraming::GetFieldOfViewDegrees(UPTFraming::SensorWidthMm, Shot.FocalLength)) * 0.5f);
-    const float TanHalfV = FMath::Tan(FMath::DegreesToRadians(
-        UPTFraming::GetFieldOfViewDegrees(UPTFraming::GetSensorHeightMm(AspectRatio), Shot.FocalLength)) * 0.5f);
-    const bool bMeasured = Shot.bHasMotionAmount;
-
-    FUPTCinematicShot EndShot = Shot;
-    if (Shot.CameraMotion == TEXT("dolly_in") || Shot.CameraMotion == TEXT("dolly_out"))
-    {
-        // 인물이 커진 비율만큼 가까워진 것으로 본다(화면 크기 ∝ 1/거리).
-        const float SubjectScale = bMeasured ? Shot.MotionSubjectScale : 0.0f;
-        if (SubjectScale > 0.05f)
-        {
-            EndShot.DistanceCm = FMath::Max(20.0f, Shot.DistanceCm / SubjectScale);
-        }
-        else
-        {
-            EndShot.DistanceCm *= Shot.CameraMotion == TEXT("dolly_in") ? 0.65f : 1.4f;
-        }
-    }
-    else if (Shot.CameraMotion == TEXT("zoom_in") || Shot.CameraMotion == TEXT("zoom_out")) return;  // 렌즈만 바뀐다
-    else if (Shot.CameraMotion == TEXT("truck_left") || Shot.CameraMotion == TEXT("truck_right") || Shot.CameraMotion == TEXT("tracking"))
-    {
-        // 방향은 모션 종류가 이미 말해 주므로 **크기만** 측정값으로 바꾼다.
-        // 측면 이동 d는 거리 D에서 화면 가로로 d/(D·2·tan(hfov/2))만큼 밀어낸다.
-        const float Sign = Shot.CameraMotion == TEXT("truck_left") ? -1.0f : 1.0f;
-        const float Measured = bMeasured ? FMath::Abs(Shot.MotionScreenDX) * Shot.DistanceCm * 2.0f * TanHalfH : 0.0f;
-        EndShot.SideCm += Sign * (Measured > 1.0f ? Measured : FMath::Max(100.0f, Shot.DistanceCm * 0.35f));
-    }
-    else if (Shot.CameraMotion == TEXT("pedestal"))
-    {
-        const float Measured = bMeasured ? FMath::Abs(Shot.MotionScreenDY) * Shot.DistanceCm * 2.0f * TanHalfV : 0.0f;
-        EndShot.HeightCm += Measured > 1.0f ? Measured : FMath::Max(100.0f, Shot.DistanceCm * 0.25f);
-    }
-    // 오빗은 화면 이동만으로 회전 반경을 가를 수 없어(측면 이동과 구분 불가) 상수 폭을 유지한다.
-    else if (Shot.CameraMotion == TEXT("orbit")) EndShot.SideCm += FMath::Max(150.0f, Shot.DistanceCm * 0.65f);
-    else if (Shot.CameraMotion == TEXT("pan"))
-    {
-        // 배경이 오른쪽으로 갔다면 카메라는 왼쪽으로 돈 것이다(부호 반대).
-        OutRotation.Yaw += bMeasured
-            ? -UPTFraming::ScreenDeltaToRotationDegrees(Shot.MotionScreenDX, Shot.FocalLength, UPTFraming::SensorWidthMm, Shot.MotionSteps)
-            : 25.0f;
-        return;
-    }
-    else if (Shot.CameraMotion == TEXT("tilt"))
-    {
-        // 화면 y는 아래로 증가한다. 배경이 아래로 갔다면 카메라가 위를 본 것이다(+Pitch).
-        OutRotation.Pitch += bMeasured
-            ? UPTFraming::ScreenDeltaToRotationDegrees(Shot.MotionScreenDY, Shot.FocalLength, UPTFraming::GetSensorHeightMm(AspectRatio), Shot.MotionSteps)
-            : -18.0f;
-        return;
-    }
-    else if (Shot.CameraMotion == TEXT("handheld"))
-    {
-        // 흔들림 폭은 누적 경로 길이에 비례시킨다. 0.15는 지금까지 상수와 같은 폭이 나오는 기준값이다.
-        const float Gain = bMeasured ? FMath::Clamp(Shot.MotionPath / 0.15f, 0.3f, 3.0f) : 1.0f;
-        OutLocation += FVector(8.0f, 12.0f, 6.0f) * Gain;
-        OutRotation += FRotator(-1.5f * Gain, 2.0f * Gain, 0.8f * Gain);
-        return;
-    }
-    else return;
-    UPTFraming::ResolveShotCamera(World, EndShot, AspectRatio, SceneActors, OutLocation, OutRotation);
-}
-
 void AddFocalLengthKeys(UMovieScene* MovieScene, const FGuid& ComponentGuid, const int32 StartFrame, const int32 EndFrame,
     const FUPTCinematicShot& Shot)
 {
@@ -141,11 +56,7 @@ void AddFocalLengthKeys(UMovieScene* MovieScene, const FGuid& ComponentGuid, con
     Track->AddSection(*Section);
     FMovieSceneFloatChannel* Channel = Section->GetChannelProxy().GetChannel<FMovieSceneFloatChannel>(0);
     if (!Channel) return;
-    // 배경 배율이 곧 초점거리 비다. 측정값이 없을 때만 상수(1.45 / 0.72)로 되돌아간다.
-    const float Ratio = Shot.bHasMotionAmount && Shot.MotionBackgroundScale > 0.05f
-        ? Shot.MotionBackgroundScale
-        : (Motion == TEXT("zoom_in") ? 1.45f : 0.72f);
-    const float EndFocalLength = FMath::Clamp(StartFocalLength * Ratio, 8.0f, 200.0f);
+    const float EndFocalLength = UPTFraming::ResolveShotEndFocalLength(Shot);
     Channel->AddCubicKey(FFrameNumber(StartFrame), StartFocalLength);
     Channel->AddCubicKey(FFrameNumber(FMath::Max(StartFrame, EndFrame - 1)), EndFocalLength);
 }
@@ -332,7 +243,7 @@ ULevelSequence* FUPTSequenceBuilder::Build(
         }
         FVector EndCameraLocation;
         FRotator EndCameraRotation;
-        ResolveCameraEndTransform(World, Shot, Plan.AspectRatio, SceneActors, CameraLocation, CameraRotation, EndCameraLocation, EndCameraRotation);
+        UPTFraming::ResolveShotCameraEnd(World, Shot, Plan.AspectRatio, SceneActors, CameraLocation, CameraRotation, EndCameraLocation, EndCameraRotation);
         AddTransformKeys(MovieScene, CameraGuid, StartFrame, EndFrame, CameraLocation, CameraRotation, EndCameraLocation, EndCameraRotation, Shot.CameraMotion);
         UMovieSceneCameraCutSection* CutSection = Cast<UMovieSceneCameraCutSection>(CutTrack->CreateNewSection());
         CutSection->SetRange(TRange<FFrameNumber>(FFrameNumber(StartFrame), FFrameNumber(EndFrame)));

@@ -253,5 +253,19 @@
     "contact_mismatch": {
       "max": 0.06
     }
+  },
+  "motion_roundtrip": {
+    "motion_shots": {
+      "min": 4
+    },
+    "unmeasured": {
+      "equals": 0
+    },
+    "dx_error_worst": {
+      "max": 0.03
+    },
+    "scale_log_error_worst": {
+      "max": 0.02
+    }
   }
 }
