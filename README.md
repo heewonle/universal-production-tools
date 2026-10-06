@@ -137,21 +137,26 @@ UI가 처음부터 제외하는 편이 낫습니다.
 ## 캐릭터 애니메이션 파이프라인
 
 구도 재현과 별개로, **애니메이션을 캐릭터 사이로 옮기고 영상에서 만들어 내는** 쪽도 구현돼 있습니다.
-C++ 약 1,100줄 + 에디터 파이썬 스크립트입니다.
+C++ 약 2,300줄 + 에디터 파이썬 스크립트입니다.
 
-**1. 스켈레톤 자동 분석** — `UPTSkeletonAnalyzer` (395줄)
+**1. 스켈레톤 자동 분석** — `UPTSkeletonAnalyzer` (522줄)
 본 이름·계층·레퍼런스 포즈의 공간 위치를 함께 써서 휴머노이드 역할(골반·척추·양팔·양다리)을 추론하고,
 항목별 신뢰도와 A/B/C 준비도 등급을 냅니다. Twist·손가락·얼굴 보조 본은 따로 분류해 핵심 판정에서 뺍니다.
 `L-Forearm`, `RigLArm1` 같은 비표준 명칭도 역할로 인식합니다.
 
-**2. IK Rig · IK Retargeter 자동 생성** — `UPTIKRigBuilder` (214줄), `UPTIKRetargeterBuilder` (124줄)
+**2. IK Rig · IK Retargeter 자동 생성** — `UPTIKRigBuilder` (443줄), `UPTIKRetargeterBuilder` (349줄)
 엔진의 Auto Characterizer(`IKRigAutoCharacterizer`)를 1순위로 쓰고, 엔진 템플릿에 없는 구조는 위의 자체
-분석으로 대체합니다. 체인 생성, 손·발 Full Body IK Goal, 팔꿈치·무릎 관절 제한 프리셋까지 만듭니다.
+분석으로 대체합니다. 리타기팅 체인과 리타기팅 루트를 만들고, 레스트 포즈 차이를 역할 축으로 보정합니다.
 
-**3. 애니메이션 일괄 리타기팅** — `SUPTAnimationRetargetWindow` (317줄)
+**IK Goal·FBIK Solver는 기본으로 만들지 않습니다.** 만들어 붙여 보고 19쌍으로 재 봤는데 각도와 접지가
+**모두 나빠졌습니다**(각도 0.1° → 2.6°, 접지 불일치 0.0417 → 0.0625). `UPT.GenerateIKGoals 1`로 켤 수 있고
+수치는 아래 "IK 패스는 처음부터 비어 돌고 있었습니다" 절에 적어 두었습니다. 관절 제한 프리셋은 미구현입니다.
+
+**3. 애니메이션 일괄 리타기팅** — `SUPTAnimationRetargetWindow` (496줄)
 콘텐츠 브라우저에서 대상 메시를 우클릭 → 애니메이션을 여러 개 골라 한 번에 변환합니다.
-Source 스켈레톤별로 Profile·IK Rig·Retargeter를 알아서 준비하고, 상체/하체 모드는 슬롯 Montage까지 만듭니다.
+Source 스켈레톤별로 Profile·IK Rig·Retargeter를 알아서 준비합니다.
 **준비도 70% 미만이면 자동 변환을 중단하고 수동 검수로 돌립니다** — 조용히 망가진 결과를 내놓지 않습니다.
+(상·하체 분리 모드와 슬롯 Montage 생성은 미구현입니다.)
 
 **4. 영상 한 대로 얼굴 애니메이션** — UE 5.8 MetaHuman Animator → 5.7 이식
 휴대폰으로 찍은 영상(Mono footage, Identity 없이)으로 얼굴 컨트롤 커브를 풀어 냅니다.

@@ -120,12 +120,13 @@ Editor Preferences > Plugins > Universal Production Tools
 - Skeleton Profile을 선택하고 `Skeleton Profile로 IK Rig 체인 생성`을 누르면 `/Game/Animation/UPT/IKRigs`에 IK Rig가 생성됩니다.
 - 생성 체인은 Root, Spine, LeftArm, RightArm, LeftLeg, RightLeg이며 Clavicle과 Neck은 Mapping이 있을 때 추가됩니다.
 - Pelvis가 Retarget Root로 설정됩니다. 필수 Mapping 누락, 70% 미만 준비도, 끊어진 본 계층은 에셋 생성 전에 차단됩니다.
-- IK Rig 체인 생성과 FBIK 추가는 별도 버튼으로 분리되어 Retarget Chain 전용 에셋도 만들 수 있습니다.
-- `선택 IK Rig에 손·발 Full Body IK 추가` 버튼은 Left/Right Hand와 Foot Goal, Full Body IK Solver를 선택적으로 추가합니다.
-- Solver Root는 Pelvis, Root Behavior는 Free, Global Pull Chain Alpha는 0으로 설정됩니다.
-- Goal은 대응하는 LeftArm/RightArm/LeftLeg/RightLeg Retarget Chain에도 연결됩니다.
-- Finger와 Face 보조 본은 FBIK 해석 대상에서 제외되며 Twist 본은 유지됩니다.
-- 이미 Solver가 있거나 IK Rig Preview Mesh와 Profile Source Mesh가 다르면 중복 적용을 차단합니다.
+- 생성되는 IK Rig은 **리타기팅 체인과 리타기팅 루트까지**입니다. 패널에 FBIK 추가 버튼은 없습니다.
+- IK Goal과 Full Body IK Solver는 `UPT.GenerateIKGoals 1`일 때만 만들어지며 **기본값은 꺼짐**입니다.
+  켜고 19쌍을 재 보니 각도 중앙 0.1° → 2.6°, 접지 불일치 0.0417 → 0.0625로 **모두 나빠졌습니다**.
+  측정값과 판단 근거는 [RETARGET_QUALITY.md](RETARGET_QUALITY.md)에 있습니다.
+- 켤 경우 Goal은 LeftArm/RightArm/LeftLeg/RightLeg 체인의 끝 본에 붙고, Solver Root는 리타기팅 루트,
+  Root Behavior는 `UPT.IKPinRoot`에 따라 PinToInput(기본) 또는 Free입니다.
+- 팔꿈치·무릎 관절 제한(Joint Limit) 적용은 **미구현**입니다.
 - Twist/Finger/Face 분류는 보조 정보이며 핵심 Humanoid 리타기팅 준비도 계산에서는 제외됩니다.
 
 ## IK Retargeter 자동 생성
@@ -168,8 +169,6 @@ Editor Preferences > Plugins > Universal Production Tools
 - Sequencer에서 수동으로 움직인 현재 Shot 카메라의 위치·회전·초점거리를 다시 Shot Plan JSON에 기록할 수 있습니다. Subject 상대 거리·높이·측면 오프셋도 역산하므로 재생성 후 구도를 보존합니다.
 - Shot JSON은 `speaker`, `dialogue`, `lip_sync_animation_id`를 지원합니다. 대사는 `[SUB]` Sequencer Marked Frame으로, 립싱크는 `UPT Lip Sync` Skeletal Animation Track으로 생성됩니다.
 - `구도 위험 분석`은 피사체 화면 점유율, 헤드룸 가능성, 측면 오프셋과 Visibility 차폐를 Shot별 0~100 점수로 보고합니다.
-- Skeleton Profile에는 팔꿈치·무릎용 Joint Limit Preset이 생성됩니다. 본 축 확인 전에는 비활성 상태이며, 활성화된 프리셋만 Preferred Angle과 FBIK Limit으로 적용됩니다.
-- 선택한 Movie Graph Config를 사용자 설정에 저장하고 마지막 생성 Sequence와 함께 Movie Render Queue Job으로 추가할 수 있습니다. 렌더 실행은 출력 설정 확인 후 사용자가 수행합니다.
 
 ## 추가 고도화 후보
 

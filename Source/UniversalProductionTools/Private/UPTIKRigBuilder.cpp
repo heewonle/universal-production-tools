@@ -367,7 +367,12 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateIKRig(UUPTSkeletonProfile* Profile, FS
     return IKRig;
 }
 
-#if 0 // 수동 FBIK 추가는 제거 대상 (파일 정리 승인 후 블록 삭제)
+// 아래 블록은 **지금 켜면 컴파일되지 않는다.** `Profile->JointLimitPresets`와 `FUPTJointLimitPreset`은
+// Skeleton Profile에서 이미 사라졌다. 즉 손·발 FBIK Goal과 팔꿈치·무릎 관절 제한은 한 번도 동작한 적이
+// 없고, 그런데도 문서는 그것을 기능으로 적고 있었다(2026-10-07에 네 문서에서 바로잡았다).
+// 지금 쓰이는 Goal 생성은 위 AttachFallbackFBIK이고 관절 제한은 들어 있지 않다.
+// 되살릴 생각이면 Profile 쪽 필드를 먼저 복구해야 한다. 참고용으로만 남겨 둔다.
+#if 0 // 컴파일 불가 (Profile에 JointLimitPresets 없음). 제거 대상 — 파일 정리 승인 후 블록 삭제
 bool FUPTIKRigBuilder::AddFullBodyIK(UIKRigDefinition* IKRig, UUPTSkeletonProfile* Profile, FString& OutError)
 {
     if (!IKRig || !Profile) { OutError = TEXT("IK Rig과 Skeleton Profile을 선택하세요."); return false; }

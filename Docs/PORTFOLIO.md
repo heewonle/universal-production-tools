@@ -35,13 +35,13 @@ Tools/eval/run_regression.py         전체 실행 + baseline.json 기준 비교
 
 ## 캐릭터 애니메이션 파이프라인
 
-구도 재현과 별개로, 애니메이션을 캐릭터 사이로 옮기고 영상에서 만들어 내는 쪽도 구현했습니다. C++ 약 1,100줄.
+구도 재현과 별개로, 애니메이션을 캐릭터 사이로 옮기고 영상에서 만들어 내는 쪽도 구현했습니다. C++ 약 2,300줄.
 
 | 기능 | 구현 | 핵심 |
 |---|---|---|
-| 스켈레톤 자동 분석 | `UPTSkeletonAnalyzer` 395줄 | 이름·계층·레퍼런스 포즈 공간 위치를 결합해 휴머노이드 역할 추론, 신뢰도·준비도 등급. `L-Forearm`·`RigLArm1` 같은 비표준 명칭 인식 |
-| IK Rig / Retargeter 생성 | `UPTIKRigBuilder` 214줄, `UPTIKRetargeterBuilder` 124줄 | 엔진 Auto Characterizer 1순위, 템플릿 밖 구조는 자체 분석으로 대체. 체인 + 손·발 FBIK Goal + 관절 제한 |
-| 애니메이션 일괄 리타기팅 | `SUPTAnimationRetargetWindow` 317줄 | 메시 우클릭 → 다중 선택 → Source 스켈레톤별 자동 준비·변환. 상·하체 모드는 슬롯 Montage까지 |
+| 스켈레톤 자동 분석 | `UPTSkeletonAnalyzer` 522줄 | 이름·계층·레퍼런스 포즈 공간 위치를 결합해 휴머노이드 역할 추론, 신뢰도·준비도 등급. `L-Forearm`·`RigLArm1` 같은 비표준 명칭 인식 |
+| IK Rig / Retargeter 생성 | `UPTIKRigBuilder` 443줄, `UPTIKRetargeterBuilder` 349줄 | 엔진 Auto Characterizer 1순위, 템플릿 밖 구조는 자체 분석으로 대체. 체인 + 리타기팅 루트 + 역할 축 레스트 포즈 보정. **IK Goal/FBIK는 기본 끔**(켜면 각도·접지가 모두 나빠짐, 측정값은 RETARGET_QUALITY.md). 관절 제한은 미구현 |
+| 애니메이션 일괄 리타기팅 | `SUPTAnimationRetargetWindow` 496줄 | 메시 우클릭 → 다중 선택 → Source 스켈레톤별 자동 준비·변환 (상·하체 분리 모드와 슬롯 Montage는 미구현) |
 | 영상 → 얼굴 애니메이션 | UE 5.8 MetaHuman Animator → 5.7 이식 | 휴대폰 영상 한 대(Identity 없이)로 컨트롤 커브 해석 |
 
 **준비도 70% 미만이면 자동 변환을 중단하고 수동 검수로 돌립니다** — 조용히 망가진 결과를 내놓지 않는 쪽을 택했습니다.
