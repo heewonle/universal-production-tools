@@ -72,31 +72,27 @@ TArray<FAssetData> RetargetIntoSettingsFolder(
     Context.IKRetargetAsset = Retargeter;
     Context.NameRule.Suffix = Suffix;
     Context.bIncludeReferencedAssets = false;
-    Context.bOverwriteExistingFiles = false;
+    // 덮어쓰지 않으면 다시 돌릴 때마다 `..._1`, `..._2`가 쌓인다. 같은 조합의 결과는 하나만 둔다.
+    Context.bOverwriteExistingFiles = true;
 
     FString Folder = GetDefault<UUPTSettings>()->DefaultRetargetedAnimationPath;
     if (!Folder.IsEmpty()) Context.NameRule.FolderPath = Folder;
-
-    // 결과는 생성 전후의 폴더 내용을 비교해 찾는다(엔진이 이름 충돌 시 번호를 붙이므로 예측하지 않는다).
-    const FAssetRegistryModule& Registry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
-    TSet<FName> Before;
-    {
-        TArray<FAssetData> Existing;
-        Registry.Get().GetAssetsByPath(FName(*Context.NameRule.FolderPath), Existing, true);
-        for (const FAssetData& Asset : Existing) Before.Add(Asset.PackageName);
-    }
 
     UIKRetargetBatchOperation* BatchOperation = NewObject<UIKRetargetBatchOperation>();
     BatchOperation->AddToRoot();
     BatchOperation->RunRetarget(Context);
     BatchOperation->RemoveFromRoot();
 
-    TArray<FAssetData> After;
-    Registry.Get().GetAssetsByPath(FName(*Context.NameRule.FolderPath), After, true);
+    // 덮어쓰기라 이름이 `<원본 이름><접미사>`로 정해진다. 폴더를 비교하는 대신 바로 찾는다
+    // (전에는 생성 전후를 비교해 찾았는데, 그 결과 배열의 순서가 입력과 달라 엉뚱한 쌍이 manifest에 들어갔다).
     TArray<FAssetData> Results;
-    for (const FAssetData& Asset : After)
+    for (const FAssetData& SourceAsset : AssetsToRetarget)
     {
-        if (!Before.Contains(Asset.PackageName)) Results.Add(Asset);
+        const FString Expected = SourceAsset.AssetName.ToString() + Suffix;
+        if (UObject* Created = LoadObject<UObject>(nullptr, *(Context.NameRule.FolderPath / Expected + TEXT(".") + Expected)))
+        {
+            Results.Add(FAssetData(Created));
+        }
     }
 
     // 엔진 Pelvis Motion op이 아예 돌지 않는 조합이 있다(펠비스 이동 키가 세 축 모두 0으로 나온다).

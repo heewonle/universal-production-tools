@@ -86,17 +86,17 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     if (SourceName.IsEmpty()) SourceName = TEXT("Source");
     if (TargetName.IsEmpty()) TargetName = TEXT("Target");
 
-    FAssetToolsModule& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
-    FString PackageName;
-    FString AssetName;
-    const FString BasePackageName = GetDefault<UUPTSettings>()->DefaultRetargeterPath /
-        FString::Printf(TEXT("RTG_UPT_%s_to_%s"), *SourceName, *TargetName);
-    AssetTools.Get().CreateUniqueAssetName(BasePackageName, TEXT(""), PackageName, AssetName);
-    FString PackagePath;
-    PackageName.Split(TEXT("/"), &PackagePath, nullptr, ESearchCase::CaseSensitive, ESearchDir::FromEnd);
-
-    UIKRetargetFactory* Factory = NewObject<UIKRetargetFactory>();
-    UIKRetargeter* Retargeter = Cast<UIKRetargeter>(AssetTools.Get().CreateAsset(AssetName, PackagePath, UIKRetargeter::StaticClass(), Factory));
+    // IK Rig과 같은 이유로 **같은 이름이 있으면 다시 쓴다.** 매번 새로 만들면 `..._1`, `..._2`가 쌓인다.
+    const FString Folder = GetDefault<UUPTSettings>()->DefaultRetargeterPath;
+    const FString AssetName = FString::Printf(TEXT("RTG_UPT_%s_to_%s"), *SourceName, *TargetName);
+    UIKRetargeter* Retargeter = LoadObject<UIKRetargeter>(nullptr, *(Folder / AssetName + TEXT(".") + AssetName));
+    const bool bReused = Retargeter != nullptr;
+    if (!Retargeter)
+    {
+        FAssetToolsModule& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+        UIKRetargetFactory* Factory = NewObject<UIKRetargetFactory>();
+        Retargeter = Cast<UIKRetargeter>(AssetTools.Get().CreateAsset(AssetName, Folder, UIKRetargeter::StaticClass(), Factory));
+    }
     if (!Retargeter)
     {
         OutError = TEXT("IK Retargeter 에셋을 생성하지 못했습니다.");
@@ -138,6 +138,13 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     // 매핑된 체인만 정렬한다. 매핑 여부는 이름 비교로 짐작하지 않고 리타기터가 들고 있는
     // 체인 매핑에서 읽는다. 체인 매핑은 op마다 따로 있고 인자 없는 GetChainMapping()은
     // 비어 있는 op의 것을 돌려줄 수 있으므로, op를 모두 훑어 체인을 가진 매핑만 본다.
+    // 다시 쓰는 경우 지난번 정렬 오프셋이 남아 있다. 이번에 맞추지 않는 본의 값이 섞이지 않도록 비운다.
+    if (bReused)
+    {
+        Controller->ResetRetargetPose(Controller->GetCurrentRetargetPoseName(ERetargetSourceOrTarget::Target),
+            TArray<FName>(), ERetargetSourceOrTarget::Target);
+    }
+
     TSet<FName> MappedChainNames;
     for (int32 OpIndex = 0; OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
     {

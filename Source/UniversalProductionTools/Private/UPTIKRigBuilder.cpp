@@ -31,14 +31,41 @@ bool ResolveBone(const UUPTSkeletonProfile* Profile, const FName Role, FName& Ou
 }
 }
 
+namespace
+{
+/**
+ * 같은 이름의 IK Rig이 이미 있으면 **그것을 다시 쓴다.**
+ *
+ * 전에는 매번 새로 만들었고, 엔진이 이름 충돌을 피해 `..._1`, `..._2`를 붙였다.
+ * 리타기팅을 몇 번만 돌려도 메시 하나에 Rig이 대여섯 개씩 쌓였다(21개까지 봤다).
+ * 내용은 어차피 아래에서 처음부터 다시 채우므로, 기존 체인만 비우고 재사용하면 된다.
+ * 참조도 끊기지 않는다.
+ */
+UIKRigDefinition* AcquireIKRig(const FString& AssetName)
+{
+    const FString Folder = GetDefault<UUPTSettings>()->DefaultIKRigPath;
+    const FString ObjectPath = Folder / AssetName + TEXT(".") + AssetName;
+    if (UIKRigDefinition* Existing = LoadObject<UIKRigDefinition>(nullptr, *ObjectPath))
+    {
+        if (const UIKRigController* Controller = UIKRigController::GetController(Existing))
+        {
+            TArray<FName> ChainNames;
+            for (const FBoneChain& Chain : Controller->GetRetargetChains()) ChainNames.Add(Chain.ChainName);
+            for (const FName ChainName : ChainNames) Controller->RemoveRetargetChain(ChainName);
+        }
+        return Existing;
+    }
+    return UIKRigDefinitionFactory::CreateNewIKRigAsset(Folder, AssetName);
+}
+}
+
 UIKRigDefinition* FUPTIKRigBuilder::CreateUniversalIKRig(USkeletalMesh* Mesh, FString& OutError)
 {
     if (!Mesh) { OutError = TEXT("Skeletal Mesh가 없습니다."); return nullptr; }
 
     FString SafeName = ObjectTools::SanitizeObjectName(Mesh->GetName());
     if (SafeName.IsEmpty()) SafeName = TEXT("Skeleton");
-    UIKRigDefinition* IKRig = UIKRigDefinitionFactory::CreateNewIKRigAsset(
-        GetDefault<UUPTSettings>()->DefaultIKRigPath, FString(TEXT("IK_UPT_AUTO_")) + SafeName);
+    UIKRigDefinition* IKRig = AcquireIKRig(FString(TEXT("IK_UPT_AUTO_")) + SafeName);
     if (!IKRig) { OutError = TEXT("범용 IK Rig 에셋을 생성하지 못했습니다."); return nullptr; }
 
     UIKRigController* Controller = UIKRigController::GetController(IKRig);
@@ -121,7 +148,7 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateIKRig(UUPTSkeletonProfile* Profile, FS
 
     FString SafeName = ObjectTools::SanitizeObjectName(Mesh->GetName());
     if (SafeName.IsEmpty()) SafeName = TEXT("Skeleton");
-    UIKRigDefinition* IKRig = UIKRigDefinitionFactory::CreateNewIKRigAsset(GetDefault<UUPTSettings>()->DefaultIKRigPath, FString(TEXT("IK_UPT_")) + SafeName);
+    UIKRigDefinition* IKRig = AcquireIKRig(FString(TEXT("IK_UPT_")) + SafeName);
     if (!IKRig) { OutError = TEXT("IK Rig 에셋을 생성하지 못했습니다."); return nullptr; }
 
     UIKRigController* Controller = UIKRigController::GetController(IKRig);
