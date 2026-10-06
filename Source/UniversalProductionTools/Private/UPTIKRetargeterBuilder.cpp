@@ -65,14 +65,13 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     }
     USkeletalMesh* SourceMesh = SourceProfile->SourceMesh.LoadSynchronous();
     USkeletalMesh* TargetMesh = TargetProfile->SourceMesh.LoadSynchronous();
-    // 자체 분석으로 만든 Rig 경로다. 여기서는 레스트 포즈 자동 정렬을 쓰지 않는다(위 헤더 주석 참고).
-    return CreateIKRetargeter(SourceMesh, SourceIKRig, TargetMesh, TargetIKRig, OutError, false);  // 폴백 경로
+    return CreateIKRetargeter(SourceMesh, SourceIKRig, TargetMesh, TargetIKRig, OutError);
 }
 
 UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     USkeletalMesh* SourceMesh, UIKRigDefinition* SourceIKRig,
     USkeletalMesh* TargetMesh, UIKRigDefinition* TargetIKRig,
-    FString& OutError, bool bAlignRestPose)
+    FString& OutError)
 {
     if (!SourceMesh || !TargetMesh || !SourceIKRig || !TargetIKRig)
     { OutError = TEXT("Source/Target Mesh와 IK Rig을 모두 지정하세요."); return nullptr; }
@@ -127,18 +126,18 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     Controller->AutoMapChains(EAutoMapChainType::Exact, true);
 
     // 레스트 포즈(A-Pose/T-Pose) 차이를 보정하지 않으면 동작은 그대로 옮겨져도 자세가 통째로 틀어진다.
-    // 측정해 보니 Synty→Manny에서 팔이 항상 52.9° 어긋났다(다리는 2.2°). 원인은 이 보정을 건너뛴 것이었다.
+    // 측정해 보니 Synty→Manny에서 팔이 항상 52.9° 어긋났다(다리는 2.2°).
     //
-    // 엔진의 AutoAlignBones는 두 가지 함정이 있다.
+    // 엔진의 AutoAlignBones는 쓰지 않는다. 함정이 둘 있고 둘 다 겪었다.
     //  1) 빈 배열을 넘기면 "전부 정렬"로 해석한다(AutoAlignAllBones와 같아진다).
     //  2) 본이 속한 체인 중 원본에 짝이 없는 것이 하나라도 있으면
-    //     "Bone should never be retargeted and not in a mapped chain" 어설션으로 에디터를 내린다
-    //     (IKRetargeterPoseGenerator.cpp: GetChainNameForBone이 그 미매핑 체인을 돌려주기 때문).
-    //     손목(hand_l)처럼 팔 체인의 끝이면서 손가락 체인의 시작이기도 한 본이 여기 걸린다.
-    // 그래서 '속한 모든 체인이 매핑된 본'만 고른다. 매핑 여부는 이름 비교로 짐작하지 않고
-    // 리타기터가 실제로 들고 있는 체인 매핑에서 읽는다. 체인 매핑은 op마다 따로 있고
-    // 인자 없는 GetChainMapping()은 비어 있는 op의 것을 돌려줄 수 있으므로, op를 모두 훑어
-    // 체인을 가진 매핑만 본다.
+    //     "Bone should never be retargeted and not in a mapped chain" 어설션으로 **에디터를 내린다**
+    //     (IKRetargeterPoseGenerator.cpp:118). 자체 분석으로 만든 Rig에서 실제로 세 번 겪었다.
+    // 같은 보정을 직접 계산하는 쪽이 수치도 더 낫다(Manny 쌍 4.7°/11.5° → 3.3°/8.7°).
+    //
+    // 매핑된 체인만 정렬한다. 매핑 여부는 이름 비교로 짐작하지 않고 리타기터가 들고 있는
+    // 체인 매핑에서 읽는다. 체인 매핑은 op마다 따로 있고 인자 없는 GetChainMapping()은
+    // 비어 있는 op의 것을 돌려줄 수 있으므로, op를 모두 훑어 체인을 가진 매핑만 본다.
     TSet<FName> MappedChainNames;
     for (int32 OpIndex = 0; OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
     {
@@ -152,73 +151,8 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
             }
         }
     }
+    FUPTRestPoseAligner::AlignTargetToSource(Controller, SourceMesh, SourceIKRig, TargetMesh, TargetIKRig, MappedChainNames);
 
-    if (!bAlignRestPose)
-    {
-        // 엔진 AutoAlignBones는 이 조합에서 어설션으로 에디터를 내린다. 같은 보정을 직접 계산해 넣는다.
-        FUPTRestPoseAligner::AlignTargetToSource(Controller, SourceMesh, SourceIKRig, TargetMesh, TargetIKRig, MappedChainNames);
-    }
-
-    if (const UIKRigController* TargetRigController = bAlignRestPose ? UIKRigController::GetController(TargetIKRig) : nullptr)
-    {
-        const FReferenceSkeleton& TargetRef = TargetMesh->GetRefSkeleton();
-
-        // 체인의 시작·끝만 정렬하면 중간 본(lowerarm 등)이 남아 팔이 31.9° 어긋난 채로 남는다.
-        // 끝 본에서 시작 본까지 계층을 거슬러 올라가며 체인 전체를 모은다.
-        auto CollectChainBones = [&TargetRef](const FBoneChain& Chain, TArray<FName>& OutBones)
-        {
-            const FName StartName = Chain.StartBone.BoneName;
-            const FName EndName = Chain.EndBone.BoneName;
-            if (StartName == NAME_None && EndName == NAME_None) return;
-            if (StartName != NAME_None) OutBones.AddUnique(StartName);
-            int32 Index = EndName != NAME_None ? TargetRef.FindBoneIndex(EndName) : INDEX_NONE;
-            for (int32 Guard = 0; Index != INDEX_NONE && Guard < 64; ++Guard)
-            {
-                const FName BoneName = TargetRef.GetBoneName(Index);
-                OutBones.AddUnique(BoneName);
-                if (BoneName == StartName) break;
-                Index = TargetRef.GetParentIndex(Index);
-            }
-        };
-
-        // 리타기팅 루트(보통 pelvis)와 그 위쪽은 엔진이 자동 정렬을 지원하지 않는다
-        // (AlignBone은 pelvis를 특수 처리하고, 루트 본은 어떤 체인에도 속하지 않아 어설션으로 이어진다).
-        const FName RetargetRootBone = TargetRigController->GetRetargetRoot();
-
-        TArray<FName> Candidates;
-        TSet<FName> BlockedBones;
-        for (const FBoneChain& Chain : TargetRigController->GetRetargetChains())
-        {
-            if (Chain.ChainName == TEXT("Root")) continue;
-            TArray<FName> ChainBones;
-            CollectChainBones(Chain, ChainBones);
-            if (MappedChainNames.Contains(Chain.ChainName))
-            {
-                for (const FName BoneName : ChainBones) Candidates.AddUnique(BoneName);
-            }
-            else
-            {
-                // 짝 없는 체인에 걸친 본은 매핑된 체인에도 속해 있더라도 제외한다(위 2번).
-                BlockedBones.Append(ChainBones);
-            }
-        }
-
-        TArray<FName> BonesToAlign;
-        for (const FName BoneName : Candidates)
-        {
-            if (BlockedBones.Contains(BoneName)) continue;
-            if (BoneName == RetargetRootBone) continue;
-            const int32 BoneIndex = TargetRef.FindBoneIndex(BoneName);
-            if (BoneIndex == INDEX_NONE || TargetRef.GetParentIndex(BoneIndex) == INDEX_NONE) continue;
-            BonesToAlign.Add(BoneName);
-        }
-
-        // 빈 배열은 "전부 정렬"이 되어 위험하므로 그때는 아예 부르지 않는다(위 1번).
-        if (BonesToAlign.Num() > 0)
-        {
-            Controller->AutoAlignBones(BonesToAlign, ERetargetAutoAlignMethod::ChainToChain, ERetargetSourceOrTarget::Target);
-        }
-    }
     Controller->CleanAsset();
     Retargeter->MarkPackageDirty();
     return Retargeter;

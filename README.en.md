@@ -233,8 +233,13 @@ so differing bone counts (twist bones present or not) still line up.
 An **off-by-one-segment** bug in the same rule turned up too. Source segments were picked by the
 target segment's *start* ratio: the golem's forearm segment starts at 0.519 and the source's at 0.529,
 so **the forearm was being aligned to the upper arm's direction** — and that gap is exactly the elbow
-angle, 33°. Matching segment **midpoints** instead brought it to **4.8°**, and the worst segment across
-the whole suite down to 11.5°.
+angle, 33°. Matching segment **midpoints** instead brought it to **4.8°**.
+
+That then overturned the earlier conclusion that the hand-rolled alignment was worse than the engine's —
+most of that gap *was* the off-by-one (Manny pair 7.2° → **3.3°**, against the engine's 4.7°).
+**So the engine alignment path was deleted outright.** The assertion that took the editor down three
+times is gone from the code, and so is the branch on how the rig was built. Worst segment across the
+whole suite: **33.1° → 10.7°**; median **4.8° → 3.5°**.
 
 **Whether the hand-rolled version could replace the engine's was measured too — it could not.**
 Switching the Manny pair to it moved 4.7° → 7.2°, so it was reverted. Both paths stay: the engine's

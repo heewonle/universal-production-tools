@@ -209,10 +209,10 @@
       "min": 19
     },
     "targets.Retrieve_DefaultWoman->SKM_Manny.segment_angle_median_deg": {
-      "max": 6.0
+      "max": 4.5
     },
     "targets.Retrieve_DefaultWoman->SKM_Manny.worst_segment_deg": {
-      "max": 14.0
+      "max": 10.0
     },
     "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
       "max": 8.0

@@ -10,13 +10,12 @@ class FUPTIKRetargeterBuilder
 {
 public:
     static bool ValidatePair(const UUPTSkeletonProfile* Profile, const UIKRigDefinition* IKRig, const TCHAR* PairLabel, FString& OutError);
-    // bAlignRestPose: 레스트 포즈(A/T-Pose) 차이를 엔진 AutoAlignBones로 보정할지.
-    // 엔진 Auto Characterizer가 만든 Rig에서만 안전하다. 자체 분석으로 만든 Rig에 쓰면
-    // IKRetargeterPoseGenerator의 어설션으로 에디터가 내려간다(Forest Golem에서 확인).
+    // 레스트 포즈 보정은 FUPTRestPoseAligner로 직접 계산한다. 엔진 AutoAlignBones는 쓰지 않는다
+    // (비표준 Rig에서 어설션으로 에디터가 내려가고, 수치도 직접 계산 쪽이 더 낫다).
     static UIKRetargeter* CreateIKRetargeter(
         class USkeletalMesh* SourceMesh, UIKRigDefinition* SourceIKRig,
         class USkeletalMesh* TargetMesh, UIKRigDefinition* TargetIKRig,
-        FString& OutError, bool bAlignRestPose = true);
+        FString& OutError);
     static UIKRetargeter* CreateIKRetargeter(
         UUPTSkeletonProfile* SourceProfile, UIKRigDefinition* SourceIKRig,
         UUPTSkeletonProfile* TargetProfile, UIKRigDefinition* TargetIKRig,
