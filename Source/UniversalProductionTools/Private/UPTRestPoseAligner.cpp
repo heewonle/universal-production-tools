@@ -19,28 +19,44 @@ namespace
 // 본 하나를 정렬했다고 보기에 너무 작은 각도. 떨림만 만들고 의미가 없다.
 constexpr double MinAlignRadians = 0.5 * PI / 180.0;
 
-/** 정렬의 기준이 되는 해부학적 인접 관계(부모 역할 → 자식 역할). */
+/** 몸의 축. 한 축은 역할을 뿌리에서 끝까지 이은 한 줄기다. */
+const TArray<TArray<FString>>& GetRoleAxes()
+{
+    static const TArray<TArray<FString>> Axes = {
+        {TEXT("Pelvis"), TEXT("Spine"), TEXT("Neck"), TEXT("Head")},
+        {TEXT("LeftClavicle"), TEXT("LeftUpperArm"), TEXT("LeftLowerArm"), TEXT("LeftHand")},
+        {TEXT("RightClavicle"), TEXT("RightUpperArm"), TEXT("RightLowerArm"), TEXT("RightHand")},
+        {TEXT("LeftThigh"), TEXT("LeftCalf"), TEXT("LeftFoot")},
+        {TEXT("RightThigh"), TEXT("RightCalf"), TEXT("RightFoot")},
+    };
+    return Axes;
+}
+
+/** 정렬할 마디 목록(부모 역할 → 자식 역할). 축을 따라 이웃끼리만 잇는다.
+ *
+ * 갈라지는 마디(`Pelvis → Thigh`, `Spine → Clavicle`)는 **넣지 않는다.** 처음에는 넣고
+ * 자식이 여럿인 본의 회전을 평균 냈는데, 펠비스는 척추와 양 허벅지 셋을 한 회전으로 떠안아
+ * `pelvis→spine`이 중앙 3.4°로 남았다(다른 축의 마디는 전부 0.1° 이하였다).
+ *
+ * 갈라지는 방향은 **회전으로 고칠 수 있는 성질이 아니다.** 허벅지가 펠비스에서 어느 쪽으로
+ * 뻗어 있는지는 골반 폭, 즉 **위치**의 문제다. 펠비스를 돌려 그 방향을 맞춰도 다리 자체의
+ * 방향은 어차피 허벅지 본을 돌려 따로 맞춘다. 그래서 갈라지는 마디를 정렬에 넣으면
+ * 몸통 방향만 희생되고 얻는 것이 없다. 각 본은 **자기가 속한 축의 다음 역할**만 본다.
+ */
 const TArray<TPair<FString, FString>>& GetRoleSegments()
 {
-    static const TArray<TPair<FString, FString>> Segments = {
-        {TEXT("Pelvis"), TEXT("Spine")},
-        {TEXT("Spine"), TEXT("Neck")},
-        {TEXT("Neck"), TEXT("Head")},
-        {TEXT("Spine"), TEXT("LeftClavicle")},
-        {TEXT("LeftClavicle"), TEXT("LeftUpperArm")},
-        {TEXT("LeftUpperArm"), TEXT("LeftLowerArm")},
-        {TEXT("LeftLowerArm"), TEXT("LeftHand")},
-        {TEXT("Spine"), TEXT("RightClavicle")},
-        {TEXT("RightClavicle"), TEXT("RightUpperArm")},
-        {TEXT("RightUpperArm"), TEXT("RightLowerArm")},
-        {TEXT("RightLowerArm"), TEXT("RightHand")},
-        {TEXT("Pelvis"), TEXT("LeftThigh")},
-        {TEXT("LeftThigh"), TEXT("LeftCalf")},
-        {TEXT("LeftCalf"), TEXT("LeftFoot")},
-        {TEXT("Pelvis"), TEXT("RightThigh")},
-        {TEXT("RightThigh"), TEXT("RightCalf")},
-        {TEXT("RightCalf"), TEXT("RightFoot")},
-    };
+    static const TArray<TPair<FString, FString>> Segments = []
+    {
+        TArray<TPair<FString, FString>> Built;
+        for (const TArray<FString>& Axis : GetRoleAxes())
+        {
+            for (int32 Index = 0; Index + 1 < Axis.Num(); ++Index)
+            {
+                Built.Add({Axis[Index], Axis[Index + 1]});
+            }
+        }
+        return Built;
+    }();
     return Segments;
 }
 
@@ -127,8 +143,8 @@ int32 FUPTRestPoseAligner::AlignTargetToSource(
     TArray<FTransform> TargetPose;
     BuildComponentPose(TargetRef, TargetLocal, TargetPose);
 
-    // 같은 본에 여러 마디가 걸린다(척추는 목과 양 쇄골, 펠비스는 척추와 양 허벅지).
-    // 회전 하나로 전부 맞출 수는 없으니 본 단위로 모아 두고 뒤에서 평균 낸다.
+    // 축만 따라가면 한 본에 마디는 하나씩 붙는다. 그래도 본 단위로 모아 두는 것은,
+    // 역할 목록을 늘리다가 한 본에 둘이 걸리면 조용히 마지막 것만 적용되는 일을 막기 위해서다.
     TMap<FName, FAlignTarget> AlignTargets;
     int32 SegmentCount = 0;
     for (const TPair<FString, FString>& Segment : GetRoleSegments())
@@ -164,7 +180,7 @@ int32 FUPTRestPoseAligner::AlignTargetToSource(
         const int32 SourceIndex = SourceRef.FindBoneIndex(Entry.SourceBone);
         if (BoneIndex == INDEX_NONE || SourceIndex == INDEX_NONE) continue;
 
-        // 자식마다 필요한 회전을 구해 평균 낸다. 자식이 하나면 그 회전이 그대로 쓰인다.
+        // 자식마다 필요한 회전을 구해 평균 낸다(지금 구성에서는 자식이 하나라 그대로 쓰인다).
         FQuat Align = FQuat::Identity;
         int32 Contributions = 0;
         for (const TPair<FName, FName>& Child : Entry.Children)

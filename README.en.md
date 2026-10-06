@@ -59,7 +59,7 @@ Tools/eval/
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
-| `retarget` | does retargeting preserve the motion (2 sources x 3 targets, 19 pairs) | 0.6° median angle |
+| `retarget` | does retargeting preserve the motion (2 sources x 3 targets, 19 pairs) | 0.1° median angle |
 
 ## What the apparatus actually found
 
@@ -342,6 +342,48 @@ The measurement entry point was bundled as well (`Tools/eval/editor/upt_run_reta
 waits for the registry and logs an error when a manifest's pair count is not what was asked for. The
 regression baseline also gained two whole-suite guards so changes that improve one combination while
 degrading another cannot pass.
+
+### Broken down per segment, the error sat in exactly three places
+
+A 0.6° overall median looks finished, but collecting the per-segment numbers across all 19 pairs made
+the shape obvious: **almost every segment was at or below 0.1°, and three were not** — `pelvis→spine`
+3.4°, `lowerarm→hand` 2.1°, `calf→foot` 5.1°. A structure the median had been hiding.
+
+`pelvis→spine` was there because the pelvis is **the only bone with several children** (spine and both
+thighs). One rotation carrying three of them averages into a value that is none of them. But averaging
+better was not the fix — **a branch direction is not something a rotation can correct.** Which way a
+thigh points out of the pelvis is pelvis width, i.e. a matter of **position**, and the leg's own
+direction gets corrected one level down by rotating the thigh anyway.
+→ The role graph became a set of **axes**; each bone looks only at the next role along its own axis.
+`pelvis→spine` 3.4° → **0.0°**, overall median 0.6° → **0.1°**, every combination at or below 0.1°.
+
+The remaining `calf→foot` and `lowerarm→hand` are IK goal bones, so the IK pass was the suspect.
+Turning every IK op off changed **nothing, to two decimal places** — rejected. (A side finding: in
+these combinations the IK ops are **doing nothing at all.**)
+
+The cause was elsewhere. **Every segment at 0.1° has its parent as the first bone of a chain, and every
+segment with error does not.** The FK Chains op defaults to `Interpolated`: both chains are normalized
+by length and each target rotation is interpolated from the source at the matching fraction. The first
+bone sits at fraction 0 and arrives exactly; from the second bone on, a different thigh:calf ratio
+pulls in **a value shifted toward a different source bone**. The same class of off-by-one I had hit in
+my own aligner — here it is the engine working as designed.
+
+With equal bone counts there is no reason to search by fraction, so `One to One` was tried. The result split.
+
+| metric | `Interpolated` (default) | `One to One` |
+|---|---|---|
+| segment angle median / worst | 0.1° / 8.4° | **0.0° / 0.1°** |
+| motion deviation | 2.46° | **0.01°** |
+| foot clearance error / contact mismatch | **0.0120 / 0.0417** | 0.0181 / 0.0625 |
+
+Angles go essentially perfect, and **contact mismatch crosses the regression guard (0.06)**. Copying
+rotations exactly means a body with different bone lengths plants its feet at a different height — the
+length normalization had been absorbing that. **The guard was not loosened to let it pass.** A 0.0°
+angle means no more than "the source rotations were copied"; the metric saturates there and stops
+discriminating. The contact metrics exist precisely because angles were found not to explain quality,
+and they just did their job.
+→ `UPT.FKOneToOne` stays off by default and remains available as a switch. Getting both would mean
+pairing `One to One` with a floor-constraint or speed-planting op and measuring that separately.
 
 ## Layout
 

@@ -209,34 +209,34 @@
       "min": 19
     },
     "segment_angle_median_deg": {
-      "max": 1.0
+      "max": 0.5
     },
     "worst_segment_deg": {
       "max": 9.0
     },
     "targets.Retrieve_DefaultWoman->SKM_Manny.segment_angle_median_deg": {
-      "max": 1.5
+      "max": 0.5
     },
     "targets.Retrieve_DefaultWoman->SKM_Manny.worst_segment_deg": {
       "max": 9.0
     },
     "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
-      "max": 1.0
+      "max": 0.5
     },
     "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.worst_segment_deg": {
       "max": 8.5
     },
     "targets.Retrieve_DefaultWoman->X_Bot.segment_angle_median_deg": {
-      "max": 1.5
+      "max": 0.5
     },
     "targets.Retrieve_DefaultWoman->X_Bot.worst_segment_deg": {
       "max": 7.5
     },
     "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
-      "max": 1.0
+      "max": 0.5
     },
     "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.worst_segment_deg": {
-      "max": 4.0
+      "max": 3.5
     },
     "motion_deviation_worst_deg": {
       "max": 3.0

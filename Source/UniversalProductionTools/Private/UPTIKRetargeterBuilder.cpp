@@ -10,9 +10,26 @@
 #include "RetargetEditor/IKRetargetFactory.h"
 #include "RetargetEditor/IKRetargeterController.h"
 #include "Retargeter/IKRetargetChainMapping.h"
+#include "Retargeter/RetargetOps/FKChainsOp.h"
 #include "Retargeter/IKRetargeter.h"
 #include "Rig/IKRigDefinition.h"
 #include "RigEditor/IKRigController.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogUPTIKRetargeter, Log, All);
+
+// 손·발에만 남은 오차가 IK Goal 쪽에서 오는지 확인하기 위한 진단 스위치.
+// 1로 두면 이름에 IK가 들어간 op을 모두 끈다(접지가 나빠지므로 측정용으로만 쓴다).
+static TAutoConsoleVariable<int32> CVarDisableIKOps(
+    TEXT("UPT.DisableIKOps"), 0,
+    TEXT("1이면 리타기터의 IK 관련 op을 모두 끈다(진단용)."));
+
+// 본 개수가 같은 체인의 FK 회전을 길이 비율 보간 대신 1:1로 옮긴다(아래 ApplyOneToOneForEqualChains 참고).
+// 기본은 **끔**이다. 각도는 완벽해지는데(최악 8.4° -> 0.1°) 접지가 나빠진다
+// (접지 불일치 0.0417 -> 0.0625, 발 높이 오차 0.0120 -> 0.0181). 각도를 정확히 복사하면
+// 뼈 길이가 다른 몸에서는 발이 닿는 높이가 달라지기 때문이다. 길이 정규화가 그걸 메워 주고 있었다.
+static TAutoConsoleVariable<int32> CVarFKOneToOne(
+    TEXT("UPT.FKOneToOne"), 0,
+    TEXT("1이면 원본·대상 체인의 본 개수가 같을 때 FK 회전 모드를 One to One으로 바꾼다(각도↑ 접지↓)."));
 
 namespace
 {
@@ -22,6 +39,88 @@ namespace
 const TArray<FName> RequiredChains = {
     TEXT("Spine"), TEXT("LeftArm"), TEXT("RightArm"), TEXT("LeftLeg"), TEXT("RightLeg")
 };
+
+/** 체인에 든 본 개수. 끝 본에서 시작 본까지 계층을 거슬러 올라가 센다. 계층이 끊기면 0. */
+int32 CountChainBones(const FReferenceSkeleton& Ref, const FBoneChain& Chain)
+{
+    const FName StartName = Chain.StartBone.BoneName;
+    const FName EndName = Chain.EndBone.BoneName;
+    int32 Index = EndName != NAME_None ? Ref.FindBoneIndex(EndName) : Ref.FindBoneIndex(StartName);
+    for (int32 Count = 1; Index != INDEX_NONE && Count <= 64; ++Count)
+    {
+        if (Ref.GetBoneName(Index) == StartName) return Count;
+        Index = Ref.GetParentIndex(Index);
+    }
+    return 0;
+}
+
+TMap<FName, int32> BuildChainLengths(const USkeletalMesh* Mesh, const UIKRigDefinition* IKRig)
+{
+    TMap<FName, int32> Lengths;
+    const UIKRigController* RigController = IKRig ? UIKRigController::GetController(IKRig) : nullptr;
+    if (!Mesh || !RigController) return Lengths;
+    const FReferenceSkeleton& Ref = Mesh->GetRefSkeleton();
+    for (const FBoneChain& Chain : RigController->GetRetargetChains())
+    {
+        Lengths.Add(Chain.ChainName, CountChainBones(Ref, Chain));
+    }
+    return Lengths;
+}
+
+/**
+ * 본 개수가 같은 체인의 FK 회전 모드를 One to One으로 바꾼다.
+ *
+ * 역할 축 정렬을 넣은 뒤 남은 오차가 `calf→foot` 5.7°, `lowerarm→hand` 2.1°였고 나머지 마디는
+ * 전부 0.1° 이하였다. IK Goal이 걸린 본이라 IK 쪽을 의심했지만, IK op을 모두 꺼도 수치가
+ * **소수점 둘째 자리까지 그대로**였다. 그래서 IK는 아니었다.
+ *
+ * 남은 마디를 다시 보면 규칙이 정확하다. **0.1°인 마디는 부모 본이 체인의 첫 본이고
+ * (`thigh`, `upperarm`, `neck`), 오차가 있는 마디는 그렇지 않다**(`calf`, `lowerarm`).
+ * FK Chains op의 기본 회전 모드가 `Interpolated`이기 때문이다. 양쪽 체인을 길이로 정규화한 뒤
+ * 같은 비율 위치의 회전을 **이웃 본 사이에서 보간**해 가져온다. 첫 본은 비율 0이라 정확히 오지만,
+ * 두 번째 본부터는 허벅지:정강이 길이 비가 다르면 **원본의 다른 본 쪽으로 밀린 값**이 온다.
+ * 내가 정렬기에서 직접 겪었던 "마디 한 칸 밀림"과 같은 종류이고, 여기서는 엔진의 의도된 동작이다.
+ *
+ * 본 개수가 같으면 비율로 찾을 이유가 없다. `One to One`은 i번째를 i번째로 옮긴다.
+ * 개수가 다른 체인(트위스트 본 유무 등)은 비율 보간이 여전히 맞으므로 건드리지 않는다.
+ */
+void ApplyOneToOneForEqualChains(UIKRetargeterController* Controller,
+    const USkeletalMesh* SourceMesh, const UIKRigDefinition* SourceIKRig,
+    const USkeletalMesh* TargetMesh, const UIKRigDefinition* TargetIKRig)
+{
+    if (CVarFKOneToOne.GetValueOnAnyThread() == 0 || !Controller) return;
+    const TMap<FName, int32> SourceLengths = BuildChainLengths(SourceMesh, SourceIKRig);
+    const TMap<FName, int32> TargetLengths = BuildChainLengths(TargetMesh, TargetIKRig);
+    if (SourceLengths.IsEmpty() || TargetLengths.IsEmpty()) return;
+
+    for (int32 OpIndex = 0; OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
+    {
+        UIKRetargetFKChainsController* FKController =
+            Cast<UIKRetargetFKChainsController>(Controller->GetOpController(OpIndex));
+        if (!FKController) continue;
+
+        const FName OpName = Controller->GetOpName(OpIndex);
+        FIKRetargetFKChainsOpSettings Settings = FKController->GetSettings();
+        int32 Changed = 0;
+        for (FRetargetFKChainSettings& ChainSettings : Settings.ChainsToRetarget)
+        {
+            const FName SourceChain = Controller->GetSourceChain(ChainSettings.TargetChainName, OpName);
+            if (SourceChain == NAME_None) continue;
+            const int32* SourceCount = SourceLengths.Find(SourceChain);
+            const int32* TargetCount = TargetLengths.Find(ChainSettings.TargetChainName);
+            if (!SourceCount || !TargetCount || *SourceCount == 0 || *SourceCount != *TargetCount) continue;
+            ChainSettings.RotationMode = EFKChainRotationMode::OneToOne;
+            ++Changed;
+        }
+        if (Changed > 0)
+        {
+            FKController->SetSettings(Settings);
+            UE_LOG(LogUPTIKRetargeter, Log,
+                TEXT("UPT_RETARGETER '%s': 본 개수가 같은 체인 %d개를 One to One 회전으로 바꿨습니다."),
+                *OpName.ToString(), Changed);
+        }
+    }
+}
 }
 
 bool FUPTIKRetargeterBuilder::ValidatePair(const UUPTSkeletonProfile* Profile, const UIKRigDefinition* IKRig, const TCHAR* PairLabel, FString& OutError)
@@ -127,6 +226,21 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     Controller->AssignIKRigToAllOps(ERetargetSourceOrTarget::Source, SourceIKRig);
     Controller->AssignIKRigToAllOps(ERetargetSourceOrTarget::Target, TargetIKRig);
     Controller->AutoMapChains(EAutoMapChainType::Exact, true);
+
+    // 역할 축 정렬 뒤 남은 오차가 **손과 발에만** 몰려 있다(발 5.7°, 손 2.1°, 나머지 0.1° 이하).
+    // 둘 다 IK Goal이 걸린 본이라, IK 쪽이 원인인지 확인할 수단이 필요하다. 진단용 스위치다.
+    ApplyOneToOneForEqualChains(Controller, SourceMesh, SourceIKRig, TargetMesh, TargetIKRig);
+
+    if (CVarDisableIKOps.GetValueOnAnyThread() != 0)
+    {
+        for (int32 OpIndex = 0; OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
+        {
+            const FString OpName = Controller->GetOpName(OpIndex).ToString();
+            if (!OpName.Contains(TEXT("IK"))) continue;
+            Controller->SetRetargetOpEnabled(OpIndex, false);
+            UE_LOG(LogUPTIKRetargeter, Log, TEXT("UPT_RETARGETER op '%s' 을 껐습니다(진단)."), *OpName);
+        }
+    }
 
     // 레스트 포즈(A-Pose/T-Pose) 차이를 보정하지 않으면 동작은 그대로 옮겨져도 자세가 통째로 틀어진다.
     // 측정해 보니 Synty→Manny에서 팔이 항상 52.9° 어긋났다(다리는 2.2°).
