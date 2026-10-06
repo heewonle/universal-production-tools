@@ -228,7 +228,13 @@ with a log line, for rigs built by the fallback analyzer.
 (`LocalRotation = RefLocal · Delta`), the same correction is now **computed by hand, without the engine
 API**, and written into the retarget pose. Positions are matched by cumulative length along the chain,
 so differing bone counts (twist bones present or not) still line up.
-→ golem **18.4° → 6.5°, worst 70.0° → 13.3°**, no assertion.
+→ golem **18.4° → 5.6°, worst 70.0° → 10.7°**, no assertion.
+
+An **off-by-one-segment** bug in the same rule turned up too. Source segments were picked by the
+target segment's *start* ratio: the golem's forearm segment starts at 0.519 and the source's at 0.529,
+so **the forearm was being aligned to the upper arm's direction** — and that gap is exactly the elbow
+angle, 33°. Matching segment **midpoints** instead brought it to **4.8°**, and the worst segment across
+the whole suite down to 11.5°.
 
 **Whether the hand-rolled version could replace the engine's was measured too — it could not.**
 Switching the Manny pair to it moved 4.7° → 7.2°, so it was reverted. Both paths stay: the engine's

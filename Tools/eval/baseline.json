@@ -218,19 +218,19 @@
       "max": 8.0
     },
     "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.worst_segment_deg": {
-      "max": 16.0
+      "max": 13.0
     },
     "targets.Retrieve_DefaultWoman->X_Bot.segment_angle_median_deg": {
-      "max": 7.0
+      "max": 5.0
     },
     "targets.Retrieve_DefaultWoman->X_Bot.worst_segment_deg": {
-      "max": 16.0
+      "max": 9.0
     },
     "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
-      "max": 4.0
+      "max": 2.0
     },
     "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.worst_segment_deg": {
-      "max": 36.0
+      "max": 7.0
     },
     "motion_deviation_worst_deg": {
       "max": 4.0

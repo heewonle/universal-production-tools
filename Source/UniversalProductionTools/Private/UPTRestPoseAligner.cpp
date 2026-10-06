@@ -86,18 +86,35 @@ TArray<FChainSegment> BuildSegments(const FReferenceSkeleton& Ref, const TArray<
     return Segments;
 }
 
-/** 길이 비율 Param에 해당하는 마디의 방향. 본 개수가 달라도 같은 자리끼리 맞추기 위한 것.
+/** 마디의 중점 비율. 어느 마디끼리 대응하는지 따질 때의 대표 위치다. */
+double SegmentMidpoint(const TArray<FChainSegment>& Segments, int32 Index)
+{
+    const double Start = Segments[Index].Param;
+    const double End = Index + 1 < Segments.Num() ? Segments[Index + 1].Param : 1.0;
+    return 0.5 * (Start + End);
+}
+
+/** 대상 마디의 중점에 가장 가까운 원본 마디의 방향.
  *
- * 양옆 마디를 섞어 접선을 만드는 쪽도 구현해 재 봤지만 더 나빴다(골렘 최악 13.3° → 18.1°).
- * 관절이 굽어 있으면 위팔 방향과 아래팔 방향을 섞는 셈이 되어, 어느 쪽도 아닌 방향이 나온다.
- * 마디 하나를 그대로 집는 편이 맞다.
+ * 처음에는 "대상 마디의 **시작** 비율 이하인 마지막 원본 마디"를 집었다. 그 한 끗 때문에
+ * UE4 마네킹 원본 → 골렘에서 팔이 32° 어긋났다. 골렘의 아래팔 마디는 0.519에서 시작하는데
+ * 원본의 아래팔 마디는 0.529에서 시작한다. 0.519 <= 0.529라 **아래팔이 위팔 방향에 맞춰졌고**,
+ * 그 차이가 곧 팔꿈치 각도였다.
+ * 양옆을 섞는 보간도 시도했지만 더 나빴다(관절이 굽어 있으면 어느 쪽도 아닌 방향이 나온다).
+ * 섞지 않고 **중점끼리 가장 가까운 마디 하나**를 고르는 것이 맞다.
  */
-FVector DirectionAtParam(const TArray<FChainSegment>& Segments, double Param)
+FVector DirectionAtMidpoint(const TArray<FChainSegment>& Segments, double TargetMidpoint)
 {
     int32 Best = 0;
+    double BestDistance = TNumericLimits<double>::Max();
     for (int32 Index = 0; Index < Segments.Num(); ++Index)
     {
-        if (Segments[Index].Param <= Param + KINDA_SMALL_NUMBER) Best = Index;
+        const double Distance = FMath::Abs(SegmentMidpoint(Segments, Index) - TargetMidpoint);
+        if (Distance < BestDistance)
+        {
+            BestDistance = Distance;
+            Best = Index;
+        }
     }
     return Segments[Best].Direction;
 }
@@ -170,7 +187,7 @@ int32 FUPTRestPoseAligner::AlignTargetToSource(
             if (!TargetSegments.IsValidIndex(Index)) break;
 
             const FVector Current = TargetSegments[Index].Direction;
-            const FVector Desired = DirectionAtParam(SourceSegments, TargetSegments[Index].Param);
+            const FVector Desired = DirectionAtMidpoint(SourceSegments, SegmentMidpoint(TargetSegments, Index));
             const FQuat Align = FQuat::FindBetweenNormals(Current, Desired);
             if (Align.GetAngle() < MinAlignRadians) continue;
 
