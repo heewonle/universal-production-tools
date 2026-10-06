@@ -11,6 +11,9 @@
 #include "RetargetEditor/IKRetargeterController.h"
 #include "Retargeter/IKRetargetChainMapping.h"
 #include "Retargeter/RetargetOps/FKChainsOp.h"
+#include "Retargeter/RetargetOps/FloorConstraintOp.h"
+#include "Retargeter/RetargetOps/IKChainsOp.h"
+#include "Retargeter/RetargetOps/RunIKRigOp.h"
 #include "Retargeter/IKRetargeter.h"
 #include "Rig/IKRigDefinition.h"
 #include "RigEditor/IKRigController.h"
@@ -22,6 +25,12 @@ DEFINE_LOG_CATEGORY_STATIC(LogUPTIKRetargeter, Log, All);
 static TAutoConsoleVariable<int32> CVarDisableIKOps(
     TEXT("UPT.DisableIKOps"), 0,
     TEXT("1이면 리타기터의 IK 관련 op을 모두 끈다(진단용)."));
+
+// 발을 바닥에 붙이는 op을 스택에 넣을지. 기본은 **끔**이다.
+// 이 op은 IK Goal의 위치를 보정하므로 IK Goal이 있어야 의미가 있다(UPT.GenerateIKGoals 1).
+static TAutoConsoleVariable<int32> CVarFloorConstraint(
+    TEXT("UPT.FloorConstraint"), 0,
+    TEXT("1이면 다리 체인에 Floor Constraint op을 붙인다(IK Goal이 있을 때만 효과가 있다)."));
 
 // 본 개수가 같은 체인의 FK 회전을 길이 비율 보간 대신 1:1로 옮긴다(아래 ApplyOneToOneForEqualChains 참고).
 // 기본은 **끔**이다. 각도는 완벽해지는데(최악 8.4° -> 0.1°) 접지가 나빠진다
@@ -65,6 +74,74 @@ TMap<FName, int32> BuildChainLengths(const USkeletalMesh* Mesh, const UIKRigDefi
         Lengths.Add(Chain.ChainName, CountChainBones(Ref, Chain));
     }
     return Lengths;
+}
+
+/**
+ * 다리 체인에 Floor Constraint op을 붙인다.
+ *
+ * 이 op은 IK Goal의 높이를 바닥 기준으로 보정한다. 체인에 Goal이 없으면 아무 일도 하지 않는다.
+ * 기본값은 모든 체인이 `EnableFloorConstraint = false`라, 넣기만 해서는 효과가 없다.
+ * 다리 체인만 켠다. 손은 바닥에 붙일 이유가 없다.
+ *
+ * 부모는 `Retarget IK Goals`가 아니라 **`Run IK Rig`**이다(FloorConstraintOp.cpp:209).
+ * 이름만 보고 IK Goals에 붙였더니 정리 단계에서 부모 타입이 맞지 않아 op이 통째로 사라지고
+ * "Retarget ops were lost during cleaning" ensure로 **에디터가 멈췄다.**
+ */
+void AttachFloorConstraint(UIKRetargeterController* Controller)
+{
+    if (CVarFloorConstraint.GetValueOnAnyThread() == 0 || !Controller) return;
+
+    FName ParentOpName = NAME_None;
+    for (int32 OpIndex = 0; OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
+    {
+        const FIKRetargetOpBase* Op = Controller->GetRetargetOpByIndex(OpIndex);
+        if (Op && Op->GetType() == FIKRetargetRunIKRigOp::StaticStruct())
+        {
+            ParentOpName = Controller->GetOpName(OpIndex);
+            break;
+        }
+    }
+    if (ParentOpName == NAME_None)
+    {
+        UE_LOG(LogUPTIKRetargeter, Warning, TEXT("UPT_RETARGETER Run IK Rig op이 없어 Floor Constraint를 붙이지 못했습니다."));
+        return;
+    }
+
+    // 다시 쓰는 에셋에는 이미 붙어 있을 수 있다. 두 번 넣으면 보정이 두 번 걸린다.
+    int32 FloorOpIndex = INDEX_NONE;
+    for (int32 OpIndex = 0; OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
+    {
+        const FIKRetargetOpBase* Op = Controller->GetRetargetOpByIndex(OpIndex);
+        if (Op && Op->GetType() == FIKRetargetFloorConstraintOp::StaticStruct())
+        {
+            FloorOpIndex = OpIndex;
+            break;
+        }
+    }
+    if (FloorOpIndex == INDEX_NONE)
+    {
+        FloorOpIndex = Controller->AddRetargetOp(FIKRetargetFloorConstraintOp::StaticStruct(), ParentOpName);
+    }
+    if (FloorOpIndex == INDEX_NONE)
+    {
+        UE_LOG(LogUPTIKRetargeter, Warning, TEXT("UPT_RETARGETER Floor Constraint op을 추가하지 못했습니다."));
+        return;
+    }
+
+    FIKRetargetOpBase* FloorOpBase = Controller->GetRetargetOpByIndex(FloorOpIndex);
+    if (!FloorOpBase) return;
+    FIKRetargetFloorConstraintOp* FloorOp = static_cast<FIKRetargetFloorConstraintOp*>(FloorOpBase);
+
+    int32 Enabled = 0;
+    for (FFloorConstraintChainSettings& ChainSettings : FloorOp->Settings.ChainsToAffect)
+    {
+        const FString ChainName = ChainSettings.TargetChainName.ToString();
+        if (!ChainName.Contains(TEXT("Leg"))) continue;
+        ChainSettings.EnableFloorConstraint = true;
+        ++Enabled;
+    }
+    UE_LOG(LogUPTIKRetargeter, Log, TEXT("UPT_RETARGETER Floor Constraint를 다리 체인 %d개에 켰습니다(전체 %d개)."),
+        Enabled, FloorOp->Settings.ChainsToAffect.Num());
 }
 
 /**
@@ -230,6 +307,7 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     // 역할 축 정렬 뒤 남은 오차가 **손과 발에만** 몰려 있다(발 5.7°, 손 2.1°, 나머지 0.1° 이하).
     // 둘 다 IK Goal이 걸린 본이라, IK 쪽이 원인인지 확인할 수단이 필요하다. 진단용 스위치다.
     ApplyOneToOneForEqualChains(Controller, SourceMesh, SourceIKRig, TargetMesh, TargetIKRig);
+    AttachFloorConstraint(Controller);
 
     if (CVarDisableIKOps.GetValueOnAnyThread() != 0)
     {

@@ -385,6 +385,35 @@ and they just did their job.
 → `UPT.FKOneToOne` stays off by default and remains available as a switch. Getting both would mean
 pairing `One to One` with a floor-constraint or speed-planting op and measuring that separately.
 
+### The IK pass had been running empty the whole time
+
+"Turning the IK ops off changes nothing" was itself the bigger finding. Opening the retargeter asset
+showed the golem's IK op with an **empty chain list**, and Manny's with chains but no effect. The
+engine code is explicit: a chain **with no IK goal is skipped**, and if none initialize, the op does
+not run. Our IK Rigs had **neither goals nor a solver** — the engine path only built chains (FBIK
+generation is a separate call), and the fallback path's FBIK code sat behind `#if 0`. Everything
+achieved so far came from FK and pelvis motion alone.
+
+Wired up properly and measured in three configurations:
+
+| metric | no IK (current) | IK goals | + floor constraint | + pinned root |
+|---|---|---|---|---|
+| angle median / worst | **0.1° / 8.4°** | 2.6° / 22.1° | 4.4° / 25.2° | 2.2° / 24.1° |
+| motion deviation | **2.46°** | 6.68° | 6.66° | 4.61° |
+| worst foot clearance | **0.0413** | 0.0413 | 0.0946 | 0.0869 |
+| contact mismatch | **0.0417** | 0.0625 | 0.0625 | 0.0625 |
+
+**The reason to run IK is contact, and contact did not improve.** The floor constraint, added
+specifically to put feet on the ground, more than doubled the worst clearance error instead. The
+reason is structural: an IK goal is built from the source chain's normalized extension times the
+target chain length, while the FK path already has the angles right from role-axis rest-pose
+alignment — **two different models pulling the same limb.**
+
+→ All three switches default to off. Goal generation now works, so it can be turned on and measured
+for assets where contact matters more than angles. Along the way, picking the floor constraint's
+parent op by name rather than by type stalled the editor with `Retarget ops were lost during
+cleaning` (its parent is `Run IK Rig`, not `Retarget IK Goals`).
+
 ## Layout
 
 ```

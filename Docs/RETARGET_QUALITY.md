@@ -184,7 +184,74 @@ UPT_RETARGET 'Forest_Golem_1_PolyArt' 는 자체 분석으로 만든 IK Rig이�
 정렬이 적용된 Manny와 큰 차이가 없다. **동작 자체는 옮겨졌고 자세만 틀어져 있다** —
 `motion_deviation_worst_deg`를 따로 재지 않았다면 "골렘 리타기팅은 70° 망가진다"로 잘못 읽었을 것이다.
 
-### 회귀 기준을 쌍별로 나눴다
+### IK 패스는 처음부터 비어 돌고 있었다 (2026-10-07)
+
+앞 절에서 "IK op을 모두 꺼도 수치가 한 자리도 안 변한다"는 것을 확인하고 넘어갔다.
+그 자체가 더 큰 사실이었다. 리타기터 에셋을 열어 op 스택과 설정을 그대로 찍어 봤다.
+
+```
+=== RTG_UPT_..._to_SKM_Manny  ops=6
+  [2] Retarget IK Goals  enabled=True
+      chains_to_retarget: (LeftArm),(RightArm),(RightLeg),(LeftLeg)
+=== RTG_UPT_..._to_Forest_Golem_1_PolyArt  ops=6
+  [2] Retarget IK Goals  enabled=True
+      chains_to_retarget:            ← 비어 있음
+```
+
+골렘 쪽은 체인이 아예 없었고, Manny 쪽은 체인이 있는데도 아무 일이 일어나지 않았다.
+`IKChainsOp.cpp:290`을 보면 답이 있다 — **체인에 IK Goal이 붙어 있지 않으면 건너뛰고**,
+하나도 초기화되지 않으면 op 자체가 `bIsInitialized = false`가 되어 실행되지 않는다.
+
+우리 IK Rig에는 **Goal도 Solver도 없었다.** 엔진 경로는 `AutoGenerateRetargetDefinition`으로
+체인만 만들고 끝났고(FBIK 생성은 `AutoGenerateFBIK`라는 별도 호출이다), 폴백 경로의 FBIK 생성
+코드는 `#if 0`으로 막혀 있었다. 즉 **지금까지의 품질은 전부 FK와 펠비스 이동에서 나온 것**이고
+IK 패스는 한 번도 돈 적이 없다.
+
+### 고치고 나니 더 나빠졌다
+
+Goal을 제대로 만들어 붙였다. 엔진 경로는 `AutoGenerateFBIK`를, 폴백 경로는 손·발 역할 본에
+Goal을 만들어 같은 이름의 체인에 묶는 코드를 직접 넣었다(엔진 생성기는 내부에서 Auto Characterize를
+다시 돌리므로 폴백 Rig에는 쓸 수 없다). 그리고 세 가지 구성으로 19쌍을 다시 쟀다.
+
+| 지표 | IK 없음(지금) | IK Goal | + Floor Constraint | + 루트 고정 |
+|---|---|---|---|---|
+| 각도 중앙 / 최악 | **0.1° / 8.4°** | 2.6° / 22.1° | 4.4° / 25.2° | 2.2° / 24.1° |
+| 동작 왜곡 | **2.46°** | 6.68° | 6.66° | 4.61° |
+| 발 높이 오차 | **0.0120** | 0.0165 | 0.0171 | 0.0231 |
+| 발 높이 오차 최악 | **0.0413** | 0.0413 | 0.0946 | 0.0869 |
+| 접지 불일치 | **0.0417** | 0.0625 | 0.0625 | 0.0625 |
+| 발 미끄러짐 (원본 0.0391) | 0.0427 | **0.0409** | 0.0407 | 0.0470 |
+
+**IK를 쓸 이유는 접지인데, 접지가 나아지지 않았다.** 세 구성 모두 접지 불일치가
+0.0417 → 0.0625로 같은 폭만큼 나빠졌고, 발을 바닥에 붙이라고 넣은 Floor Constraint는
+오히려 발 높이 오차 최악값을 0.0413 → 0.0946으로 **두 배 넘게** 키웠다.
+
+가는 길에 두 번 걸렸다.
+
+- **Floor Constraint의 부모 op은 `Retarget IK Goals`가 아니라 `Run IK Rig`이다**
+  (FloorConstraintOp.cpp:209). 이름만 보고 IK Goals에 붙였더니 정리 단계에서 부모 타입이 맞지
+  않아 op이 통째로 사라지고 `Retarget ops were lost during cleaning` ensure로 **에디터가 멈췄다.**
+- 엔진 생성기는 Solver 루트를 `Free`로 둔다. 그러면 FBIK가 Goal에 닿으려고 **펠비스까지
+  움직여** Pelvis Motion op과 서로를 밀어낸다. `PinToInput`으로 바꾸니 팔은 좋아졌는데
+  (`upperarm→lowerarm` 4.0° → 1.0°) 다리가 나빠졌다(`thigh→calf` 3.0° → 5.6°).
+
+### 왜 이렇게 되는가
+
+`Retarget IK Goals`는 Goal 위치를 **원본 체인의 늘어난 정도(정규화 길이)에 대상 체인 길이를
+곱해서** 만든다. 우리 FK 경로는 레스트 포즈를 역할 축으로 맞춰 둬서 이미 각도가 거의 정확한데,
+IK가 그와 **다른 모델로 계산한 위치**로 팔다리를 끌어당긴다. 각도가 나빠지는 것은 구조상 당연하고,
+그 대가로 얻어야 할 접지가 측정에서 나오지 않았다.
+
+→ `UPT.GenerateIKGoals`, `UPT.FloorConstraint`, `UPT.IKPinRoot`는 모두 **기본 끔**이다.
+Goal 생성 자체는 이제 제대로 동작하므로, 접지가 각도보다 중요한 다른 에셋에서는 켜고 재면 된다.
+지금 19쌍에서는 FK + 펠비스 이동 쪽이 모든 지표에서 낫다.
+
+같이 고친 것: `AcquireIKRig`이 체인만 비우고 Goal과 Solver는 남겨 두고 있었다. 그러면 다시 쓸 때
+**새 체인에는 Goal이 붙지 않는데 Solver는 남아 있어**, 겉보기엔 IK가 갖춰진 Rig인데 실제로는
+IK가 통째로 건너뛰어지는 상태가 된다. 또 FBIK 생성은 Solver를 무조건 하나 더 넣으므로 돌릴 때마다
+Solver가 쌓인다. 셋 다 비우도록 고쳤다.
+
+## 회귀 기준을 쌍별로 나눴다
 
 두 쌍의 성격이 다르므로(한쪽은 정렬, 한쪽은 미정렬) 합친 중앙값 하나로는 의미가 없다.
 
@@ -896,9 +963,10 @@ contact_mismatch                                                 <= 0.06
   길이 비율 보간이다(위 절). 고치는 수단도 있지만(`UPT.FKOneToOne`) 접지를 대가로 내므로
   기본으로 켜지 않았다. 둘을 모두 얻으려면 `One to One`에 바닥 제약이나 접지 고정 op을
   붙여 재야 한다. **다음에 손댈 곳은 여기다.**
-- IK op이 이 조합들에서 **아무 일도 하지 않고 있다**(모두 꺼도 수치가 한 자리도 안 변한다).
-  우리가 만든 IK Goal이 리타기터에 제대로 연결되지 않는 것일 수 있다. 접지를 더 조이려면
-  먼저 이것부터 봐야 한다.
+- 접지를 더 조일 방법이 남아 있지 않다. IK 쪽은 세 구성 모두 재 보고 기각했다(위 절).
+  `One to One`이 각도를 0.1°까지 떨어뜨리지만 접지를 대가로 내는 것도 그대로다.
+  다음에 시도한다면 접지 고정(`SpeedPlantingOp`)이거나, 각도·접지 중 무엇을 살릴지
+  **에셋마다 고르게 하는 것**이다. 지금은 스위치로 둘 다 열어 두었다.
 - 역할 그래프는 **손가락·발가락·트위스트 본을 다루지 않는다.** 지금 지표가 재는 범위 밖이라
   영향이 보이지 않지만, 손 자세를 재는 지표를 만들면 역할 목록을 늘려야 한다.
 
@@ -923,6 +991,9 @@ python Tools/eval/run_regression.py --only retarget
 UPT.RestPoseAlign 0      # 레스트 포즈 정렬을 끈다
 UPT.ForceFallbackRig 1   # 엔진 Characterize 대신 자체 분석 Rig을 쓴다
 UPT.FKOneToOne 1         # 본 개수가 같은 체인의 FK 회전을 1:1로 (각도↑ 접지↓)
+UPT.GenerateIKGoals 1    # IK Rig에 FBIK Goal과 Solver를 만든다 (기본 끔, 켜면 전반적으로 나빠진다)
+UPT.FloorConstraint 1    # 다리 체인에 바닥 제약 op을 붙인다 (Goal이 있어야 효과가 있다)
+UPT.IKPinRoot 0          # FBIK 루트를 엔진 기본값 Free로 (기본은 PinToInput)
 UPT.DisableIKOps 1       # IK 관련 op을 모두 끈다 (진단)
 UPT.BakePelvisMotion 2   # 펠비스 이동이 이미 있어도 덮어쓴다
 ```

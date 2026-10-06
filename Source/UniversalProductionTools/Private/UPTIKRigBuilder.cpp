@@ -11,6 +11,24 @@
 #include "RigEditor/IKRigController.h"
 #include "RigEditor/IKRigDefinitionFactory.h"
 #include "RigEditor/IKRigAutoCharacterizer.h"
+#include "RigEditor/IKRigAutoFBIK.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogUPTIKRig, Log, All);
+
+// IK Goal을 만들지 말지. 기본은 **끔**이다.
+// 켜 보니 Manny 0.1/8.4 -> 5.3/11.8, X_Bot 0.1/7.1 -> 3.8/22.1로 각도가 나빠지고
+// 접지도 같이 나빠졌다(발 높이 오차 0.0120 -> 0.0165, 접지 불일치 0.0417 -> 0.0625).
+// 자세한 수치와 판단 근거는 Docs/RETARGET_QUALITY.md에 적어 두었다.
+static TAutoConsoleVariable<int32> CVarGenerateIKGoals(
+    TEXT("UPT.GenerateIKGoals"), 0,
+    TEXT("1이면 IK Rig에 FBIK Goal과 Solver를 만든다. 0이면 FK와 펠비스 이동만 쓴다."));
+
+// FBIK Solver 루트를 입력 포즈에 고정할지. 엔진 생성기는 Free로 두는데, 그러면 FBIK가
+// Goal에 닿으려고 **펠비스까지 움직인다.** 우리는 펠비스를 Pelvis Motion op이 따로 맡으므로
+// 두 보정이 서로를 밀어낸다. PinToInput이면 IK가 팔다리만 건드린다.
+static TAutoConsoleVariable<int32> CVarIKPinRoot(
+    TEXT("UPT.IKPinRoot"), 1,
+    TEXT("1이면 FBIK Solver 루트를 PinToInput으로(팔다리만 푼다). 0이면 엔진 기본값 Free."));
 
 namespace
 {
@@ -29,6 +47,89 @@ bool ResolveBone(const UUPTSkeletonProfile* Profile, const FName Role, FName& Ou
     OutBone = *Bone;
     return true;
 }
+
+/** FBIK Solver의 루트 동작을 설정한다. 엔진 생성기가 Free로 두고 가므로 뒤에서 덮어쓴다. */
+void ApplyIKRootBehavior(const UIKRigController* Controller)
+{
+    if (!Controller || CVarIKPinRoot.GetValueOnAnyThread() == 0) return;
+    for (int32 SolverIndex = 0; SolverIndex < Controller->GetNumSolvers(); ++SolverIndex)
+    {
+        const FInstancedStruct* SolverStruct = Controller->GetSolverStructAtIndex(SolverIndex);
+        if (!SolverStruct || SolverStruct->GetScriptStruct() != FIKRigFullBodyIKSolver::StaticStruct()) continue;
+        FIKRigFullBodyIKSolver* Solver = static_cast<FIKRigFullBodyIKSolver*>(Controller->GetSolverAtIndex(SolverIndex));
+        if (Solver) Solver->Settings.RootBehavior = EPBIKRootBehavior::PinToInput;
+    }
+}
+
+/**
+ * 폴백 Rig에 FBIK Goal과 Solver를 붙인다.
+ *
+ * 엔진의 `AutoGenerateFBIK`는 내부에서 Auto Characterize를 다시 돌리고 템플릿에 맞지 않으면
+ * 그냥 돌아간다. 폴백 Rig은 애초에 그 판정에 실패해서 폴백으로 내려온 것이므로 쓸 수 없다.
+ * 손·발 역할 본에 Goal을 만들고 같은 이름의 체인에 묶어 주는 일만 직접 한다.
+ *
+ * IK는 보조 수단이라 실패해도 Rig 생성을 막지 않는다. 없으면 FK로만 가게 된다.
+ */
+void AttachFallbackFBIK(const UIKRigController* Controller, const UUPTSkeletonProfile* Profile, const FName PelvisBone)
+{
+    if (!Controller || !Profile || CVarGenerateIKGoals.GetValueOnAnyThread() == 0) return;
+
+    struct FGoalSpec { const TCHAR* GoalName; const TCHAR* Role; const TCHAR* ChainName; };
+    static const FGoalSpec GoalSpecs[] = {
+        {TEXT("LeftHand_Goal"), TEXT("LeftHand"), TEXT("LeftArm")},
+        {TEXT("RightHand_Goal"), TEXT("RightHand"), TEXT("RightArm")},
+        {TEXT("LeftFoot_Goal"), TEXT("LeftFoot"), TEXT("LeftLeg")},
+        {TEXT("RightFoot_Goal"), TEXT("RightFoot"), TEXT("RightLeg")},
+    };
+
+    // Goal을 붙일 수 있는 체인이 하나도 없으면 Solver만 남아 쓸모가 없다. 먼저 센다.
+    TArray<TPair<FName, FName>> Ready;  // (Goal 이름, 체인 이름)
+    TArray<FName> GoalBones;
+    for (const FGoalSpec& Spec : GoalSpecs)
+    {
+        FName Bone;
+        if (!ResolveBone(Profile, FName(Spec.Role), Bone)) continue;
+        const FBoneChain* Chain = Controller->GetRetargetChainByName(FName(Spec.ChainName));
+        // Goal은 체인의 **끝 본**에 있어야 한다. 아니면 엔진이 경고하고 결과가 나빠진다.
+        if (!Chain || Chain->EndBone.BoneName != Bone) continue;
+        Ready.Add({FName(Spec.GoalName), FName(Spec.ChainName)});
+        GoalBones.Add(Bone);
+    }
+    if (Ready.IsEmpty())
+    {
+        UE_LOG(LogUPTIKRig, Warning, TEXT("UPT_IKRIG 폴백 Rig에 붙일 IK Goal이 없습니다. FK로만 갑니다."));
+        return;
+    }
+
+    const int32 SolverIndex = Controller->AddSolver(FIKRigFullBodyIKSolver::StaticStruct());
+    if (SolverIndex == INDEX_NONE) return;
+    if (!Controller->SetStartBone(PelvisBone, SolverIndex))
+    {
+        Controller->RemoveSolver(SolverIndex);
+        UE_LOG(LogUPTIKRig, Warning, TEXT("UPT_IKRIG FBIK Solver 루트(%s) 설정에 실패해 IK를 붙이지 않습니다."), *PelvisBone.ToString());
+        return;
+    }
+
+    int32 Attached = 0;
+    for (int32 Index = 0; Index < Ready.Num(); ++Index)
+    {
+        const FName GoalName = Controller->AddNewGoal(Ready[Index].Key, GoalBones[Index]);
+        if (GoalName.IsNone()) continue;
+        if (!Controller->ConnectGoalToSolver(GoalName, SolverIndex)) continue;
+        if (!Controller->SetRetargetChainGoal(Ready[Index].Value, GoalName)) continue;
+        ++Attached;
+    }
+
+    // 엔진 생성기와 같은 설정. Free는 Goal에 닿기 위해 필요한 만큼만 펠비스를 움직이게 하고,
+    // PullChainAlpha 0은 특히 팔에서 동작이 출렁이는 것을 가라앉힌다.
+    if (FIKRigFullBodyIKSolver* Solver = static_cast<FIKRigFullBodyIKSolver*>(Controller->GetSolverAtIndex(SolverIndex)))
+    {
+        Solver->Settings.RootBehavior = EPBIKRootBehavior::Free;
+        Solver->Settings.GlobalPullChainAlpha = 0.0f;
+    }
+    ApplyIKRootBehavior(Controller);
+    UE_LOG(LogUPTIKRig, Log, TEXT("UPT_IKRIG 폴백 Rig에 IK Goal %d개를 붙였습니다."), Attached);
+}
 }
 
 namespace
@@ -38,8 +139,12 @@ namespace
  *
  * 전에는 매번 새로 만들었고, 엔진이 이름 충돌을 피해 `..._1`, `..._2`를 붙였다.
  * 리타기팅을 몇 번만 돌려도 메시 하나에 Rig이 대여섯 개씩 쌓였다(21개까지 봤다).
- * 내용은 어차피 아래에서 처음부터 다시 채우므로, 기존 체인만 비우고 재사용하면 된다.
- * 참조도 끊기지 않는다.
+ * 내용은 어차피 아래에서 처음부터 다시 채우므로, 비우고 재사용하면 된다. 참조도 끊기지 않는다.
+ *
+ * 체인뿐 아니라 **Goal과 Solver까지** 비운다. 체인만 비우면 새 체인에는 Goal이 붙지 않는데
+ * Solver와 Goal은 남아 있어, 겉보기에는 IK가 갖춰진 Rig인데 **체인에 Goal이 없어 IK가
+ * 통째로 건너뛰어지는** 상태가 된다. 또 FBIK 생성은 Solver를 무조건 하나 더 추가하므로
+ * 비우지 않으면 돌릴 때마다 Solver가 쌓인다.
  */
 UIKRigDefinition* AcquireIKRig(const FString& AssetName)
 {
@@ -52,6 +157,18 @@ UIKRigDefinition* AcquireIKRig(const FString& AssetName)
             TArray<FName> ChainNames;
             for (const FBoneChain& Chain : Controller->GetRetargetChains()) ChainNames.Add(Chain.ChainName);
             for (const FName ChainName : ChainNames) Controller->RemoveRetargetChain(ChainName);
+
+            TArray<FName> GoalNames;
+            for (const UIKRigEffectorGoal* Goal : Controller->GetAllGoals())
+            {
+                if (Goal) GoalNames.Add(Goal->GoalName);
+            }
+            for (const FName GoalName : GoalNames) Controller->RemoveGoal(GoalName);
+
+            for (int32 SolverIndex = Controller->GetNumSolvers() - 1; SolverIndex >= 0; --SolverIndex)
+            {
+                Controller->RemoveSolver(SolverIndex);
+            }
         }
         return Existing;
     }
@@ -113,6 +230,25 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateUniversalIKRig(USkeletalMesh* Mesh, FS
     }
 
     Controller->SortRetargetChains();
+
+    // 체인만 만들어 두면 **IK 패스가 통째로 비어 돈다.** 리타기터의 `Retarget IK Goals` op은
+    // 체인에 Goal이 붙어 있는 것만 처리하고(IKChainsOp.cpp:290), 하나도 없으면 초기화에
+    // 실패해 아무 일도 하지 않는다. IK op을 전부 꺼도 수치가 소수점 둘째 자리까지 그대로였던
+    // 이유가 이것이다 — 지금까지의 품질은 전부 FK와 펠비스 이동에서 나온 것이었다.
+    // 엔진 생성기는 Auto Characterize 템플릿을 다시 쓰므로 AUTO 경로에서만 쓸 수 있다.
+    if (CVarGenerateIKGoals.GetValueOnAnyThread() != 0)
+    {
+    FAutoFBIKResults FBIKResults;
+    Controller->AutoGenerateFBIK(FBIKResults);
+    if (FBIKResults.Outcome != EAutoFBIKResult::AllOk)
+    {
+        UE_LOG(LogUPTIKRig, Warning,
+            TEXT("UPT_IKRIG '%s' FBIK 자동 생성 결과 %d (없는 체인 %d개). IK 패스 없이 FK로만 갑니다."),
+            *Mesh->GetName(), static_cast<int32>(FBIKResults.Outcome), FBIKResults.MissingChains.Num());
+    }
+    ApplyIKRootBehavior(Controller);
+    }
+
     IKRig->MarkPackageDirty();
     return IKRig;
 }
@@ -226,6 +362,7 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateIKRig(UUPTSkeletonProfile* Profile, FS
         if (CreatedName.IsNone()) { OutError = FString::Printf(TEXT("IK Rig 체인 %s 생성에 실패했습니다."), *Chain.Name.ToString()); return nullptr; }
     }
     Controller->SortRetargetChains();
+    AttachFallbackFBIK(Controller, Profile, MotionBone);
     IKRig->MarkPackageDirty();
     return IKRig;
 }
