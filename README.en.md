@@ -68,7 +68,12 @@ Problems that would have shipped unnoticed without measurement. Full write-ups l
 (Korean).
 
 - **Over-the-shoulder shots passed horizontally and fell out of frame vertically.** The solver
-  reported success while the foreground person was not on screen at all.
+  reported success while the foreground person was not on screen at all. And **that lesson had never
+  reached the regression guards** — `framing_video` had no guard on vertical error at all, and the
+  value sat at **0.9024** while passing. It turned out to be a flaw in the metric itself: a detection
+  failure was being counted as a 4.4 position error and dragging the mean up on its own. Measuring
+  the aim point only where a person was found and the size matched brings it to **0.0233**. Known
+  failures were also hiding behind numbers like `size_hits >= 4`, so they are now pinned **by name**.
   → [OTS_FRAMING_FIX.md](Docs/OTS_FRAMING_FIX.md)
 - **The verifier mis-measured a cropped subject's position by 9%.** Extrapolating the body axis of a
   cropped, leaning figure pushes the aim point sideways. Three candidate measurement rules were
