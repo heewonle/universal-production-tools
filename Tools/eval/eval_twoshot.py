@@ -37,6 +37,9 @@ def compare(plan: dict, truth: dict) -> dict:
     role_to_label = defaultdict(Counter)
     count_ok, x_errors, rows = 0, [], []
     ots_expected, ots_hits, ots_false = 0, 0, 0
+    # 놓친 어깨 너머 샷을 **이름으로** 남긴다. ots_hits >= 1 처럼 숫자로 두면
+    # 알려진 실패가 다른 샷으로 옮겨가도 통과한다.
+    ots_missed = []
     for truth_shot in truth["shots"]:
         center = (truth_shot["start"] + truth_shot["end"]) / 2
         shot = next((s for s in plan["shots"] if s["start_seconds"] <= center <= s["end_seconds"]), None)
@@ -58,7 +61,10 @@ def compare(plan: dict, truth: dict) -> dict:
         found_side = ((shot or {}).get("over_the_shoulder") or {}).get("side", "")
         if expected:
             ots_expected += 1
-            ots_hits += int(found_side == expected)
+            if found_side == expected:
+                ots_hits += 1
+            else:
+                ots_missed.append(truth_shot["name"])
         elif found_side:
             ots_false += 1
         rows.append(f"{truth_shot['name']}: 보이는 인물 {len(visible)} / 찾은 인물 {len(found)} {'OK' if matched else 'MISS'} "
@@ -72,6 +78,7 @@ def compare(plan: dict, truth: dict) -> dict:
         "mean_abs_dx": round(sum(x_errors) / len(x_errors), 4) if x_errors else None,
         "roles_consistent": bool(role_to_label) and single_label and distinct,
         "ots_expected": ots_expected, "ots_hits": ots_hits, "ots_false": ots_false,
+        "ots_missed": ots_missed,
         "role_groups": labels_per_role, "rows": rows,
     }
 

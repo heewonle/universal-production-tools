@@ -8,11 +8,25 @@
     "shots_detected": {
       "equals": 5
     },
-    "size_hits": {
-      "min": 4
+    "size_compared": {
+      "equals": 5
+    },
+    "size_misses": {
+      "equals": []
+    },
+    "shots_without_person_names": {
+      "equals": [
+        "GT_05_ExtremeCloseUp"
+      ]
+    },
+    "aim_compared": {
+      "equals": 4
     },
     "mean_x_error": {
       "max": 0.02
+    },
+    "mean_y_error": {
+      "max": 0.04
     },
     "mean_boundary_error": {
       "max": 0.1
@@ -45,8 +59,17 @@
     "motion_hits": {
       "min": 5
     },
+    "aim_compared": {
+      "min": 5
+    },
+    "shots_without_person": {
+      "equals": 0
+    },
     "mean_x_error": {
       "max": 0.02
+    },
+    "mean_y_error": {
+      "max": 0.03
     },
     "identities": {
       "equals": 1
@@ -149,11 +172,16 @@
     "roles_consistent": {
       "equals": true
     },
-    "ots_hits": {
-      "min": 1
-    },
     "ots_false": {
       "equals": 0
+    },
+    "ots_expected": {
+      "equals": 2
+    },
+    "ots_missed": {
+      "equals": [
+        "TS_03_OTS_Partner"
+      ]
     }
   },
   "library_search": {

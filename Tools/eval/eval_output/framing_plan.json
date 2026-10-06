@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "title": "ground_truth",
+  "match_mode": "scene",
+  "vision_model": "upt-local-pose/balanced",
+  "analysis_fingerprint": "",
+  "aspect_ratio": 1.7778,
+  "analysis_notes": {
+    "analyzer": "pose-v8",
+    "proportion_calibration": {
+      "0": 0.967,
+      "1": 0.991,
+      "2": 0.984,
+      "3": 0.99,
+      "4": 0.983,
+      "5": 0.886,
+      "6": 0.873,
+      "shoulder_width": 0.223,
+      "ear_width": 0.101
+    },
+    "identities": {
+      "count": 1,
+      "shot_roles": [
+        [
+          "main_character"
+        ],
+        [
+          "main_character"
+        ],
+        [
+          "main_character"
+        ],
+        [
+          "main_character"
+        ],
+        []
+      ]
+    },
+    "foreground_detection": "deeplab_v3",
+    "active_area": null
+  },
+  "shots": [
+    {
+      "name": "Shot_01",
+      "subject_role": "main_character",
+      "start_seconds": 0.0,
+      "end_seconds": 2.0,
+      "shot_size": "wide",
+      "camera_angle": "eye",
+      "camera_motion": "static",
+      "camera_motion_amount": {},
+      "subject_screen_position": {
+        "x": 0.49412786024769606,
+        "y": 0.5506672842300657
+      },
+      "subject_screen_size": {
+        "width": 0.05534558370709419,
+        "height": 0.2150866591146043
+      },
+      "subjects": [
+        {
+          "role": "main_character",
+          "screen_position": {
+            "x": 0.49414449965451385,
+            "y": 0.550687697002215
+          },
+          "screen_size": {
+            "width": 0.055338382720947266,
+            "height": 0.21509356595494186
+          },
+          "depth_order": 0
+        }
+      ],
+      "composition": "center",
+      "confidence": 0.71,
+      "diagnostics": {
+        "full_body_screen_height": 0.215,
+        "focus_height_ratio": 0.5,
+        "people_max": 1,
+        "detected_samples": 4,
+        "samples": 4,
+        "keypoint_quality": 0.66,
+        "motion": {
+          "pairs": 7,
+          "net_scale": 1.0,
+          "net_tx": 0.0,
+          "net_ty": 0.0,
+          "path": 0.0,
+          "subject_scale_full": 0.999,
+          "subject_scale": 0.999,
+          "box_scale": 1.001,
+          "subject_dx": -0.0,
+          "direction_changes": 0
+        },
+        "camera_angle_confidence": 0.75,
+        "camera_angle_cues": {
+          "nose_to_shoulders": 0.396,
+          "horizon_body_ratio": 0.284,
+          "head_width_to_height": 0.005,
+          "low_limit": 0.25
+        },
+        "foreground_samples": 0
+      }
+    },
+    {
+      "name": "Shot_02",
+      "subject_role": "main_character",
+      "start_seconds": 2.0,
+      "end_seconds": 4.0,
+      "shot_size": "full",
+      "camera_angle": "low",
+      "camera_motion": "static",
+      "camera_motion_amount": {},
+      "subject_screen_position": {
+        "x": 0.41461862187387843,
+        "y": 0.5030044274530773
+      },
+      "subject_screen_size": {
+        "width": 0.22317925095558167,
+        "height": 0.6910789353430717
+      },
+      "subjects": [
+        {
+          "role": "main_character",
+          "screen_position": {
+            "x": 0.41443244816365504,
+            "y": 0.5030943432095155
+          },
+          "screen_size": {
+            "width": 0.22317838668823242,
+            "height": 0.6907893151011153
+          },
+          "depth_order": 0
+        }
+      ],
+      "composition": "thirds",
+      "confidence": 0.87,
+      "diagnostics": {
+        "full_body_screen_height": 0.691,
+        "focus_height_ratio": 0.5,
+        "people_max": 1,
+        "detected_samples": 4,
+        "samples": 4,
+        "keypoint_quality": 0.843,
+        "motion": {
+          "pairs": 0
+        },
+        "camera_angle_confidence": 0.75,
+        "camera_angle_cues": {
+          "nose_to_shoulders": 0.396,
+          "horizon_body_ratio": 0.12,
+          "head_width_to_height": 0.102,
+          "low_limit": 0.25
+        },
+        "foreground_samples": 0
+      }
+    },
+    {
+      "name": "Shot_03",
+      "subject_role": "main_character",
+      "start_seconds": 4.0,
+      "end_seconds": 6.0,
+      "shot_size": "medium",
+      "camera_angle": "eye",
+      "camera_motion": "static",
+      "camera_motion_amount": {},
+      "subject_screen_position": {
+        "x": 0.6543396863458564,
+        "y": 0.4716975463719992
+      },
+      "subject_screen_size": {
+        "width": 0.5410972237586975,
+        "height": 0.7604481093869481
+      },
+      "subjects": [
+        {
+          "role": "main_character",
+          "screen_position": {
+            "x": 0.654346834733891,
+            "y": 0.4716195936034866
+          },
+          "screen_size": {
+            "width": 0.5410995483398438,
+            "height": 0.7607465418122269
+          },
+          "depth_order": 0
+        }
+      ],
+      "composition": "thirds",
+      "confidence": 0.74,
+      "diagnostics": {
+        "full_body_screen_height": 1.521,
+        "focus_height_ratio": 0.72,
+        "people_max": 1,
+        "detected_samples": 4,
+        "samples": 4,
+        "keypoint_quality": 0.692,
+        "motion": {
+          "pairs": 0
+        },
+        "camera_angle_confidence": 0.75,
+        "camera_angle_cues": {
+          "nose_to_shoulders": 0.289,
+          "horizon_body_ratio": 0.604,
+          "head_width_to_height": 0.111,
+          "low_limit": 0.426
+        },
+        "foreground_samples": 0
+      }
+    },
+    {
+      "name": "Shot_04",
+      "subject_role": "main_character",
+      "start_seconds": 6.0,
+      "end_seconds": 8.0,
+      "shot_size": "close_up",
+      "camera_angle": "eye",
+      "camera_motion": "static",
+      "camera_motion_amount": {},
+      "subject_screen_position": {
+        "x": 0.27685853533050625,
+        "y": 0.5591157099796356
+      },
+      "subject_screen_size": {
+        "width": 0.703437328338623,
+        "height": 0.8492661761570065
+      },
+      "subjects": [
+        {
+          "role": "main_character",
+          "screen_position": {
+            "x": 0.2785177064854511,
+            "y": 0.5605248138430555
+          },
+          "screen_size": {
+            "width": 0.7033673524856567,
+            "height": 0.8497272002481254
+          },
+          "depth_order": 0
+        }
+      ],
+      "composition": "thirds",
+      "confidence": 0.66,
+      "diagnostics": {
+        "full_body_screen_height": 3.86,
+        "focus_height_ratio": 0.88,
+        "people_max": 1,
+        "detected_samples": 4,
+        "samples": 4,
+        "keypoint_quality": 0.609,
+        "motion": {
+          "pairs": 0
+        },
+        "camera_angle_confidence": 0.75,
+        "camera_angle_cues": {
+          "nose_to_shoulders": 0.416,
+          "horizon_body_ratio": 0.812,
+          "head_width_to_height": 0.122,
+          "low_limit": 0.554
+        },
+        "foreground_samples": 0
+      }
+    },
+    {
+      "name": "Shot_05",
+      "subject_role": "",
+      "start_seconds": 8.0,
+      "end_seconds": 12.0,
+      "shot_size": "wide",
+      "camera_angle": "eye",
+      "camera_motion": "static",
+      "subject_screen_position": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "subject_screen_size": {
+        "width": 0.3,
+        "height": 0.5
+      },
+      "subjects": [],
+      "composition": "center",
+      "confidence": 0.1,
+      "diagnostics": {
+        "people_max": 0,
+        "samples": 4
+      }
+    }
+  ]
+}
