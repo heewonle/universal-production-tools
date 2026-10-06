@@ -371,17 +371,59 @@ UE4 원본의 팔 33°를 겨냥해, 정렬에서 맞출 방향을 고를 때 **
 이름이 겹치면 엔진이 번호까지 붙인다. 엉뚱한 쌍이 들어가 `length_mismatch`가 4로 튀면서 드러났다.
 이름 접두사로 짝짓도록 고쳤다. **회귀 기준에 `length_mismatch == 0`을 넣어 둔 덕에 잡혔다.**
 
+## 발 뜨기를 끝까지 추적했다 — 원인은 못 찾았고, 가설 셋을 기각했다 (2026-10-06)
+
+접지 지표가 드러낸 "서 있는 동작에서 발이 뜬다"를 파고들었다. 먼저 **펠비스 높이 곡선**을
+원본과 비교했더니 범인이 한눈에 보였다.
+
+| 조합 | 원본 펠비스 진폭 | 결과 펠비스 진폭 |
+|---|---|---|
+| Synty → UE 마네킹 | 0.1642 | **0.1636** |
+| Synty → Forest Golem | 0.1642 | **0.0000** |
+| UE4 마네킹 → Forest Golem | 0.1140 | **0.0000** |
+| Synty → X_Bot (Mixamo) | 0.1642 | **0.0000** |
+
+**네 조합 중 UE 표준끼리인 하나만 수직 펠비스 이동이 전달된다.** 나머지 셋은 정확히 0이다.
+몸이 위아래로 움직이지 않으니 원본이 몸을 낮추는 구간에서 다리가 그 차이를 떠안고 발이 뜬다.
+발 높이 오차가 **원본이 펠비스를 얼마나 움직이는 동작인가**에 비례했던 것과 정확히 맞는다
+(`Idle_RM` 진폭 0.008 → 오차 0.0034, `Combo_A` 진폭 0.349 → 오차 0.1793).
+
+### 기각한 가설 셋
+
+| 가설 | 검증 | 결과 |
+|---|---|---|
+| 기본 op 스택이 두 벌이라 펠비스 보정이 두 번 걸린다 | op 11개 → 6개로 수정 후 재측정 | **수치가 소수점 넷째 자리까지 동일.** 중복 op는 적용되지 않는다 |
+| 내가 넣은 레스트 포즈 정렬이 원인이다 | `UPT.RestPoseAlign` 0/1로 A/B | **정렬이 오히려 접지를 0.0409 → 0.0229로 개선.** 원인이 아니라 완화 요인 |
+| 리타기팅 루트를 잘못 골랐다 | 골렘 계층이 `Root → CG → Pelvis`이고 `Pelvis`의 로컬 오프셋이 0이다. 높이는 `CG`가 든다. 루트를 `CG`로 바꿔 재측정 | **`CG`가 149.89에 고정된 채 그대로.** 루트 선택 문제가 아니다 |
+
+### 우리 코드 문제가 아니라는 것은 확인했다
+
+플러그인을 거치지 않고 **엔진 기본 API**(`UIKRetargetBatchOperation.duplicate_and_retarget`)로
+같은 리타기터·같은 애니메이션을 직접 돌렸다. 결과는 같다 — 골렘 `Pelvis` 로컬 z가 0.00으로 고정이다.
+**우리 설정이 아니라 엔진이 이 조합에서 수직 이동을 만들지 않는다.**
+
+### 지금 상태
+
+원인은 아직 모른다. 다만 **경계가 숫자로 그어져 있다.**
+
+- 어떤 조합에서 일어나는지: 대상이 UE 표준 계층(`root`(고정) → `pelvis`(높이를 든 로컬 오프셋))이
+  아닌 경우. 골렘은 사이에 `CG`가 끼고, X_Bot은 `Hips`가 최상위 본이라 고정된 부모가 없다.
+- 얼마나 나쁜지: 발 높이 오차 중앙 0.023, 최악 0.13 (다리 길이 대비)
+- 무엇이 원인이 **아닌지**: 위 표의 셋
+- 회귀로 잠겨 있으므로 더 나빠지면 바로 드러난다
+
+다음에 볼 것은 Pelvis Motion op이 실제로 어떤 값을 쓰는지(`scale_vertical`·`affect_ik_vertical`의
+의미와, 대상 펠비스의 "지면 대비 높이"를 무엇으로 계산하는지)다.
+
 ## 회귀 기준
 
 ```
 length_mismatch                                                  == 0
-pairs                                                            >= 14
-targets.Retrieve_DefaultWoman->SKM_Manny.segment_angle_median_deg          <= 6.0
-targets.Retrieve_DefaultWoman->SKM_Manny.worst_segment_deg                 <= 14.0
-targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg <= 8.0
-targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.worst_segment_deg        <= 16.0
-targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.segment_angle_median_deg      <= 4.0
-targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.worst_segment_deg             <= 36.0
+pairs                                                            >= 19
+targets.Retrieve_DefaultWoman->SKM_Manny.*                        중앙 <= 6.0 / 최악 <= 14.0
+targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.*           중앙 <= 8.0 / 최악 <= 16.0
+targets.Retrieve_DefaultWoman->X_Bot.*                            중앙 <= 7.0 / 최악 <= 16.0
+targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.*                중앙 <= 4.0 / 최악 <= 36.0
 motion_deviation_worst_deg                                       <= 4.0
 foot_slide_target                                                <= 0.13
 foot_clearance_error                                             <= 0.03
@@ -397,9 +439,8 @@ contact_mismatch                                                 <= 0.10
 
 ## 남은 것
 
-- **발 뜨기의 원인을 아직 모른다.** 중복 op 가설은 측정으로 기각했고, 레스트 포즈 정렬은
-  원인이 아니라 완화 요인이었다. 원본이 펠비스를 크게 위아래로 움직이는 동작에서 커진다는 것까지
-  알아냈다. 다음은 펠비스 높이 곡선 자체를 원본과 비교해 보는 것이다.
+- **발 뜨기의 원인을 아직 모른다.** 위 절 참고 — 가설 셋을 기각했고, 엔진 기본 경로에서도
+  재현된다는 것까지 확인했다. 다음은 Pelvis Motion op이 대상 펠비스 높이를 어떻게 계산하는지다.
 - **UE4 마네킹 원본 → 골렘의 팔 33°.** 접선 보간으로는 안 됐다. 체인 매핑이 손목에서
   어긋나는지(원본 `hand_l`이 손가락 체인의 시작이기도 하다) 확인해 볼 차례다.
 - 직접 계산한 정렬이 엔진보다 2.5° 나쁘다(7.2° vs 4.7°). 접선 보간 말고 다른 접근이 필요하다.

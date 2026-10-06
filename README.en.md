@@ -249,6 +249,14 @@ The same metric was used to check that the rest-pose alignment did not trade con
 on and off from a console variable, both improve — angles 18.6° → 6.5°, contact 0.0409 → 0.0229. It is
 not a trade-off.
 
+The hovering feet were chased to the end and **the cause was not found.** Comparing pelvis-height curves
+showed that **of four source→target combinations only the UE-standard-to-UE-standard one carries vertical
+pelvis motion through; the other three come out at exactly zero.** Three hypotheses — a duplicated default
+op stack, the rest-pose alignment itself, and the choice of retarget root — were each rejected by
+measurement, and the same behaviour **reproduces through the engine's own API with the plugin out of the
+loop.** What could not be found is written down as not found; how bad it is (0.023 median, 0.13 worst) and
+what it is *not* are recorded as numbers and locked by the regression.
+
 ## Layout
 
 ```
