@@ -430,11 +430,23 @@ void RunRetargetE2E(const TArray<FString>& Args, UWorld* World)
         UE_LOG(LogUPTRetarget, Log, TEXT("UPT_RETARGET %s -> %s : %d개 생성"),
             *Group.Key->GetName(), *Target->GetName(), Results.Num());
 
-        for (int32 Index = 0; Index < Results.Num() && Index < Group.Value.Num(); ++Index)
+        // 결과는 폴더 비교로 찾으므로 순서가 입력과 같다는 보장이 없다(이름 충돌 시 번호도 붙는다).
+        // 인덱스로 짝지으면 엉뚱한 쌍이 manifest에 들어가므로 이름으로 맞춘다.
+        for (const FAssetData& SourceAsset : Group.Value)
         {
+            const FString SourceName = SourceAsset.AssetName.ToString();
+            const FAssetData* Match = Results.FindByPredicate([&SourceName](const FAssetData& Candidate)
+            {
+                return Candidate.AssetName.ToString().StartsWith(SourceName, ESearchCase::CaseSensitive);
+            });
+            if (!Match)
+            {
+                UE_LOG(LogUPTRetarget, Warning, TEXT("UPT_RETARGET %s 의 결과를 찾지 못해 manifest에서 뺍니다."), *SourceName);
+                continue;
+            }
             TSharedRef<FJsonObject> Row = MakeShared<FJsonObject>();
-            Row->SetStringField(TEXT("source_animation"), Group.Value[Index].GetObjectPathString());
-            Row->SetStringField(TEXT("retargeted_animation"), Results[Index].GetObjectPathString());
+            Row->SetStringField(TEXT("source_animation"), SourceAsset.GetObjectPathString());
+            Row->SetStringField(TEXT("retargeted_animation"), Match->GetObjectPathString());
             Row->SetStringField(TEXT("source_mesh"), Group.Key->GetPathName());
             Row->SetStringField(TEXT("target_mesh"), Target->GetPathName());
             Pairs.Add(MakeShared<FJsonValueObject>(Row));

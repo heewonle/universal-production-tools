@@ -8,6 +8,12 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogUPTRestPose, Log, All);
 
+// 정렬을 껐다 켜며 결과를 비교하기 위한 스위치. 각도는 좋아지는데 접지가 나빠지는 식의
+// 맞교환이 있는지 확인하려면 같은 빌드에서 양쪽을 재야 한다.
+static TAutoConsoleVariable<int32> CVarRestPoseAlign(
+    TEXT("UPT.RestPoseAlign"), 1,
+    TEXT("1이면 자체 분석 Rig에 레스트 포즈 정렬을 적용한다. 0이면 건너뛴다(비교용)."));
+
 namespace
 {
 // 본 하나를 정렬했다고 보기에 너무 작은 각도. 떨림만 만들고 의미가 없다.
@@ -80,7 +86,12 @@ TArray<FChainSegment> BuildSegments(const FReferenceSkeleton& Ref, const TArray<
     return Segments;
 }
 
-/** 길이 비율 Param에 해당하는 마디의 방향. 본 개수가 달라도 같은 자리끼리 맞추기 위한 것. */
+/** 길이 비율 Param에 해당하는 마디의 방향. 본 개수가 달라도 같은 자리끼리 맞추기 위한 것.
+ *
+ * 양옆 마디를 섞어 접선을 만드는 쪽도 구현해 재 봤지만 더 나빴다(골렘 최악 13.3° → 18.1°).
+ * 관절이 굽어 있으면 위팔 방향과 아래팔 방향을 섞는 셈이 되어, 어느 쪽도 아닌 방향이 나온다.
+ * 마디 하나를 그대로 집는 편이 맞다.
+ */
 FVector DirectionAtParam(const TArray<FChainSegment>& Segments, double Param)
 {
     int32 Best = 0;
@@ -99,6 +110,11 @@ int32 FUPTRestPoseAligner::AlignTargetToSource(
     const TSet<FName>& MappedChainNames)
 {
     if (!Controller || !SourceMesh || !TargetMesh || !SourceIKRig || !TargetIKRig) return 0;
+    if (CVarRestPoseAlign.GetValueOnAnyThread() == 0)
+    {
+        UE_LOG(LogUPTRestPose, Log, TEXT("UPT_RESTPOSE UPT.RestPoseAlign=0 이라 정렬을 건너뜁니다."));
+        return 0;
+    }
     const UIKRigController* SourceRig = UIKRigController::GetController(SourceIKRig);
     const UIKRigController* TargetRig = UIKRigController::GetController(TargetIKRig);
     if (!SourceRig || !TargetRig) return 0;

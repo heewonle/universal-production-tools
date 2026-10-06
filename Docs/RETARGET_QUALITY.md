@@ -274,36 +274,143 @@ Delta = RefLocal⁻¹ · Parent⁻¹ · Align · Parent · RefLocal
 새 설정 `DefaultRetargetedAnimationPath`(기본 `/Game/Animation/UPT/Retargeted`)로 조정한다.
 생성된 에셋 목록은 **폴더의 생성 전후를 비교해** 찾는다(이름 충돌 시 엔진이 번호를 붙이므로 예측하지 않는다).
 
+## 접지 지표를 따로 만들었다 (2026-10-06)
+
+앞 절 "남은 것"에 `calf→foot` 10~13°를 고칠 가치가 있지만 **지금 재는 지표가 바로 그 마디라
+지표에 맞춰 튜닝이 되기 쉬우니 접지 지표를 먼저 만들어야 한다**고 적어 뒀다. 그걸 만들었다.
+
+각도가 아니라 **높이**를 본다. 발이 바닥에서 얼마나 떠 있는지의 시간별 곡선을 다리 길이로 정규화해
+원본과 비교한다. 바닥은 그 클립에서 두 발이 닿은 가장 낮은 지점으로 잡는다.
+
+| 지표 | 뜻 |
+|---|---|
+| `foot_clearance_error` | 발 높이 곡선의 차이(다리 길이 대비) 중앙값 |
+| `foot_clearance_worst` | 쌍 단위 최악값 |
+| `contact_mismatch` | 접지 상태(바닥 근처인가)가 원본과 다른 프레임 비율 |
+
+### 만들자마자 계획이 틀렸다는 걸 알려 줬다
+
+| 애니메이션 | 대상 | `calf→foot` | 발 높이 오차 | 접지 불일치 |
+|---|---|---|---|---|
+| Idle_Fidget_Swipe | 골렘 | 11.6° | **0.1054** | **0.6875** |
+| Jump_Running | 골렘 | 13.3° | 0.0380 | 0.0625 |
+| Turn_180L | 골렘 | 11.9° | 0.0219 | 0.0417 |
+| Walk_F | Manny | 10.4° | **0.0060** | 0.0208 |
+
+**`calf→foot` 각도는 10쌍 전부 9.5~13.3°로 거의 일정한데 접지 오차는 18배 차이가 난다.**
+즉 그 각도는 발 디딤 품질을 설명하지 못한다. 고치려던 대상이 틀렸다.
+접지 지표를 먼저 만들지 않았다면 각도만 보고 "발이 좋아졌다"고 할 뻔했다.
+
+진짜 문제는 따로 있었다. 서 있는 동작에서 **골렘의 발이 바닥에서 다리 길이의 12~24%만큼 떠 있다.**
+원본은 같은 구간에서 0.000으로 완전히 붙어 있다.
+
+### 원인이라고 생각한 것 — 틀렸다
+
+리타기터 op 스택을 덤프해 보니 **기본 스택이 두 벌**이었다
+(`Pelvis Motion` / `Pelvis Motion_0`, `FK Chains` / `FK Chains_0` … op 11개).
+`IKRetargetFactory`가 이미 넣어 둔 스택 위에 `AddDefaultOps()`를 또 부른 탓이다.
+펠비스 보정이 두 번 걸리면 다리 길이 차이에 비례해 발이 뜰 것이고, 그러면
+Manny(+6%)에서 거의 안 보이고 골렘(+55%)에서 크게 보이는 것과 맞아떨어진다.
+
+고쳐서 op 11개 → 6개가 됐고, **측정값은 소수점 넷째 자리까지 하나도 바뀌지 않았다.**
+중복 op는 실제로 중복 적용되지 않는다. 가설이 틀렸다. 수정 자체는 위생 문제라 유지했지만,
+**발 뜨기의 원인은 아니다.**
+
+### 정렬이 접지를 희생하지 않았는지도 확인했다
+
+각도를 좋게 하는 수정이 접지를 망가뜨릴 수 있으므로, `UPT.RestPoseAlign` 콘솔 변수를 넣어
+같은 빌드에서 켜고 끄며 쟀다.
+
+| 골렘 · 동작 5개 | 정렬 없음 | 정렬 있음 |
+|---|---|---|
+| 뼈마디 각도 중앙 | 18.6° | **6.5°** |
+| 최악 뼈마디 | 70.0° | **13.3°** |
+| 발 높이 오차 중앙 | 0.0409 | **0.0229** |
+| 발 높이 오차 최악 | 0.1743 | **0.1054** |
+| 접지 불일치 | 0.2708 | **0.0625** |
+
+**맞교환이 아니라 양쪽 다 좋아진다.** 남은 발 뜨기는 정렬이 만든 것이 아니라 정렬이 줄여 준 것이다.
+
+## 원본을 바꿔 봤다 — 오차는 대상만의 문제가 아니었다
+
+같은 대상(골렘)에 원본만 Synty → UE4 마네킹으로 바꿔 4개를 더 돌렸다.
+
+| 조합 | 각도 중앙 | 최악 뼈마디 | 발 높이 오차 |
+|---|---|---|---|
+| Synty → Manny | 4.7° | 11.5° `calf→foot` | 0.0060~0.0240 |
+| Synty → 골렘 | 6.5° | 13.3° `calf→foot` | 0.0219~0.1054 |
+| **UE4 마네킹 → 골렘** | **2.4°** | **33.1° `lowerarm→hand`** | 0.0034~0.1793 |
+
+같은 골렘인데 **원본이 바뀌니 중앙값은 좋아지고(6.5 → 2.4) 최악은 나빠졌다(13.3 → 33.1).**
+틀어지는 뼈마디도 다리에서 팔로 옮겨 갔다. **오차는 대상 체형만의 함수가 아니다.**
+서 있는 동작(`Idle`)의 발 높이 오차는 0.0034로 거의 완벽했는데, 공격 동작(`Combo_A`)은 0.1793이었다.
+발 뜨기는 다리 길이보다 **원본이 펠비스를 얼마나 위아래로 움직이는가**에 더 붙어 있다.
+
+그래서 회귀 기준을 **원본→대상 조합별**로 나눴다. 대상만으로 묶으면 두 원본이 섞여 묻힌다.
+
+## 접선 보간을 시도했다 — 되돌렸다
+
+UE4 원본의 팔 33°를 겨냥해, 정렬에서 맞출 방향을 고를 때 **양옆 마디를 섞어 접선을 만드는**
+방식을 구현했다(기존에는 길이 비율에 해당하는 마디 하나를 그대로 집었다).
+
+| | 마디 하나(기존) | 접선 보간 |
+|---|---|---|
+| UE4 → 골렘 최악(팔) | 33.1° | **16.1°** |
+| UE4 → 골렘 중앙 | **2.4°** | 4.8° |
+| Synty → 골렘 최악 | **13.3°** | 18.1° |
+| Synty → 골렘 중앙 | **6.5°** | 6.8° |
+
+겨냥한 팔은 절반이 됐지만 **기준 데이터셋이 전반적으로 나빠졌다.** 원리로도 그렇다 —
+관절이 굽어 있으면 위팔 방향과 아래팔 방향을 섞는 셈이라 어느 쪽도 아닌 방향이 나온다.
+되돌리고 코드에 이유를 남겼다. 팔 33°는 **알려진 한계**로 기준에 박아 더 나빠지지만 않게 했다.
+
+## 결과물 짝짓기 버그
+
+산출물 폴더를 고치면서 결과를 **폴더의 생성 전후 비교**로 찾도록 바꿨는데, 그 결과 배열을
+입력과 **인덱스로 짝지어** manifest를 쓰고 있었다. 폴더 비교 결과의 순서는 입력 순서와 다르고,
+이름이 겹치면 엔진이 번호까지 붙인다. 엉뚱한 쌍이 들어가 `length_mismatch`가 4로 튀면서 드러났다.
+이름 접두사로 짝짓도록 고쳤다. **회귀 기준에 `length_mismatch == 0`을 넣어 둔 덕에 잡혔다.**
+
 ## 회귀 기준
 
 ```
-length_mismatch                                         == 0
-pairs                                                   >= 10
-targets.SKM_Manny.segment_angle_median_deg              <= 6.0
-targets.SKM_Manny.worst_segment_deg                     <= 14.0
-targets.Forest_Golem_1_PolyArt.segment_angle_median_deg <= 8.0
-targets.Forest_Golem_1_PolyArt.worst_segment_deg        <= 16.0
-motion_deviation_worst_deg                              <= 4.0
-foot_slide_target                                       <= 0.13
+length_mismatch                                                  == 0
+pairs                                                            >= 14
+targets.Retrieve_DefaultWoman->SKM_Manny.segment_angle_median_deg          <= 6.0
+targets.Retrieve_DefaultWoman->SKM_Manny.worst_segment_deg                 <= 14.0
+targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg <= 8.0
+targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.worst_segment_deg        <= 16.0
+targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.segment_angle_median_deg      <= 4.0
+targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.worst_segment_deg             <= 36.0
+motion_deviation_worst_deg                                       <= 4.0
+foot_slide_target                                                <= 0.13
+foot_clearance_error                                             <= 0.03
+foot_clearance_worst                                             <= 0.20
+contact_mismatch                                                 <= 0.10
 ```
- `run_regression.py --only retarget`으로 돌린다.
+
+마지막 세 줄이 각도와 독립인 접지 지표다. `worst` 쪽 두 개(팔 36°, 발 뜨기 0.20)는
+**알려진 한계를 담은 값**이라 "여기까지는 안다, 더 나빠지면 잡는다"는 뜻이다.
+
+`run_regression.py --only retarget`으로 돌린다.
 전체 12개 스위트 모두 통과 상태다.
 
 ## 남은 것
 
-- 최악 뼈마디가 10쌍 전부 `calf→foot` 10~13°다. 대부분 고정 오프셋이지만, 발만은 **접지 판정에
-  직접 영향**을 주므로 체인 끝 마디를 따로 맞추는 처리를 볼 가치가 있다. 다만 지금 재는 지표가
-  바로 그 마디라 "지표에 맞춰 튜닝"이 되기 쉬워, 별도의 접지 지표를 먼저 만들어야 한다.
-- 원본이 모두 **Synty 고블린 한 벌**이다. 체형이 다른 원본(예: UE 마네킹 원본 → 골렘)을 넣어
-  방향을 뒤집어 봐야 원본 쪽 편향이 없는지 안다.
-- 직접 계산한 정렬이 엔진보다 2.5° 나쁘다(7.2° vs 4.7°). 길이 비율 대응 대신 체인 접선을
-  보간하는 쪽이 엔진이 쓰는 방식에 가깝다.
+- **발 뜨기의 원인을 아직 모른다.** 중복 op 가설은 측정으로 기각했고, 레스트 포즈 정렬은
+  원인이 아니라 완화 요인이었다. 원본이 펠비스를 크게 위아래로 움직이는 동작에서 커진다는 것까지
+  알아냈다. 다음은 펠비스 높이 곡선 자체를 원본과 비교해 보는 것이다.
+- **UE4 마네킹 원본 → 골렘의 팔 33°.** 접선 보간으로는 안 됐다. 체인 매핑이 손목에서
+  어긋나는지(원본 `hand_l`이 손가락 체인의 시작이기도 하다) 확인해 볼 차례다.
+- 직접 계산한 정렬이 엔진보다 2.5° 나쁘다(7.2° vs 4.7°). 접선 보간 말고 다른 접근이 필요하다.
 
 ## 다시 돌리는 법
 
 ```
-UPT.RetargetE2E /Game/.../SKM_Manny.SKM_Manny <애니메이션...> -out=<Saved>/retarget_manifest.json
-UPT.RetargetE2E /Game/.../Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt <애니메이션...> -out=<Saved>/retarget_manifest_golem.json
+UPT.RestPoseAlign 1       # 0으로 두면 자체 분석 Rig의 레스트 포즈 정렬을 끈다(비교용)
+UPT.RetargetE2E /Game/.../SKM_Manny.SKM_Manny <Synty 애니메이션...> -out=<Saved>/retarget_manifest.json
+UPT.RetargetE2E /Game/.../Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt <Synty 애니메이션...> -out=<Saved>/retarget_manifest_golem.json
+UPT.RetargetE2E /Game/.../Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt <UE4 애니메이션...> -out=<Saved>/retarget_manifest_ue4src.json
 ```
 
 정답 촬영은 manifest를 여러 개 받는다(에디터 Python).

@@ -59,7 +59,7 @@ Tools/eval/
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
-| `retarget` | does retargeting preserve the motion (2 pairs x 5 motions) | 3.6° motion distortion |
+| `retarget` | does retargeting preserve the motion (2 sources x 2 targets, 14 pairs) | 0.023 contact error |
 
 ## What the apparatus actually found
 
@@ -224,9 +224,19 @@ Switching the Manny pair to it moved 4.7° → 7.2°, so it was reverted. Both p
 alignment for engine-built rigs, the hand-rolled one for fallback rigs.
 
 The sample grew as well: **a 180° turn, a running jump and an arm swipe** joined walking and running,
-for 2 character pairs × 5 animations = **10 pairs**. The 3.7° reported earlier was **the median of two
-easy motions**; with the wider sample it is 4.7°. Motion distortion with the constant offset removed
-peaks at 3.6°.
+and **a second source skeleton** (UE4 mannequin) was added, for 2 sources × 2 targets = **14 pairs**.
+The 3.7° reported earlier was **the median of two easy motions**; with the wider sample it is 4.7°.
+
+**A ground-contact metric, independent of the angles, was then built** — the foot's height above the
+floor over time, compared against the source. It immediately showed the plan was aimed at the wrong
+thing: the `calf→foot` angle that was going to be fixed sits at 9.5–13.3° across all 10 pairs —
+**essentially constant, while the contact error varies 18×**. That angle does not explain foot-plant
+quality. The real problem it surfaced: **in a standing idle the golem's feet hover 12–24% of leg length
+above the floor**, where the source's are flat on it.
+
+The same metric was used to check that the rest-pose alignment did not trade contact for angles. Toggled
+on and off from a console variable, both improve — angles 18.6° → 6.5°, contact 0.0409 → 0.0229. It is
+not a trade-off.
 
 ## Layout
 

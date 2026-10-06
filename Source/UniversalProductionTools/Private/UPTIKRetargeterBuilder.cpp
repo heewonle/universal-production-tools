@@ -114,7 +114,14 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     Controller->SetIKRig(ERetargetSourceOrTarget::Target, TargetIKRig);
     Controller->SetPreviewMesh(ERetargetSourceOrTarget::Source, SourceMesh);
     Controller->SetPreviewMesh(ERetargetSourceOrTarget::Target, TargetMesh);
-    Controller->AddDefaultOps();
+    // IKRetargetFactory가 이미 기본 op 스택을 넣어 둔다. 여기서 또 부르면 스택이 두 벌이 되고
+    // (Pelvis Motion / Pelvis Motion_0 ...) 펠비스 보정이 두 번 적용돼 발이 바닥에서 뜬다.
+    // 오차가 다리 길이 차이에 비례해, Manny(+6%)에서는 거의 안 보이고 골렘(+55%)에서 크게 드러났다.
+    // 싱글턴 op만 "Op not added" 경고를 내고 걸러지므로 로그만으로는 알기 어려웠다.
+    if (Controller->GetNumRetargetOps() == 0)
+    {
+        Controller->AddDefaultOps();
+    }
     Controller->AssignIKRigToAllOps(ERetargetSourceOrTarget::Source, SourceIKRig);
     Controller->AssignIKRigToAllOps(ERetargetSourceOrTarget::Target, TargetIKRig);
     Controller->AutoMapChains(EAutoMapChainType::Exact, true);

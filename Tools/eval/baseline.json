@@ -206,25 +206,40 @@
       "equals": 0
     },
     "pairs": {
-      "min": 10
+      "min": 14
     },
-    "targets.SKM_Manny.segment_angle_median_deg": {
+    "targets.Retrieve_DefaultWoman->SKM_Manny.segment_angle_median_deg": {
       "max": 6.0
     },
-    "targets.SKM_Manny.worst_segment_deg": {
+    "targets.Retrieve_DefaultWoman->SKM_Manny.worst_segment_deg": {
       "max": 14.0
     },
-    "targets.Forest_Golem_1_PolyArt.segment_angle_median_deg": {
+    "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
       "max": 8.0
     },
-    "targets.Forest_Golem_1_PolyArt.worst_segment_deg": {
+    "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.worst_segment_deg": {
       "max": 16.0
+    },
+    "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
+      "max": 4.0
+    },
+    "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.worst_segment_deg": {
+      "max": 36.0
     },
     "motion_deviation_worst_deg": {
       "max": 4.0
     },
     "foot_slide_target": {
       "max": 0.13
+    },
+    "foot_clearance_error": {
+      "max": 0.03
+    },
+    "foot_clearance_worst": {
+      "max": 0.2
+    },
+    "contact_mismatch": {
+      "max": 0.1
     }
   }
 }
