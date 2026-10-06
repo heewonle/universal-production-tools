@@ -138,9 +138,10 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
     //     (IKRetargeterPoseGenerator.cpp:118). 자체 분석으로 만든 Rig에서 실제로 세 번 겪었다.
     // 같은 보정을 직접 계산하는 쪽이 수치도 더 낫다(Manny 쌍 4.7°/11.5° → 3.3°/8.7°).
     //
-    // 매핑된 체인만 정렬한다. 매핑 여부는 이름 비교로 짐작하지 않고 리타기터가 들고 있는
-    // 체인 매핑에서 읽는다. 체인 매핑은 op마다 따로 있고 인자 없는 GetChainMapping()은
-    // 비어 있는 op의 것을 돌려줄 수 있으므로, op를 모두 훑어 체인을 가진 매핑만 본다.
+    // 정렬 기준은 이 리타기터의 체인 구성이 아니라 **역할 그래프**다. 체인을 따라 정렬했더니
+    // 체인을 어디서 끊느냐에 결과가 따라붙었고(한 본짜리 Neck 체인에서 10.7° → 31.6°),
+    // 같은 스켈레톤인데도 Rig을 만든 방식에 따라 수치가 달라졌다. 그래서 Rig을 넘기지 않는다.
+    //
     // 다시 쓰는 경우 지난번 정렬 오프셋이 남아 있다. 이번에 맞추지 않는 본의 값이 섞이지 않도록 비운다.
     if (bReused)
     {
@@ -148,20 +149,7 @@ UIKRetargeter* FUPTIKRetargeterBuilder::CreateIKRetargeter(
             TArray<FName>(), ERetargetSourceOrTarget::Target);
     }
 
-    TSet<FName> MappedChainNames;
-    for (int32 OpIndex = 0; OpIndex < Controller->GetNumRetargetOps(); ++OpIndex)
-    {
-        const FRetargetChainMapping* OpMapping = Controller->GetChainMapping(Controller->GetOpName(OpIndex));
-        if (!OpMapping || !OpMapping->HasAnyChains()) continue;
-        for (const FName ChainName : OpMapping->GetChainNames(ERetargetSourceOrTarget::Target))
-        {
-            if (OpMapping->GetChainMappedTo(ChainName, ERetargetSourceOrTarget::Target) != NAME_None)
-            {
-                MappedChainNames.Add(ChainName);
-            }
-        }
-    }
-    FUPTRestPoseAligner::AlignTargetToSource(Controller, SourceMesh, SourceIKRig, TargetMesh, TargetIKRig, MappedChainNames);
+    FUPTRestPoseAligner::AlignTargetToSource(Controller, SourceMesh, TargetMesh);
 
     Controller->CleanAsset();
     Retargeter->MarkPackageDirty();

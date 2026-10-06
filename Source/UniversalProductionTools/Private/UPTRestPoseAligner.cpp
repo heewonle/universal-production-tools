@@ -1,10 +1,10 @@
 #include "UPTRestPoseAligner.h"
 
+#include "UPTSkeletonAnalyzer.h"
+
 #include "Engine/SkeletalMesh.h"
 #include "ReferenceSkeleton.h"
 #include "RetargetEditor/IKRetargeterController.h"
-#include "Rig/IKRigDefinition.h"
-#include "RigEditor/IKRigController.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogUPTRestPose, Log, All);
 
@@ -19,30 +19,64 @@ namespace
 // 본 하나를 정렬했다고 보기에 너무 작은 각도. 떨림만 만들고 의미가 없다.
 constexpr double MinAlignRadians = 0.5 * PI / 180.0;
 
-/** 체인의 끝 본에서 시작 본까지 계층을 거슬러 올라가 본 목록을 만든다(시작 → 끝 순서로 돌려준다). */
-TArray<FName> CollectChainBones(const FReferenceSkeleton& Ref, const FBoneChain& Chain)
+/** 정렬의 기준이 되는 해부학적 인접 관계(부모 역할 → 자식 역할). */
+const TArray<TPair<FString, FString>>& GetRoleSegments()
 {
-    TArray<FName> Reversed;
-    const FName StartName = Chain.StartBone.BoneName;
-    const FName EndName = Chain.EndBone.BoneName;
-    int32 Index = EndName != NAME_None ? Ref.FindBoneIndex(EndName) : Ref.FindBoneIndex(StartName);
-    for (int32 Guard = 0; Index != INDEX_NONE && Guard < 64; ++Guard)
-    {
-        const FName BoneName = Ref.GetBoneName(Index);
-        Reversed.Add(BoneName);
-        if (BoneName == StartName) break;
-        Index = Ref.GetParentIndex(Index);
-    }
-    Algo::Reverse(Reversed);
-    // 시작 본에 닿지 못했으면(계층이 끊겼으면) 체인으로 쓰지 않는다.
-    if (StartName != NAME_None && (Reversed.IsEmpty() || Reversed[0] != StartName)) return {};
-    return Reversed;
+    static const TArray<TPair<FString, FString>> Segments = {
+        {TEXT("Pelvis"), TEXT("Spine")},
+        {TEXT("Spine"), TEXT("Neck")},
+        {TEXT("Neck"), TEXT("Head")},
+        {TEXT("Spine"), TEXT("LeftClavicle")},
+        {TEXT("LeftClavicle"), TEXT("LeftUpperArm")},
+        {TEXT("LeftUpperArm"), TEXT("LeftLowerArm")},
+        {TEXT("LeftLowerArm"), TEXT("LeftHand")},
+        {TEXT("Spine"), TEXT("RightClavicle")},
+        {TEXT("RightClavicle"), TEXT("RightUpperArm")},
+        {TEXT("RightUpperArm"), TEXT("RightLowerArm")},
+        {TEXT("RightLowerArm"), TEXT("RightHand")},
+        {TEXT("Pelvis"), TEXT("LeftThigh")},
+        {TEXT("LeftThigh"), TEXT("LeftCalf")},
+        {TEXT("LeftCalf"), TEXT("LeftFoot")},
+        {TEXT("Pelvis"), TEXT("RightThigh")},
+        {TEXT("RightThigh"), TEXT("RightCalf")},
+        {TEXT("RightCalf"), TEXT("RightFoot")},
+    };
+    return Segments;
 }
 
-/** 레퍼런스 포즈를 컴포넌트 공간으로 합성한다. */
-void BuildComponentPose(const FReferenceSkeleton& Ref, TArray<FTransform>& OutPose)
+/** 역할이 없을 때 한 칸 건너뛸 대체 역할. 쇄골 없는 리그, 목 없는 리그가 실제로 있다. */
+const TMap<FString, FString>& GetRoleFallbacks()
 {
-    const TArray<FTransform>& Local = Ref.GetRefBonePose();
+    static const TMap<FString, FString> Fallbacks = {
+        {TEXT("LeftClavicle"), TEXT("LeftUpperArm")},
+        {TEXT("RightClavicle"), TEXT("RightUpperArm")},
+        {TEXT("Neck"), TEXT("Head")},
+    };
+    return Fallbacks;
+}
+
+/** 역할 → 본 이름. 이름 근거 없이 배정된 역할(ForcedRoles)은 쓰지 않는다.
+ *
+ * 부분 메시(망토·머리 부착물)에서는 남은 아무 본이나 집어 오므로(LeftFoot ← jaw)
+ * 그 방향에 맞추면 몸이 통째로 틀어진다. 역할이 비면 대체 역할로 한 번 넘어간다.
+ */
+FName ResolveRole(const FUPTSkeletonAnalysisData& Analysis, const FString& Role)
+{
+    auto Pick = [&Analysis](const FString& Name) -> FName
+    {
+        if (Analysis.ForcedRoles.Contains(Name)) return NAME_None;
+        const FName* Found = Analysis.BoneMappings.Find(Name);
+        return Found ? *Found : NAME_None;
+    };
+    const FName Direct = Pick(Role);
+    if (Direct != NAME_None) return Direct;
+    if (const FString* Alternate = GetRoleFallbacks().Find(Role)) return Pick(*Alternate);
+    return NAME_None;
+}
+
+/** 로컬 포즈를 컴포넌트 공간으로 합성한다. */
+void BuildComponentPose(const FReferenceSkeleton& Ref, const TArray<FTransform>& Local, TArray<FTransform>& OutPose)
+{
     OutPose.SetNum(Local.Num());
     for (int32 Index = 0; Index < Local.Num(); ++Index)
     {
@@ -51,197 +85,121 @@ void BuildComponentPose(const FReferenceSkeleton& Ref, TArray<FTransform>& OutPo
     }
 }
 
-/** 체인을 따라가며 마디마다 (누적 길이 비율, 방향 단위벡터)를 만든다. */
-struct FChainSegment
+int32 BoneDepth(const FReferenceSkeleton& Ref, int32 Index)
 {
-    double Param = 0.0;      // 체인 시작에서 이 마디 시작까지의 누적 길이 비율
-    FVector Direction = FVector::ZeroVector;
+    int32 Depth = 0;
+    for (int32 Walk = Ref.GetParentIndex(Index); Walk != INDEX_NONE; Walk = Ref.GetParentIndex(Walk)) ++Depth;
+    return Depth;
+}
+
+/** 한 본이 맞춰야 할 마디들. 대상 자식 본과 그에 대응하는 원본 자식 본의 짝이다. */
+struct FAlignTarget
+{
+    FName SourceBone = NAME_None;             // 이 본에 대응하는 원본 본
+    TArray<TPair<FName, FName>> Children;     // (대상 자식, 원본 자식)
 };
-
-TArray<FChainSegment> BuildSegments(const FReferenceSkeleton& Ref, const TArray<FTransform>& Pose, const TArray<FName>& Bones)
-{
-    TArray<FChainSegment> Segments;
-    TArray<double> Lengths;
-    double Total = 0.0;
-    for (int32 Index = 0; Index + 1 < Bones.Num(); ++Index)
-    {
-        const int32 A = Ref.FindBoneIndex(Bones[Index]);
-        const int32 B = Ref.FindBoneIndex(Bones[Index + 1]);
-        if (A == INDEX_NONE || B == INDEX_NONE) return {};
-        const FVector Delta = Pose[B].GetLocation() - Pose[A].GetLocation();
-        const double Length = Delta.Size();
-        if (Length <= KINDA_SMALL_NUMBER) return {};
-        Segments.Add({0.0, Delta / Length});
-        Lengths.Add(Length);
-        Total += Length;
-    }
-    if (Segments.IsEmpty() || Total <= KINDA_SMALL_NUMBER) return {};
-
-    double Walked = 0.0;
-    for (int32 Index = 0; Index < Segments.Num(); ++Index)
-    {
-        Segments[Index].Param = Walked / Total;
-        Walked += Lengths[Index];
-    }
-    return Segments;
-}
-
-/** 마디의 중점 비율. 어느 마디끼리 대응하는지 따질 때의 대표 위치다. */
-double SegmentMidpoint(const TArray<FChainSegment>& Segments, int32 Index)
-{
-    const double Start = Segments[Index].Param;
-    const double End = Index + 1 < Segments.Num() ? Segments[Index + 1].Param : 1.0;
-    return 0.5 * (Start + End);
-}
-
-/** 대상 마디의 중점에 가장 가까운 원본 마디의 방향.
- *
- * 처음에는 "대상 마디의 **시작** 비율 이하인 마지막 원본 마디"를 집었다. 그 한 끗 때문에
- * UE4 마네킹 원본 → 골렘에서 팔이 32° 어긋났다. 골렘의 아래팔 마디는 0.519에서 시작하는데
- * 원본의 아래팔 마디는 0.529에서 시작한다. 0.519 <= 0.529라 **아래팔이 위팔 방향에 맞춰졌고**,
- * 그 차이가 곧 팔꿈치 각도였다.
- * 양옆을 섞는 보간도 시도했지만 더 나빴다(관절이 굽어 있으면 어느 쪽도 아닌 방향이 나온다).
- * 섞지 않고 **중점끼리 가장 가까운 마디 하나**를 고르는 것이 맞다.
- */
-FVector DirectionAtMidpoint(const TArray<FChainSegment>& Segments, double TargetMidpoint)
-{
-    int32 Best = 0;
-    double BestDistance = TNumericLimits<double>::Max();
-    for (int32 Index = 0; Index < Segments.Num(); ++Index)
-    {
-        const double Distance = FMath::Abs(SegmentMidpoint(Segments, Index) - TargetMidpoint);
-        if (Distance < BestDistance)
-        {
-            BestDistance = Distance;
-            Best = Index;
-        }
-    }
-    return Segments[Best].Direction;
-}
 }
 
 int32 FUPTRestPoseAligner::AlignTargetToSource(
     UIKRetargeterController* Controller,
-    USkeletalMesh* SourceMesh, const UIKRigDefinition* SourceIKRig,
-    USkeletalMesh* TargetMesh, const UIKRigDefinition* TargetIKRig,
-    const TSet<FName>& MappedChainNames)
+    USkeletalMesh* SourceMesh,
+    USkeletalMesh* TargetMesh)
 {
-    if (!Controller || !SourceMesh || !TargetMesh || !SourceIKRig || !TargetIKRig) return 0;
+    if (!Controller || !SourceMesh || !TargetMesh) return 0;
     if (CVarRestPoseAlign.GetValueOnAnyThread() == 0)
     {
         UE_LOG(LogUPTRestPose, Log, TEXT("UPT_RESTPOSE UPT.RestPoseAlign=0 이라 정렬을 건너뜁니다."));
         return 0;
     }
-    const UIKRigController* SourceRig = UIKRigController::GetController(SourceIKRig);
-    const UIKRigController* TargetRig = UIKRigController::GetController(TargetIKRig);
-    if (!SourceRig || !TargetRig) return 0;
+
+    const FUPTSkeletonAnalysisData SourceAnalysis = FUPTSkeletonAnalyzer::AnalyzeDetailed(SourceMesh, FString());
+    const FUPTSkeletonAnalysisData TargetAnalysis = FUPTSkeletonAnalyzer::AnalyzeDetailed(TargetMesh, FString());
+    if (SourceAnalysis.BoneMappings.IsEmpty() || TargetAnalysis.BoneMappings.IsEmpty()) return 0;
 
     const FReferenceSkeleton& SourceRef = SourceMesh->GetRefSkeleton();
     const FReferenceSkeleton& TargetRef = TargetMesh->GetRefSkeleton();
 
     TArray<FTransform> SourcePose;
-    BuildComponentPose(SourceRef, SourcePose);
+    BuildComponentPose(SourceRef, SourceRef.GetRefBonePose(), SourcePose);
 
     // 대상 쪽은 오프셋을 넣을 때마다 바뀌므로, 로컬 포즈를 복사해 두고 그 위에 누적한다.
     TArray<FTransform> TargetLocal = TargetRef.GetRefBonePose();
     TArray<FTransform> TargetPose;
-    TargetPose.SetNum(TargetLocal.Num());
-    auto RefreshTargetPose = [&]()
+    BuildComponentPose(TargetRef, TargetLocal, TargetPose);
+
+    // 같은 본에 여러 마디가 걸린다(척추는 목과 양 쇄골, 펠비스는 척추와 양 허벅지).
+    // 회전 하나로 전부 맞출 수는 없으니 본 단위로 모아 두고 뒤에서 평균 낸다.
+    TMap<FName, FAlignTarget> AlignTargets;
+    int32 SegmentCount = 0;
+    for (const TPair<FString, FString>& Segment : GetRoleSegments())
     {
-        for (int32 Index = 0; Index < TargetLocal.Num(); ++Index)
-        {
-            const int32 Parent = TargetRef.GetParentIndex(Index);
-            TargetPose[Index] = Parent == INDEX_NONE ? TargetLocal[Index] : TargetLocal[Index] * TargetPose[Parent];
-        }
-    };
-    RefreshTargetPose();
+        const FName TargetParent = ResolveRole(TargetAnalysis, Segment.Key);
+        const FName TargetChild = ResolveRole(TargetAnalysis, Segment.Value);
+        const FName SourceParent = ResolveRole(SourceAnalysis, Segment.Key);
+        const FName SourceChild = ResolveRole(SourceAnalysis, Segment.Value);
+        if (TargetParent == NAME_None || TargetChild == NAME_None) continue;
+        if (SourceParent == NAME_None || SourceChild == NAME_None) continue;
+        // 대체 역할로 넘어가다 보면 양끝이 같은 본이 될 수 있다(쇄골 없는 리그의 Clavicle→UpperArm).
+        if (TargetParent == TargetChild || SourceParent == SourceChild) continue;
 
-    TMap<FName, const FBoneChain*> SourceChains;
-    for (const FBoneChain& Chain : SourceRig->GetRetargetChains()) SourceChains.Add(Chain.ChainName, &Chain);
-
-    const FName RetargetRootBone = TargetRig->GetRetargetRoot();
-    int32 AlignedCount = 0;
-
-    for (const FBoneChain& TargetChain : TargetRig->GetRetargetChains())
-    {
-        if (!MappedChainNames.Contains(TargetChain.ChainName)) continue;
-        // Root 체인은 펠비스 배치용이라 방향을 맞출 대상이 아니다.
-        if (TargetChain.ChainName == TEXT("Root")) continue;
-        const FBoneChain* const* SourceChainPtr = SourceChains.Find(TargetChain.ChainName);
-        if (!SourceChainPtr || !*SourceChainPtr) continue;
-
-        TArray<FName> TargetBones = CollectChainBones(TargetRef, TargetChain);
-        TArray<FName> SourceBones = CollectChainBones(SourceRef, **SourceChainPtr);
-
-        // 본이 하나뿐인 체인은 방향을 만들 수 없어 그대로 두면 정렬에서 빠진다.
-        // 엔진 관례대로 체인을 끊으면 `Neck → Neck`, `Head → Head` 같은 한 본 체인이 생기는데,
-        // 그러면 목 정렬이 통째로 빠져 `neck→head`가 31.6°까지 벌어졌다.
-        // 바로 아래로 이어지는 **다른 매핑된 체인의 시작 본**까지 한 칸 늘려 방향을 만든다.
-        // 양쪽 모두 같은 이름의 체인을 쓰므로 대응이 어긋나지 않는다.
-        auto ExtendSingleBoneChain = [&](const FBoneChain& Chain, const FReferenceSkeleton& Ref,
-                                         const UIKRigController* Rig, TArray<FName>& Bones) -> FName
-        {
-            if (Bones.Num() != 1) return NAME_None;
-            const int32 EndIndex = Ref.FindBoneIndex(Bones.Last());
-            if (EndIndex == INDEX_NONE) return NAME_None;
-            for (const FBoneChain& Other : Rig->GetRetargetChains())
-            {
-                if (Other.ChainName == Chain.ChainName) continue;
-                if (!MappedChainNames.Contains(Other.ChainName)) continue;
-                const int32 OtherStart = Ref.FindBoneIndex(Other.StartBone.BoneName);
-                if (OtherStart == INDEX_NONE || Ref.GetParentIndex(OtherStart) != EndIndex) continue;
-                Bones.Add(Other.StartBone.BoneName);
-                return Other.ChainName;
-            }
-            return NAME_None;
-        };
-        const FName TargetExtendedBy = ExtendSingleBoneChain(TargetChain, TargetRef, TargetRig, TargetBones);
-        if (TargetExtendedBy != NAME_None)
-        {
-            // 원본도 **같은 이름의 체인**으로 늘려야 대응이 맞는다.
-            for (const FBoneChain& Other : SourceRig->GetRetargetChains())
-            {
-                if (Other.ChainName != TargetExtendedBy) continue;
-                SourceBones.Add(Other.StartBone.BoneName);
-                break;
-            }
-        }
-        if (TargetBones.Num() < 2 || SourceBones.Num() < 2) continue;
-
-        const TArray<FChainSegment> SourceSegments = BuildSegments(SourceRef, SourcePose, SourceBones);
-        if (SourceSegments.IsEmpty()) continue;
-
-        // 대상 체인은 본을 하나 돌릴 때마다 아래쪽 위치가 바뀌므로, 마디마다 다시 계산한다.
-        for (int32 Index = 0; Index + 1 < TargetBones.Num(); ++Index)
-        {
-            const FName BoneName = TargetBones[Index];
-            if (BoneName == RetargetRootBone) continue;
-
-            const TArray<FChainSegment> TargetSegments = BuildSegments(TargetRef, TargetPose, TargetBones);
-            if (!TargetSegments.IsValidIndex(Index)) break;
-
-            const FVector Current = TargetSegments[Index].Direction;
-            const FVector Desired = DirectionAtMidpoint(SourceSegments, SegmentMidpoint(TargetSegments, Index));
-            const FQuat Align = FQuat::FindBetweenNormals(Current, Desired);
-            if (Align.GetAngle() < MinAlignRadians) continue;
-
-            const int32 BoneIndex = TargetRef.FindBoneIndex(BoneName);
-            if (BoneIndex == INDEX_NONE) continue;
-            const int32 ParentIndex = TargetRef.GetParentIndex(BoneIndex);
-            const FQuat ParentRotation = ParentIndex == INDEX_NONE ? FQuat::Identity : TargetPose[ParentIndex].GetRotation();
-            const FQuat RefLocalRotation = TargetRef.GetRefBonePose()[BoneIndex].GetRotation();
-
-            // 엔진은 리타기팅 포즈 오프셋을 LocalRotation = RefLocal * Delta 로 적용한다.
-            // 컴포넌트 공간에서 Align만큼 돌리려면 부모 회전으로 감싸 로컬로 되돌려야 한다.
-            const FQuat Delta = RefLocalRotation.Inverse() * ParentRotation.Inverse() * Align * ParentRotation * RefLocalRotation;
-            Controller->SetRotationOffsetForRetargetPoseBone(BoneName, Delta.GetNormalized(), ERetargetSourceOrTarget::Target);
-
-            TargetLocal[BoneIndex].SetRotation((RefLocalRotation * Delta).GetNormalized());
-            RefreshTargetPose();
-            ++AlignedCount;
-        }
+        FAlignTarget& Entry = AlignTargets.FindOrAdd(TargetParent);
+        Entry.SourceBone = SourceParent;
+        Entry.Children.Add({TargetChild, SourceChild});
+        ++SegmentCount;
     }
 
-    UE_LOG(LogUPTRestPose, Log, TEXT("UPT_RESTPOSE '%s' 레스트 포즈 직접 정렬: 본 %d개"), *TargetMesh->GetName(), AlignedCount);
+    // 부모를 먼저 맞춰야 자식의 현재 방향이 제대로 나온다. 계층이 얕은 본부터 처리한다.
+    TArray<FName> OrderedBones;
+    AlignTargets.GetKeys(OrderedBones);
+    OrderedBones.Sort([&TargetRef](const FName A, const FName B)
+    {
+        return BoneDepth(TargetRef, TargetRef.FindBoneIndex(A)) < BoneDepth(TargetRef, TargetRef.FindBoneIndex(B));
+    });
+
+    int32 AlignedCount = 0;
+    for (const FName BoneName : OrderedBones)
+    {
+        const int32 BoneIndex = TargetRef.FindBoneIndex(BoneName);
+        const FAlignTarget& Entry = AlignTargets[BoneName];
+        const int32 SourceIndex = SourceRef.FindBoneIndex(Entry.SourceBone);
+        if (BoneIndex == INDEX_NONE || SourceIndex == INDEX_NONE) continue;
+
+        // 자식마다 필요한 회전을 구해 평균 낸다. 자식이 하나면 그 회전이 그대로 쓰인다.
+        FQuat Align = FQuat::Identity;
+        int32 Contributions = 0;
+        for (const TPair<FName, FName>& Child : Entry.Children)
+        {
+            const int32 TargetChildIndex = TargetRef.FindBoneIndex(Child.Key);
+            const int32 SourceChildIndex = SourceRef.FindBoneIndex(Child.Value);
+            if (TargetChildIndex == INDEX_NONE || SourceChildIndex == INDEX_NONE) continue;
+
+            const FVector Current = (TargetPose[TargetChildIndex].GetLocation() - TargetPose[BoneIndex].GetLocation()).GetSafeNormal();
+            const FVector Desired = (SourcePose[SourceChildIndex].GetLocation() - SourcePose[SourceIndex].GetLocation()).GetSafeNormal();
+            if (Current.IsNearlyZero() || Desired.IsNearlyZero()) continue;
+
+            const FQuat Rotation = FQuat::FindBetweenNormals(Current, Desired);
+            ++Contributions;
+            Align = Contributions == 1 ? Rotation : FQuat::Slerp(Align, Rotation, 1.0f / Contributions);
+        }
+        if (Contributions == 0) continue;
+        Align.Normalize();
+        if (Align.GetAngle() < MinAlignRadians) continue;
+
+        const int32 ParentIndex = TargetRef.GetParentIndex(BoneIndex);
+        const FQuat ParentRotation = ParentIndex == INDEX_NONE ? FQuat::Identity : TargetPose[ParentIndex].GetRotation();
+        const FQuat RefLocalRotation = TargetRef.GetRefBonePose()[BoneIndex].GetRotation();
+
+        // 엔진은 리타기팅 포즈 오프셋을 LocalRotation = RefLocal * Delta 로 적용한다.
+        // 컴포넌트 공간에서 Align만큼 돌리려면 부모 회전으로 감싸 로컬로 되돌려야 한다.
+        const FQuat Delta = RefLocalRotation.Inverse() * ParentRotation.Inverse() * Align * ParentRotation * RefLocalRotation;
+        Controller->SetRotationOffsetForRetargetPoseBone(BoneName, Delta.GetNormalized(), ERetargetSourceOrTarget::Target);
+
+        TargetLocal[BoneIndex].SetRotation((RefLocalRotation * Delta).GetNormalized());
+        BuildComponentPose(TargetRef, TargetLocal, TargetPose);
+        ++AlignedCount;
+    }
+
+    UE_LOG(LogUPTRestPose, Log, TEXT("UPT_RESTPOSE '%s' 레스트 포즈 정렬(역할 그래프): 마디 %d개 / 본 %d개"),
+        *TargetMesh->GetName(), SegmentCount, AlignedCount);
     return AlignedCount;
 }

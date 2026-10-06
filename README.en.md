@@ -59,7 +59,7 @@ Tools/eval/
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
-| `retarget` | does retargeting preserve the motion (2 sources x 3 targets, 19 pairs) | 0.7° median angle |
+| `retarget` | does retargeting preserve the motion (2 sources x 3 targets, 19 pairs) | 0.6° median angle |
 
 ## What the apparatus actually found
 
@@ -303,6 +303,45 @@ In hindsight, the baker built as "fix the symptom since the cause is out of reac
 door: the **"which bone carries the height" rule** written for it became the core of the second fix, and
 the fact that the baker's numbers and the engine op's numbers **agree to the decimal** is the check that
 both are right.
+
+### The alignment basis moved from IK Rig chains to a role graph
+
+The fixes kept coming back **in the same shape**. Cutting the chains the way the engine does turned
+`Neck` and `Head` into single-bone chains, which dropped out of alignment entirely and sent the worst
+segment from 10.7° to 31.6°; that was patched by extending a single-bone chain into the next mapped
+chain's start bone. The `neck→head` 8.7° that remained was the same kind of mismatch: **the aligner was
+matching `neck_01→neck_02` (a chain) while the metric measures `neck_01→head` (a segment).**
+
+All of it came from the aligner reading **IK Rig chains**. Chains are decided by whoever built the rig;
+bone-segment directions are decided by the skeleton. The basis was attached to the wrong thing.
+
+→ The basis is now an **anatomical role graph** (pelvis→spine→neck→head, clavicle→upperarm→lowerarm→hand,
+thigh→calf→foot; 17 segments). The analyzer extracts roles from any naming convention, so the result is
+independent of rig construction. The aligner **no longer even takes a `UIKRigDefinition`** — rig
+independence is a function signature, not a comment. Bones with several children (spine carries neck and
+both clavicles) average the rotation each child asks for, and bones are processed parent-first by
+hierarchy depth. Roles assigned without name evidence are not used (`LeftFoot ← jaw` misassignments).
+
+| combination | chain basis | role graph |
+|---|---|---|
+| Synty → UE mannequin | 3.3° / 8.7° (`neck→head`) | **0.9° / 8.4°** (`calf→foot`) |
+| UE4 mannequin → Forest Golem | 0.0° / 4.8° | 0.0° / **3.2°** |
+| **overall median / worst** | 0.7° / 8.7° | **0.6° / 8.4°** |
+
+The `neck→head` 8.7° disappeared **without touching the metric** — both sides now look at the same segment.
+
+Since the claim is "independent of rig construction", that was measured too. Forcing a completely
+different chain construction on the same skeletons (`UPT.ForceFallbackRig 1`) aligned **exactly the same
+number of bones on all three targets** (13/13/11), and the overall numbers came out equal or better
+(worst 8.4° → 7.8°, motion deviation 2.46° → 2.27°). Under the chain basis, touching the chain
+construction alone swung the worst segment 3×.
+
+The measurement entry point was bundled as well (`Tools/eval/editor/upt_run_retarget_suite.py`).
+`-ExecCmds` runs **before the asset registry finishes scanning**, and running in that state yields
+**zero-pair manifests** for all four combinations — with no error, so it looks like success. It now
+waits for the registry and logs an error when a manifest's pair count is not what was asked for. The
+regression baseline also gained two whole-suite guards so changes that improve one combination while
+degrading another cannot pass.
 
 ## Layout
 

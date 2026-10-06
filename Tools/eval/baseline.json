@@ -208,29 +208,35 @@
     "pairs": {
       "min": 19
     },
-    "targets.Retrieve_DefaultWoman->SKM_Manny.segment_angle_median_deg": {
-      "max": 4.5
+    "segment_angle_median_deg": {
+      "max": 1.0
     },
-    "targets.Retrieve_DefaultWoman->SKM_Manny.worst_segment_deg": {
-      "max": 10.0
-    },
-    "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
-      "max": 2.0
-    },
-    "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.worst_segment_deg": {
-      "max": 10.0
-    },
-    "targets.Retrieve_DefaultWoman->X_Bot.segment_angle_median_deg": {
-      "max": 2.0
-    },
-    "targets.Retrieve_DefaultWoman->X_Bot.worst_segment_deg": {
+    "worst_segment_deg": {
       "max": 9.0
     },
+    "targets.Retrieve_DefaultWoman->SKM_Manny.segment_angle_median_deg": {
+      "max": 1.5
+    },
+    "targets.Retrieve_DefaultWoman->SKM_Manny.worst_segment_deg": {
+      "max": 9.0
+    },
+    "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
+      "max": 1.0
+    },
+    "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.worst_segment_deg": {
+      "max": 8.5
+    },
+    "targets.Retrieve_DefaultWoman->X_Bot.segment_angle_median_deg": {
+      "max": 1.5
+    },
+    "targets.Retrieve_DefaultWoman->X_Bot.worst_segment_deg": {
+      "max": 7.5
+    },
     "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
-      "max": 2.0
+      "max": 1.0
     },
     "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.worst_segment_deg": {
-      "max": 7.0
+      "max": 4.0
     },
     "motion_deviation_worst_deg": {
       "max": 3.0

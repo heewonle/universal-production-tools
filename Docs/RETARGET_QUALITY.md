@@ -688,55 +688,137 @@ FK 체인 리타기팅은 회전만 옮기므로, Pelvis Motion op이 써 넣은
 같이 메워야 효과가 났다.** 중간 측정이 없었다면 "체인 수정은 최악값을 3배로 만든다"고 결론 내고
 되돌렸을 것이다.
 
+## 정렬 기준을 체인에서 역할 그래프로 옮겼다 (2026-10-06)
+
+앞 절의 결론을 다시 읽으면 고친 것이 **증상**이었다. 한 본 체인에 구멍이 있던 것도,
+그 구멍을 "다른 체인의 시작 본까지 한 칸 늘려" 메운 것도, 전부 **정렬기가 체인을 보고 있기 때문에**
+생긴 일이다. 체인은 Rig을 만든 사람이 정하는 것이고, 뼈마디 방향은 스켈레톤이 정하는 것이다.
+기준이 잘못된 곳에 걸려 있었다.
+
+| | 체인 기준 (이전) | 역할 그래프 (지금) |
+|---|---|---|
+| 무엇을 따라 도는가 | `IKRig->GetRetargetChains()` | 해부학적 인접 관계 17마디 |
+| 대응을 어떻게 잡는가 | 같은 **이름의 체인**끼리, 누적 길이 비율로 | 같은 **역할**끼리 직접 |
+| Rig 구성에 따라 결과가 | 바뀐다 | 바뀌지 않는다 |
+| 한 본 체인 | 정렬에서 빠진다(특례 필요) | 개념 자체가 없다 |
+| 체인 경계를 넘는 마디 | 정렬이 닿지 않는다 | 그냥 한 마디다 |
+
+정렬기는 이제 `UIKRigDefinition`을 **인자로 받지도 않는다.** 두 메시의 레퍼런스 스켈레톤과
+분석기의 역할 대응만 쓴다. Rig 독립성이 주석이 아니라 함수 시그니처로 보장된다.
+
+구현에서 새로 필요해진 것은 두 가지다.
+
+- **자식이 여럿인 본.** 척추에는 목과 양 쇄골이, 펠비스에는 척추와 양 허벅지가 붙는다.
+  회전 하나로 전부 맞출 수 없으므로 자식마다 필요한 회전을 구해 평균(누적 slerp)한다.
+  체인을 돌 때는 한 줄기씩만 보았으니 생기지 않던 문제다.
+- **처리 순서.** 부모를 먼저 맞춰야 자식의 현재 방향이 제대로 나온다. 계층 깊이로 정렬해 돈다.
+
+이름 근거 없이 위치·계층만으로 배정된 역할(`ForcedRoles`)은 **쓰지 않는다.** 부분 메시에서는
+남은 아무 본이나 집어 오므로(`LeftFoot ← jaw`) 그 방향에 맞추면 몸이 통째로 틀어진다.
+쇄골이나 목이 없는 리그는 한 칸 건너뛴 역할로 대체한다(`Clavicle → UpperArm`, `Neck → Head`).
+
+### 결과
+
+| 조합 | 체인 기준 | 역할 그래프 |
+|---|---|---|
+| Synty → UE 마네킹 | 3.3° / 8.7° (`neck→head`) | **0.9° / 8.4°** (`calf→foot`) |
+| Synty → Forest Golem | 0.6° / 7.8° | 0.6° / 7.8° |
+| Synty → X_Bot (Mixamo) | 0.8° / 7.1° | 1.0° / 7.1° |
+| UE4 마네킹 → Forest Golem | 0.0° / 4.8° | 0.0° / **3.2°** |
+| **전체 중앙 / 최악** | 0.7° / 8.7° | **0.6° / 8.4°** |
+
+접지 지표와 동작 왜곡은 그대로다(2.46° / 0.0114 / 0.0413 / 0.0417). 12개 스위트 모두 통과.
+
+Manny 중앙값이 3.3° → 0.9°로 떨어진 것이 핵심이다. 남아 있던 `neck→head` 8.7°는 **지표를
+고치지 않고** 사라졌다. 정렬기가 `neck_01→neck_02`(체인)를 맞추고 지표는 `neck_01→head`(마디)를
+재던 불일치가, 둘 다 같은 역할 마디를 보게 되면서 없어졌다.
+
+### Rig 구성을 바꿔도 같은지 실제로 재 봤다
+
+이것이 이번 변경의 핵심 주장이므로 측정으로 확인했다. `UPT.ForceFallbackRig 1`은 엔진
+Characterize가 성공하는 메시에도 **자체 분석 Rig**을 쓰게 한다. 같은 스켈레톤, 전혀 다른 체인 구성이다.
+
+| | 엔진 Characterize Rig | 자체 분석 Rig 강제 |
+|---|---|---|
+| 정렬한 본 수 (Manny / 골렘 / X_Bot) | 13 / 13 / 11 | **13 / 13 / 11** |
+| Synty → UE 마네킹 | 0.9° / 8.4° | 0.7° / 6.1° |
+| Synty → Forest Golem | 0.6° / 7.8° | 0.6° / 7.8° |
+| Synty → X_Bot | 1.0° / 7.1° | 1.0° / 7.1° |
+| UE4 마네킹 → Forest Golem | 0.0° / 3.2° | 0.0° / 3.2° |
+| 전체 중앙 / 최악 | 0.6° / 8.4° | 0.6° / **7.8°** |
+| 동작 왜곡 | 2.46° | 2.27° |
+
+**정렬한 본 수가 세 대상 모두 똑같다.** 정렬 자체는 Rig 구성에 전혀 반응하지 않았고, 남은 차이는
+리타기팅 op의 체인 매핑에서 온 것이다(그리고 나쁘지 않은 쪽으로). 체인 기준이었을 때는 체인 구성을
+건드리는 것만으로 최악값이 10.7° → 31.6°로 튀었다.
+
+### 측정 진입점도 묶었다
+
+조합 네 개를 손으로 치다 보니 이번에도 한 번 당했다. `-ExecCmds`는 **에셋 레지스트리 스캔이
+끝나기 전에** 실행된다. 그 상태로 돌리면 애니메이션의 Skeleton으로 원본 메시를 역추적하는 조회가
+전부 실패해 네 조합 모두 **0쌍 manifest**로 저장된다. 에러 없이 파일이 생기므로 성공처럼 보인다.
+
+→ `Tools/eval/editor/upt_run_retarget_suite.py`에 조합 목록을 넣고, 레지스트리 완료를 기다린 뒤
+네 조합을 돌리고 바로 촬영까지 한다. manifest 쌍 수가 기대와 다르면 에러를 남긴다.
+회귀 기준에도 전체 지표 두 줄을 넣어, 한 조합이 좋아지고 다른 조합이 나빠지는 변화가 통과하지 않게 했다.
+
 ## 회귀 기준
 
 ```
 length_mismatch                                                  == 0
 pairs                                                            >= 19
-targets.Retrieve_DefaultWoman->SKM_Manny.*                        중앙 <= 6.0 / 최악 <= 14.0
-targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.*           중앙 <= 8.0 / 최악 <= 16.0
-targets.Retrieve_DefaultWoman->X_Bot.*                            중앙 <= 7.0 / 최악 <= 16.0
-targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.*                중앙 <= 4.0 / 최악 <= 36.0
-motion_deviation_worst_deg                                       <= 4.0
+segment_angle_median_deg                                         <= 1.0
+worst_segment_deg                                                <= 9.0
+targets.Retrieve_DefaultWoman->SKM_Manny.*                        중앙 <= 1.5 / 최악 <= 9.0
+targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.*           중앙 <= 1.0 / 최악 <= 8.5
+targets.Retrieve_DefaultWoman->X_Bot.*                            중앙 <= 1.5 / 최악 <= 7.5
+targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.*                중앙 <= 1.0 / 최악 <= 4.0
+motion_deviation_worst_deg                                       <= 3.0
 foot_slide_target                                                <= 0.06
 foot_clearance_error                                             <= 0.02
 foot_clearance_worst                                             <= 0.06
 contact_mismatch                                                 <= 0.06
 ```
 
-마지막 세 줄이 각도와 독립인 접지 지표다. 펠비스 이동을 직접 구워 넣은 뒤 크게 조였다.
+마지막 네 줄이 각도와 독립인 접지 지표다. 펠비스 이동을 직접 구워 넣은 뒤 크게 조였다.
+
+전체 지표(`segment_angle_median_deg` / `worst_segment_deg`) 두 줄은 역할 그래프 정렬에서 새로 넣었다.
+조합별 기준만 있으면 **한 조합이 좋아지고 다른 조합이 나빠지는 변화를 통과시킨다.** 접선 보간을
+시도했을 때 실제로 그랬다(UE4 팔은 절반, 표준 묶음은 13.3° → 18.1°).
 
 `run_regression.py --only retarget`으로 돌린다.
-전체 12개 스위트 모두 통과 상태다.
+전체 12개 스위트 모두 통과 상태다(비디오·자세 스위트는 `ThirdParty/UPTAnalyzer/.venv`의 파이썬으로 돌려야 한다).
 
 ## 남은 것
 
 - 베이커는 **회전은 손대지 않는다.** 지금은 엔진 op이 동작하므로 쓰이지 않지만, 또 다른 비표준
   리그에서 베이커가 실제로 돌게 되면 회전 쪽이 빠진 영향을 재야 한다.
-- Manny 조합의 최악 뼈마디가 `neck→head` 8.7°로 남아 있다. 정렬기는 `neck_01`을
-  `neck_01→neck_02` 방향으로 맞추는데 **지표는 `neck_01→head`를 잰다.** 체인 경계를 넘는
-  마디라 정렬이 직접 닿지 않는다. 지표를 체인에 맞출지, 정렬을 마디에 맞출지 정해야 한다.
-- 남은 최악 뼈마디는 골렘의 `upperarm→lowerarm` 10.7°와 Manny의 `neck→head` 8.7°다.
-  둘 다 고정 오프셋 성격이고 동작 왜곡은 3.13°다.
+- 남은 최악 뼈마디는 세 대상 모두 `calf→foot` (7.1°~8.4°)다. 역할 그래프로 바꾸면서 최악 뼈마디가
+  `neck→head`에서 여기로 옮겨 왔다. 발목은 **레스트 포즈에서 이미 몸마다 각도가 다르고**
+  (발등이 앞으로 뻗은 정도), 마디가 짧아 같은 cm 오차가 큰 각도로 환산된다. 고정 오프셋 성격이고
+  동작 왜곡은 2.46°, 접지 지표는 기준의 1/4 수준이다. 다음에 손댈 곳이면 여기다.
+- 역할 그래프는 **손가락·발가락·트위스트 본을 다루지 않는다.** 지금 지표가 재는 범위 밖이라
+  영향이 보이지 않지만, 손 자세를 재는 지표를 만들면 역할 목록을 늘려야 한다.
 
 ## 다시 돌리는 법
 
-```
-UPT.RestPoseAlign 1       # 0으로 두면 자체 분석 Rig의 레스트 포즈 정렬을 끈다(비교용)
-UPT.RetargetE2E /Game/.../SKM_Manny.SKM_Manny <Synty 애니메이션...> -out=<Saved>/retarget_manifest.json
-UPT.RetargetE2E /Game/.../Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt <Synty 애니메이션...> -out=<Saved>/retarget_manifest_golem.json
-UPT.RetargetE2E /Game/.../Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt <UE4 애니메이션...> -out=<Saved>/retarget_manifest_ue4src.json
+측정 한 벌(19쌍)을 한 번에 돌리는 진입점을 만들어 두었다. 조합 목록이 스크립트 안에 있으므로
+조합을 빠뜨리거나 manifest를 섞어서 "쌍이 줄어든 채로 통과"하는 일이 없다.
+
+```bash
+"C:/Program Files/Epic Games/UE_5.7/Engine/Binaries/Win64/UnrealEditor.exe" <프로젝트>.uproject -ExecCmds="py <플러그인>/Tools/eval/editor/upt_run_retarget_suite.py, quit" -unattended -nosplash -nop4
 ```
 
-정답 촬영은 manifest를 여러 개 받는다(에디터 Python).
+그다음 베이스라인과 비교한다.
 
-```python
-import upt_capture_retarget_poses as m
-m.main([r"<Saved>
-etarget_manifest.json", r"<Saved>
-etarget_manifest_golem.json"])
+```bash
+python Tools/eval/run_regression.py --only retarget
 ```
 
+비교용 스위치는 그대로 있다. 둘 다 `-ExecCmds`의 앞에 끼워 넣으면 된다.
+
 ```
-run_regression.py --only retarget
+UPT.RestPoseAlign 0      # 레스트 포즈 정렬을 끈다
+UPT.ForceFallbackRig 1   # 엔진 Characterize 대신 자체 분석 Rig을 쓴다
+UPT.BakePelvisMotion 2   # 펠비스 이동이 이미 있어도 덮어쓴다
 ```
