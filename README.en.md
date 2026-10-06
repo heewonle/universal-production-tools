@@ -265,8 +265,27 @@ showed that **of four source→target combinations only the UE-standard-to-UE-st
 pelvis motion through; the other three come out at exactly zero.** Three hypotheses — a duplicated default
 op stack, the rest-pose alignment itself, and the choice of retarget root — were each rejected by
 measurement, and the same behaviour **reproduces through the engine's own API with the plugin out of the
-loop.** What could not be found is written down as not found; how bad it is (0.023 median, 0.13 worst) and
-what it is *not* are recorded as numbers and locked by the regression.
+loop.** What could not be found is written down as not found; how bad it is and what it is *not* are recorded
+as numbers.
+
+**With the cause out of reach, the symptom was fixed directly.** A post-process now redoes the
+calculation the engine op was supposed to do and writes it into the result's track. Combinations that
+already carry pelvis motion are left alone; only the ones that come out at zero on all three axes get
+filled in. Two mistakes along the way, both caught by measurement: a reversed composition order showed
+up immediately as a height ratio of `-0.000`, and then the keys were going to **a bone that does not
+carry the body's height** (the golem's `Root→CG→Pelvis` has zero local offset on `Pelvis`; `CG` holds
+the height — and `CG` turned out to be the bone the retargeter actually drives, which became obvious
+from **which bone's rotation changes**).
+
+| metric | before | after |
+|---|---|---|
+| worst foot clearance error | 0.192 | **0.0413** |
+| contact mismatch | 0.0625 | **0.0417** |
+| foot sliding (source 0.0391) | 0.0708 | **0.0428** |
+| segment angles | 3.5° / 10.7° | **unchanged** |
+
+**Feet that hovered up to 19% of leg length now sit at 4%**, and not one angle moved — which is exactly
+what should happen when only translation is touched, and is the check that it was.
 
 ## Layout
 

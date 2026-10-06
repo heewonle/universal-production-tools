@@ -2,6 +2,7 @@
 
 #include "UPTIKRetargeterBuilder.h"
 #include "UPTIKRigBuilder.h"
+#include "UPTPelvisMotionBaker.h"
 #include "UPTSkeletonAnalyzer.h"
 #include "UPTSettings.h"
 #include "UPTSkeletonProfileBuilder.h"
@@ -96,6 +97,24 @@ TArray<FAssetData> RetargetIntoSettingsFolder(
     for (const FAssetData& Asset : After)
     {
         if (!Before.Contains(Asset.PackageName)) Results.Add(Asset);
+    }
+
+    // 엔진 Pelvis Motion op이 아예 돌지 않는 조합이 있다(펠비스 이동 키가 세 축 모두 0으로 나온다).
+    // 그 경우에만 같은 계산을 직접 해서 채워 넣는다. 이름으로 원본-결과를 짝짓는다.
+    for (const FAssetData& SourceAsset : AssetsToRetarget)
+    {
+        UAnimSequence* SourceSequence = Cast<UAnimSequence>(SourceAsset.GetAsset());
+        if (!SourceSequence) continue;
+        const FString SourceName = SourceAsset.AssetName.ToString();
+        const FAssetData* Match = Results.FindByPredicate([&SourceName](const FAssetData& Candidate)
+        {
+            return Candidate.AssetName.ToString().StartsWith(SourceName, ESearchCase::CaseSensitive);
+        });
+        if (!Match) continue;
+        if (UAnimSequence* TargetSequence = Cast<UAnimSequence>(Match->GetAsset()))
+        {
+            FUPTPelvisMotionBaker::BakeIfMissing(SourceSequence, SourceMesh, TargetSequence, TargetMesh);
+        }
     }
     return Results;
 }
