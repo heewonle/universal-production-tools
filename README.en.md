@@ -59,7 +59,7 @@ Tools/eval/
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
-| `retarget` | does retargeting preserve the motion (2 sources x 3 targets, 19 pairs) | body 0.1° / fingers 0.0° |
+| `retarget` | does retargeting preserve the motion (19 humanoid pairs + 3 quadruped) | body 0.1° / fingers 0.0° |
 | `motion_roundtrip` | does the **generated** sequence carry the reference's camera-motion magnitude | 0.014 screen error |
 
 ## What the apparatus actually found
@@ -193,6 +193,27 @@ Hand height separates by **2.9×** and spine verticality by **24×**, putting bo
 middle of an empty band. **What is rejected is the posture, not the body type** — the golem and the
 gargoyle are not human but stand upright, so they pass. It is kept separate from readiness: readiness
 means "the role mapping is complete", posture means "that role graph fits this body".
+
+**The first version of that guard was too strict.** It rejected anything that was not an upright
+biped, and the note said quadruped retargeting would need its own role axes. Both were wrong — the
+wolf's role axes are **literally the same** as a human's (the rigger named them that way, which is why
+they mapped at 1.00). What breaks is not the quadruped but **mixing postures**: a human `Hand` grips
+at waist height, a wolf `Hand` carries weight on the ground. The same role does a different job.
+
+→ The guard now rejects only when source and target postures **differ**. With that, a quadruped pair
+entered the suite **without changing a single role axis**.
+
+| combination | segment median / worst |
+|---|---|
+| Synty → SKM_Manny | 0.1° / 8.4° |
+| UE4 mannequin → Forest Golem | 0.0° / 2.6° |
+| **Wolf_Cub → Wolf_Pa_v2 (quadruped)** | **0.0° / 0.8°** |
+
+19 pairs → **22**. But **this pair is easier than the human ones** — the two wolves share a skeleton
+topology, so the body difference is small (alignment touched 2 bones out of 13 segments). It shows the
+pipeline does not break on a quadruped; it does not show it handles hard quadruped retargeting. Easy
+pairs also dilute the overall medians (contact mismatch 0.0417 → 0.0312), so the wolf combination got
+its own per-combination guards to keep dilution from masking a per-combination regression.
 → [SKELETON_AUDIT.md](Docs/SKELETON_AUDIT.md)
 
 **4. Face animation from a single video** — UE 5.8 MetaHuman Animator → transferred into 5.7
