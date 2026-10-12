@@ -247,6 +247,11 @@ def compare_pair(pair: dict, segments: list, ground_bones: list, scale_chain: li
         "twist_dropped": sum(1 for v in twist_rows.values()
                              if v["source_deg"] >= 5.0 and v["target_deg"] < 0.2 * v["source_deg"]),
         "twist_compared": len(twist_rows),
+        # "빠지지 않았다"만으로는 부족하다. 원본 대비 **얼마나** 전달됐는지를 비로 본다.
+        # 1.00이면 그대로, 0이면 통째로 사라진 것이다. 원본이 5° 이상 구른 역할만 센다.
+        "twist_ratio_worst_error": round(max(
+            (abs(v["target_deg"] / v["source_deg"] - 1.0) for v in twist_rows.values()
+             if v["source_deg"] >= 5.0), default=0.0), 3),
     }
 
 
@@ -324,6 +329,7 @@ def run(output_dir: str) -> dict:
         "finger_worst_deg": round(float(max(fingers_worst)), 1) if fingers_worst else None,
         "pairs_with_twist": sum(1 for row in rows if row["twist_compared"] > 0),
         "twist_dropped_worst": max((row["twist_dropped"] for row in rows), default=0),
+        "twist_ratio_worst_error": round(max((row["twist_ratio_worst_error"] for row in rows), default=0.0), 3),
         "dataset": os.path.basename(data_dir),
     }
     with open(os.path.join(output_dir, "retarget_rows.json"), "w", encoding="utf-8") as handle:

@@ -142,11 +142,15 @@ def twist_bones(parents: dict, roles: dict) -> dict:
         walk, guard = parents.get(bone, ""), 0
         while walk and guard < 16:
             if walk in bone_to_role:
-                out.setdefault(bone_to_role[walk], []).append(bone)
+                out.setdefault(bone_to_role[walk], []).append((guard, bone))
                 break
             walk = parents.get(walk, "")
             guard += 1
-    return {role: sorted(bones) for role, bones in out.items()}
+    # 역할 아래에 트위스트 본이 여럿이면 **역할 본에 가장 가까운** 것을 쓴다.
+    # 이름 정렬로 고르면 안 된다 — Manny는 `lowerarm_l -> twist_02 -> twist_01` 사슬이라
+    # 이름 순 첫 번째(_01)가 가장 먼 본이다. 베이커는 가까운 쪽(_02)에 쓰므로, 이름 정렬로
+    # 읽으면 **쓴 본과 읽는 본이 달라져** 전달이 실패한 것처럼 보인다(실제로 겪었다).
+    return {role: [bone for _, bone in sorted(items)] for role, items in out.items()}
 
 
 def build_parent_map(mesh) -> dict:

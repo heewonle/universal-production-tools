@@ -294,13 +294,16 @@
       "min": 5
     },
     "twist_dropped_worst": {
-      "equals": 8
+      "equals": 0
     },
     "targets.Wolf_Cub->Wolf_Pa_v2.segment_angle_median_deg": {
       "max": 0.5
     },
     "targets.Wolf_Cub->Wolf_Pa_v2.worst_segment_deg": {
       "max": 1.5
+    },
+    "twist_ratio_worst_error": {
+      "max": 0.05
     }
   },
   "motion_roundtrip": {

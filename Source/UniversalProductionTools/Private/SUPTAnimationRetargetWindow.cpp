@@ -3,6 +3,7 @@
 #include "UPTIKRetargeterBuilder.h"
 #include "UPTIKRigBuilder.h"
 #include "UPTPelvisMotionBaker.h"
+#include "UPTTwistMotionBaker.h"
 #include "UPTSkeletonAnalyzer.h"
 #include "UPTSettings.h"
 #include "UPTSkeletonProfileBuilder.h"
@@ -110,6 +111,9 @@ TArray<FAssetData> RetargetIntoSettingsFolder(
         if (UAnimSequence* TargetSequence = Cast<UAnimSequence>(Match->GetAsset()))
         {
             FUPTPelvisMotionBaker::BakeIfMissing(SourceSequence, SourceMesh, TargetSequence, TargetMesh);
+            // 트위스트 본은 체인 경로 밖의 가지라 FK 체인 리타기팅이 건드리지 않고 멈춘다.
+            // 대상에 트위스트 본이 없으면 아무 일도 하지 않는다.
+            FUPTTwistMotionBaker::Bake(SourceSequence, SourceMesh, TargetSequence, TargetMesh);
         }
     }
     return Results;
