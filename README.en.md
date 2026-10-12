@@ -59,7 +59,7 @@ Tools/eval/
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
-| `retarget` | does retargeting preserve the motion (2 sources x 3 targets, 19 pairs) | 0.1° median angle |
+| `retarget` | does retargeting preserve the motion (2 sources x 3 targets, 19 pairs) | body 0.1° / fingers 0.0° |
 | `motion_roundtrip` | does the **generated** sequence carry the reference's camera-motion magnitude | 0.014 screen error |
 
 ## What the apparatus actually found

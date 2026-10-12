@@ -143,11 +143,37 @@ int32 FUPTRestPoseAligner::AlignTargetToSource(
     TArray<FTransform> TargetPose;
     BuildComponentPose(TargetRef, TargetLocal, TargetPose);
 
+    // 손가락 축은 표에 고정해 둘 수 없다. 관절 수가 스켈레톤마다 다르고(2개짜리도 3개짜리도
+    // 있다) 분석기가 있는 만큼만 `LeftIndex1..3`으로 채우므로, **양쪽에 다 있는 관절만** 잇는다.
+    //
+    // 손가락을 정렬에서 빼 두는 동안 손가락 마디가 중앙 15.3°, 최악 48.8°였다
+    // (같은 측정에서 몸통은 0.1° / 8.4°). 몸통이 정렬 전에 52.9°였던 것과 같은 상황이다.
+    TArray<TArray<FString>> AllAxes = GetRoleAxes();
+    for (const TCHAR* Side : {TEXT("Left"), TEXT("Right")})
+    {
+        for (const TCHAR* Finger : {TEXT("Thumb"), TEXT("Index"), TEXT("Middle"), TEXT("Ring"), TEXT("Pinky")})
+        {
+            TArray<FString> Axis;
+            for (int32 Joint = 1; Joint <= 3; ++Joint)
+            {
+                const FString Role = FString::Printf(TEXT("%s%s%d"), Side, Finger, Joint);
+                if (!SourceAnalysis.BoneMappings.Contains(Role) || !TargetAnalysis.BoneMappings.Contains(Role)) break;
+                Axis.Add(Role);
+            }
+            if (Axis.Num() >= 2) AllAxes.Add(MoveTemp(Axis));
+        }
+    }
+    TArray<TPair<FString, FString>> Segments;
+    for (const TArray<FString>& Axis : AllAxes)
+    {
+        for (int32 Index = 0; Index + 1 < Axis.Num(); ++Index) Segments.Add({Axis[Index], Axis[Index + 1]});
+    }
+
     // 축만 따라가면 한 본에 마디는 하나씩 붙는다. 그래도 본 단위로 모아 두는 것은,
     // 역할 목록을 늘리다가 한 본에 둘이 걸리면 조용히 마지막 것만 적용되는 일을 막기 위해서다.
     TMap<FName, FAlignTarget> AlignTargets;
     int32 SegmentCount = 0;
-    for (const TPair<FString, FString>& Segment : GetRoleSegments())
+    for (const TPair<FString, FString>& Segment : Segments)
     {
         const FName TargetParent = ResolveRole(TargetAnalysis, Segment.Key);
         const FName TargetChild = ResolveRole(TargetAnalysis, Segment.Value);

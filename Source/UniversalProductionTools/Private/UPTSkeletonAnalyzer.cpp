@@ -89,6 +89,70 @@ TArray<FTransform> BuildComponentPose(const FReferenceSkeleton& Ref)
  *  - 손이 발보다 얼마나 위에 있는가: 이족은 허리 높이(0.4 이상), 사족은 앞발도 땅이라 0 근처.
  *  - 펠비스→목 방향의 수직 성분: 이족은 1에 가깝고, 사족은 몸통이 누워 있어 작다.
  */
+/**
+ * 손 역할 본의 자손을 손가락 토큰으로 갈라 `LeftIndex1`·`LeftIndex2` 같은 역할을 붙인다.
+ *
+ * 역할 표(Specs)에 넣지 않고 여기서 따로 채운다. 표에 넣으면 1,691개 감사의 준비도 계산이
+ * 흔들리는데, 손가락은 리타기팅 성립 여부를 가르는 핵심 역할이 아니다.
+ *
+ * 왜 필요한가: 손가락이 역할 그래프에 없으면 레스트 포즈 정렬이 손을 건너뛴다. 측정해 보니
+ * 손가락 마디가 중앙 15.3°, 최악 48.8°로 몸통(0.1° / 8.4°)보다 두 자릿수 나빴다.
+ * 몸통이 정렬 전에 52.9°였던 것과 같은 상황이다.
+ *
+ * 이름 규칙이 달라도(`index_01_l` / `L_Index1` / `f_index_01_l`) 토큰은 같으므로 대응이 생긴다.
+ */
+void AddFingerRoles(const FReferenceSkeleton& Ref, FUPTSkeletonAnalysisData& Result)
+{
+    struct FFingerSpec { const TCHAR* Name; TArray<FString> Tokens; };
+    static const TArray<FFingerSpec> Fingers = {
+        {TEXT("Thumb"), {TEXT("thumb")}},
+        {TEXT("Index"), {TEXT("index")}},
+        {TEXT("Middle"), {TEXT("middle")}},
+        {TEXT("Ring"), {TEXT("ring")}},
+        {TEXT("Pinky"), {TEXT("pinky"), TEXT("little")}},
+    };
+    // 손가락마다 앞의 세 관절까지. 두 개면 첫 관절만, 세 개면 둘째 관절까지 정렬할 수 있다.
+    constexpr int32 MaxJoints = 3;
+
+    for (const TCHAR* Side : {TEXT("Left"), TEXT("Right")})
+    {
+        const FName* HandBone = Result.BoneMappings.Find(FString(Side) + TEXT("Hand"));
+        const int32 HandIndex = HandBone ? Ref.FindBoneIndex(*HandBone) : INDEX_NONE;
+        if (HandIndex == INDEX_NONE) continue;
+
+        for (const FFingerSpec& Finger : Fingers)
+        {
+            // 손 아래의 자손만 본다. 반대쪽 손가락이 섞이지 않는다.
+            TArray<TPair<int32, int32>> Found;  // (계층 깊이, 본 인덱스)
+            for (int32 Index = HandIndex + 1; Index < Ref.GetNum(); ++Index)
+            {
+                int32 Depth = 0;
+                int32 Walk = Ref.GetParentIndex(Index);
+                for (; Walk != INDEX_NONE && Depth < 16; Walk = Ref.GetParentIndex(Walk), ++Depth)
+                {
+                    if (Walk == HandIndex) break;
+                }
+                if (Walk != HandIndex) continue;
+                const FString Lower = Ref.GetBoneName(Index).ToString().ToLower();
+                // 중수골(metacarpal)은 세지 않는다. UE5 Manny에는 `pinky_metacarpal_l`이 별도
+                // 관절로 있고 Synty 원본에는 없어, 그대로 세면 관절 번호가 **한 칸 밀린다**.
+                // 그 밀림 때문에 Pinky 마디가 중앙 15.2°, Index가 9.6°로 남아 있었다
+                // (중수골이 없는 Thumb은 0.0°였다). 엔진 Characterizer도 중수골을 별도 체인으로 뺀다.
+                if (Lower.Contains(TEXT("metacarpal")) || Lower.Contains(TEXT("carpus"))) continue;
+                bool bMatch = false;
+                for (const FString& Token : Finger.Tokens) bMatch |= Lower.Contains(Token);
+                if (bMatch) Found.Add({Depth, Index});
+            }
+            Found.Sort([](const TPair<int32, int32>& A, const TPair<int32, int32>& B) { return A.Key < B.Key; });
+            for (int32 Order = 0; Order < Found.Num() && Order < MaxJoints; ++Order)
+            {
+                Result.BoneMappings.Add(FString::Printf(TEXT("%s%s%d"), Side, Finger.Name, Order + 1),
+                    Ref.GetBoneName(Found[Order].Value));
+            }
+        }
+    }
+}
+
 void ClassifyPosture(const FReferenceSkeleton& Ref, const TArray<FTransform>& Pose,
     const TMap<FString, FName>& Roles, FUPTSkeletonAnalysisData& Result)
 {
@@ -577,6 +641,9 @@ FUPTSkeletonAnalysisData FUPTSkeletonAnalyzer::AnalyzeDetailed(USkeletalMesh* Sk
     if (!TwistBones.IsEmpty()) Report += TEXT("- Twist: ") + FString::Join(TwistBones, TEXT(", ")) + TEXT("\n");
     if (!FingerBones.IsEmpty()) Report += TEXT("- Finger: ") + FString::Join(FingerBones, TEXT(", ")) + TEXT("\n");
     if (!FaceBones.IsEmpty()) Report += TEXT("- Face: ") + FString::Join(FaceBones, TEXT(", ")) + TEXT("\n");
+
+    // 손가락 역할은 핵심 역할 매핑이 끝난 뒤에 채운다(손 역할 본이 있어야 자손을 찾을 수 있다).
+    AddFingerRoles(Ref, Result);
 
     // 역할 매핑이 다 끝난 뒤에 기하로 자세를 본다. 이름만으로는 사족보행을 막을 수 없다.
     ClassifyPosture(Ref, ComponentPose, Result.BoneMappings, Result);

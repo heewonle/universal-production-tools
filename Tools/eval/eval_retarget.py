@@ -141,7 +141,48 @@ def contact_metrics(source: list, target: list, bones: list,
     }
 
 
-def compare_pair(pair: dict, segments: list, ground_bones: list, scale_chain: list) -> dict:
+def twist_motion_range(frames: list, role: str) -> float | None:
+    """트위스트 본의 로컬 회전이 샷 동안 얼마나 움직였는가(도).
+
+    트위스트 본은 팔·다리 축을 따라 **구르는** 본이라 위치로는 거의 아무것도 알 수 없다.
+    실무에서 실제로 깨지는 방식은 "트위스트 트랙이 통째로 빠져 레퍼런스 포즈에 멈춘다"는
+    것이고, 그러면 아래팔 스키닝이 뒤틀린다. 그래서 각도가 아니라 **움직인 범위**를 잰다.
+    첫 샘플 기준 회전차의 최대값을 쓴다.
+    """
+    quats = [frame.get("twist", {}).get(role) for frame in frames]
+    quats = [q for q in quats if q]
+    if len(quats) < 2:
+        return None
+    first = np.array(quats[0], dtype=float)
+    worst = 0.0
+    for q in quats[1:]:
+        # 쿼터니언 사이 각도. 부호가 뒤집힌 표현도 같은 회전이므로 절대값을 쓴다.
+        dot = abs(float(np.clip(np.dot(first, np.array(q, dtype=float)), -1.0, 1.0)))
+        worst = max(worst, math.degrees(2.0 * math.acos(dot)))
+    return worst
+
+
+def compare_fingers(source: list, target: list, finger_segments: list) -> dict:
+    """손가락 마디 방향을 몸통과 같은 방식으로 비교한다.
+
+    손가락은 지금까지 측정 범위 밖이었다. 리타기팅이 손가락을 옮기는지 아무도 재지 않았고,
+    "범용"을 주장하려면 손이 빠진 채로는 부족하다.
+    """
+    source_dirs = segment_angles(source, [tuple(seg) for seg in finger_segments])
+    target_dirs = segment_angles(target, [tuple(seg) for seg in finger_segments])
+    per_segment = {}
+    for name, source_list in source_dirs.items():
+        angles = []
+        for a, b in zip(source_list, target_dirs.get(name, [])):
+            if a is None or b is None:
+                continue
+            angles.append(math.degrees(math.acos(float(np.clip(np.dot(a, b), -1.0, 1.0)))))
+        if angles:
+            per_segment[name] = round(float(np.median(angles)), 1)
+    return per_segment
+
+def compare_pair(pair: dict, segments: list, ground_bones: list, scale_chain: list,
+                 finger_segments: list | None = None) -> dict:
     source, target = pair["source_frames"], pair["target_frames"]
     source_scale = leg_length(source, scale_chain)
     target_scale = leg_length(target, scale_chain)
@@ -160,6 +201,17 @@ def compare_pair(pair: dict, segments: list, ground_bones: list, scale_chain: li
             per_segment[name] = round(float(np.median(angles)), 1)
             per_segment_motion[name] = motion_deviation(angles)
             all_angles += angles
+
+    # 손가락. 양쪽에 다 있는 손가락만 비교된다(없으면 segment_angles가 건너뛴다).
+    finger_per_segment = compare_fingers(source, target, finger_segments or [])
+    # 트위스트. 원본이 움직였는데 결과가 멈춰 있으면 트랙이 빠진 것이다.
+    twist_rows = {}
+    for role in pair.get("twist_roles", []):
+        source_range = twist_motion_range(source, role)
+        target_range = twist_motion_range(target, role)
+        if source_range is None or target_range is None:
+            continue
+        twist_rows[role] = {"source_deg": round(source_range, 1), "target_deg": round(target_range, 1)}
 
     source_slides = foot_slide(source, ground_bones, source_scale)
     target_slides = foot_slide(target, ground_bones, target_scale)
@@ -184,6 +236,17 @@ def compare_pair(pair: dict, segments: list, ground_bones: list, scale_chain: li
         # 원본 자체도 완벽히 고정되지는 않으므로 원본 대비 증가분을 함께 본다.
         "foot_slide_source": round(float(np.median(source_slides)), 4) if source_slides else None,
         "foot_slide_target": round(float(np.median(target_slides)), 4) if target_slides else None,
+        # 손가락·트위스트는 지금까지 측정 범위 밖이었다. 없는 데이터셋에서는 None이 된다.
+        "finger_per_segment_deg": finger_per_segment or None,
+        "finger_angle_median_deg": round(float(np.median(list(finger_per_segment.values()))), 1) if finger_per_segment else None,
+        "finger_worst_deg": max(finger_per_segment.values()) if finger_per_segment else None,
+        "finger_segments_compared": len(finger_per_segment),
+        "twist": twist_rows or None,
+        # 원본이 5° 이상 구른 트위스트 중, 결과가 그 20% 미만으로만 구른 것의 수.
+        # 트위스트 트랙이 빠지면 여기가 올라간다.
+        "twist_dropped": sum(1 for v in twist_rows.values()
+                             if v["source_deg"] >= 5.0 and v["target_deg"] < 0.2 * v["source_deg"]),
+        "twist_compared": len(twist_rows),
     }
 
 
@@ -226,7 +289,9 @@ def run(output_dir: str) -> dict:
         return {"skipped": "비교할 리타기팅 쌍이 없습니다"}
 
     segments = [tuple(segment) for segment in data["segments"]]
-    rows = [compare_pair(pair, segments, data["ground_bones"], data["scale_chain"]) for pair in data["pairs"]]
+    finger_segments = data.get("finger_segments") or []
+    rows = [compare_pair(pair, segments, data["ground_bones"], data["scale_chain"], finger_segments)
+            for pair in data["pairs"]]
     angles = [row["segment_angle_median_deg"] for row in rows if row["segment_angle_median_deg"] is not None]
     worst = [row["worst_segment_deg"] for row in rows if row["worst_segment_deg"] is not None]
     motion = [row["motion_deviation_worst_deg"] for row in rows if row["motion_deviation_worst_deg"] is not None]
@@ -234,6 +299,8 @@ def run(output_dir: str) -> dict:
     clearance = [row["foot_clearance_error"] for row in rows if row.get("foot_clearance_error") is not None]
     mismatch = [row["contact_mismatch"] for row in rows if row.get("contact_mismatch") is not None]
     source_slides = [row["foot_slide_source"] for row in rows if row["foot_slide_source"] is not None]
+    fingers = [row["finger_angle_median_deg"] for row in rows if row.get("finger_angle_median_deg") is not None]
+    fingers_worst = [row["finger_worst_deg"] for row in rows if row.get("finger_worst_deg") is not None]
 
     os.makedirs(output_dir, exist_ok=True)
     metrics = {
@@ -249,6 +316,14 @@ def run(output_dir: str) -> dict:
         "foot_clearance_error": round(float(np.median(clearance)), 4) if clearance else None,
         "foot_clearance_worst": round(float(max(clearance)), 4) if clearance else None,
         "contact_mismatch": round(float(np.median(mismatch)), 4) if mismatch else None,
+        # 손가락·트위스트. 예전 데이터셋에는 없으므로 None이 될 수 있다.
+        # min을 쓰면 손가락 없는 대상(골렘) 하나 때문에 전체가 0으로 찍혀 "측정 안 됨"처럼 보인다.
+        # 몇 쌍에서 쟀는지를 세는 쪽이 사실에 가깝다.
+        "pairs_with_fingers": sum(1 for row in rows if row["finger_segments_compared"] > 0),
+        "finger_angle_median_deg": round(float(np.median(fingers)), 1) if fingers else None,
+        "finger_worst_deg": round(float(max(fingers_worst)), 1) if fingers_worst else None,
+        "pairs_with_twist": sum(1 for row in rows if row["twist_compared"] > 0),
+        "twist_dropped_worst": max((row["twist_dropped"] for row in rows), default=0),
         "dataset": os.path.basename(data_dir),
     }
     with open(os.path.join(output_dir, "retarget_rows.json"), "w", encoding="utf-8") as handle:

@@ -280,6 +280,21 @@
     },
     "contact_mismatch": {
       "max": 0.06
+    },
+    "pairs_with_fingers": {
+      "min": 10
+    },
+    "finger_angle_median_deg": {
+      "max": 0.5
+    },
+    "finger_worst_deg": {
+      "max": 1.0
+    },
+    "pairs_with_twist": {
+      "min": 5
+    },
+    "twist_dropped_worst": {
+      "equals": 8
     }
   },
   "motion_roundtrip": {
