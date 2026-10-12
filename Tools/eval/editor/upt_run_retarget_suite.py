@@ -37,6 +37,14 @@ UE4_SRC = [
     "/Game/External/CombatMasterAnimBundle/Animations/DynamicKatanaV2/Mannequin_UE4/RM/Attack/Anim_DK2_Combo_A_RM.Anim_DK2_Combo_A_RM",
 ]
 
+# 사족보행 쌍. 늑대의 역할 축은 사람과 글자 그대로 같아서(리거가 UpperArm·Forearm·Hand로 이름
+# 붙였다) 같은 자세끼리는 그대로 성립한다. 막아야 하는 것은 자세를 섞는 쪽이다.
+WOLF = [
+    "/Game/External/3D_ModelsCharactersAnimals/Animations/Idles/Wolfr_Idle.Wolfr_Idle",
+    "/Game/External/3D_ModelsCharactersAnimals/Animations/Actions/Wolfr_Bark.Wolfr_Bark",
+    "/Game/External/3D_ModelsCharactersAnimals/Animations/Actions/Wolfr_Howl.Wolfr_Howl",
+]
+
 # (manifest 이름, 대상 메시, 애니메이션 목록)
 COMBINATIONS = [
     ("retarget_manifest.json",
@@ -47,6 +55,10 @@ COMBINATIONS = [
      "/Game/Retrieve/Retargeter/Mixamo/Character/X_Bot.X_Bot", SYNTY),
     ("retarget_manifest_ue4src.json",
      "/Game/External/ForestGolems/Meshes/Forest_Golem_1_PolyArt.Forest_Golem_1_PolyArt", UE4_SRC),
+    # 늑대 애니메이션은 Wolf_Cub과 **같은 Skeleton**을 쓴다(그쪽을 대상으로 두면 변환이
+    # 불필요하다고 올바르게 건너뛴다). 성체를 대상으로 두면 실제 쌍이 된다.
+    ("retarget_manifest_wolf.json",
+     "/Game/External/3D_ModelsCharactersAnimals/Wolf_PA/Wolf_Pa_v2.Wolf_Pa_v2", WOLF),
 ]
 
 

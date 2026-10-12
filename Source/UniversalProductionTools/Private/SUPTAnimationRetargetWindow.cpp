@@ -165,18 +165,22 @@ bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRe
     // 준비도만으로는 사족보행을 막지 못한다. 늑대는 리거가 앞다리를 UpperArm·Forearm·Hand로
     // 이름 붙여 두어 **모든 역할이 신뢰도 1.00으로 매핑되고 준비도 94%로 통과한다.**
     // 역할 이름은 리거의 선언이고, 몸이 어떻게 서 있는지는 레퍼런스 포즈가 말해 준다.
-    auto RejectIfNotBiped = [&OutError](const FUPTSkeletonAnalysisData& Analysis, USkeletalMesh* Mesh, const TCHAR* Side) -> bool
+    //
+    // 막아야 하는 것은 **자세를 섞는 것**이고, 사족보행 자체가 아니다. 처음에는 "직립 이족이
+    // 아니면 거부"로 넣었는데 그건 과했다 — 늑대의 역할 축(펠비스→척추→목→머리,
+    // 쇄골→위팔→아래팔→손, 허벅지→정강이→발)은 사람과 **글자 그대로 같다.** 늑대 → 늑대 새끼
+    // 리타기팅은 같은 자세끼리라 성립하고, 실제로 재 보면 사람 쌍과 같은 수준으로 나온다.
+    // 망가지는 것은 사람 → 늑대처럼 **자세가 다른 쌍**이다.
+    if (SourceAnalysis.bUprightBiped != TargetAnalysis.bUprightBiped)
     {
-        if (Analysis.bUprightBiped) return false;
+        const auto Describe = [](const FUPTSkeletonAnalysisData& Analysis) { return Analysis.bUprightBiped ? TEXT("직립 이족") : TEXT("사족·비직립"); };
         OutError = FString::Printf(
-            TEXT("%s '%s'는 직립 이족이 아닙니다 (손 높이 %.2f, 척추 수직 %.2f). "
-                 "역할 이름은 모두 매핑되지만 휴머노이드 역할 그래프가 맞지 않아 결과가 망가집니다. "
-                 "사족보행·비정형 리그는 전용 리타기터가 필요합니다."),
-            Side, *Mesh->GetName(), Analysis.HandAboveFootRatio, Analysis.SpineUpright);
-        return true;
-    };
-    if (RejectIfNotBiped(SourceAnalysis, SourceMesh, TEXT("원본"))) return false;
-    if (RejectIfNotBiped(TargetAnalysis, TargetMesh, TEXT("대상"))) return false;
+            TEXT("자세가 다른 쌍입니다: 원본 '%s'는 %s(손 높이 %.2f), 대상 '%s'는 %s(손 높이 %.2f). "
+                 "역할 이름은 양쪽 다 매핑되지만 자세가 다르면 같은 역할이 다른 일을 하므로 결과가 망가집니다."),
+            *SourceMesh->GetName(), Describe(SourceAnalysis), SourceAnalysis.HandAboveFootRatio,
+            *TargetMesh->GetName(), Describe(TargetAnalysis), TargetAnalysis.HandAboveFootRatio);
+        return false;
+    }
 
     // 쪽마다 더 나은 Rig을 고르는(한쪽은 엔진 Rig, 다른 쪽은 폴백 Rig) 방식도 만들어 재 봤는데
     // 전면적으로 나빠졌다(골렘 5.6° → 31.0°, X_Bot 3.8° → 31.1°). 두 Rig의 체인 **이름 규칙**이
@@ -291,11 +295,8 @@ FReply SUPTAnimationRetargetWindow::ValidatePipeline()
         {
             Problems.Add(FString::Printf(TEXT("%s: 보조 분석 준비도 %.0f%% — 엔진 자동 인식이 실패하면 수동 보정이 필요합니다"), *SourceMesh->GetName(), Analysis.Readiness * 100.0f));
         }
-        else if (!Analysis.bUprightBiped)
-        {
-            Problems.Add(FString::Printf(TEXT("%s: 직립 이족이 아닙니다(손 높이 %.2f) — 역할 이름은 다 맞지만 휴머노이드 리타기팅 대상이 아닙니다"),
-                *SourceMesh->GetName(), Analysis.HandAboveFootRatio));
-        }
+        // 자세는 여기서 검사하지 않는다. 이 사전 검사는 **원본 메시만** 보는데, 자세는
+        // 원본과 대상을 견줘야 뜻이 생긴다(사족 → 사족은 정상이다). 실제 가드는 BuildRetargeter에 있다.
     }
 
     if (!Problems.IsEmpty())

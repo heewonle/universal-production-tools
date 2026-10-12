@@ -234,7 +234,7 @@
       "equals": 0
     },
     "pairs": {
-      "min": 19
+      "min": 22
     },
     "segment_angle_median_deg": {
       "max": 0.5
@@ -295,6 +295,12 @@
     },
     "twist_dropped_worst": {
       "equals": 8
+    },
+    "targets.Wolf_Cub->Wolf_Pa_v2.segment_angle_median_deg": {
+      "max": 0.5
+    },
+    "targets.Wolf_Cub->Wolf_Pa_v2.worst_segment_deg": {
+      "max": 1.5
     }
   },
   "motion_roundtrip": {

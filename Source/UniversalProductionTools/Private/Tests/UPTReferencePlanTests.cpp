@@ -100,6 +100,14 @@ bool FUPTSkeletonPostureTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("늑대는 앞발이 뒷발과 거의 같은 높이다"), Wolf.HandAboveFootRatio < 0.25f);
     }
 
+    // 막아야 하는 것은 **자세를 섞는 것**이고 사족보행 자체가 아니다. 늑대의 역할 축은 사람과
+    // 글자 그대로 같아서(리거가 그렇게 이름 붙였다) 늑대 → 늑대 새끼는 성립한다.
+    const FUPTSkeletonAnalysisData Cub = Analyze(TEXT("/Game/External/3D_ModelsCharactersAnimals/Wolf_Cub/Wolf_Cub.Wolf_Cub"));
+    if (!Wolf.BoneMappings.IsEmpty() && !Cub.BoneMappings.IsEmpty())
+    {
+        TestEqual(TEXT("늑대와 늑대 새끼는 같은 자세다"), Wolf.bUprightBiped, Cub.bUprightBiped);
+    }
+
     // 직립 캐릭터는 통과해야 한다. 비인간(골렘)도 마찬가지다 — 막아야 할 것은 체형이 아니라 자세다.
     const TCHAR* UprightMeshes[] = {
         TEXT("/Game/Retrieve/Character/Heroes/Mannequin/Meshes/SKM_Manny.SKM_Manny"),
