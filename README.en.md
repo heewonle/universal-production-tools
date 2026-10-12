@@ -216,6 +216,58 @@ pairs also dilute the overall medians (contact mismatch 0.0417 → 0.0312), so t
 its own per-combination guards to keep dilution from masking a per-combination regression.
 → [SKELETON_AUDIT.md](Docs/SKELETON_AUDIT.md)
 
+## Fingers and twist, measured for the first time
+
+All 19 pairs had only ever measured body segments. Whether retargeting carried the **fingers** was
+something **nobody knew**, and a claim of generality with the hands left out is not much of a claim.
+
+Measured, they were two orders of magnitude worse: body 0.1° / 8.4° against **fingers 15.3° / 48.8°**.
+The same situation the body was in before alignment (52.9°) — the role graph had no fingers, so
+rest-pose alignment skipped the hand and the fixed offset stayed.
+
+Adding finger axes to the aligner (13 segments → **33**) brought it to 4.2°, and chasing the rest turned
+up **another off-by-one**: Manny has `pinky_metacarpal_l` as its own joint and the Synty source does
+not, so the joint ordinals shift. Thumb, which has no metacarpal, was the only one already at 0.0° —
+that was the tell.
+
+| finger segment | no alignment | axes added | metacarpals excluded |
+|---|---|---|---|
+| median | 15.3° | 4.2° | **0.0°** |
+| worst | 48.8° | 43.9° | **0.0°** |
+
+0.0° looked like a saturated metric, so it was checked: the source really does animate fingers —
+segment direction swings **69.71° in the source and 69.70° in the result** over the shot. The motion
+had been transferring all along; only the fixed offset was left, and it is gone.
+
+**Twist was lost entirely** — the source rolls 4–23° and the result came out at 0.0–0.1°, because a
+twist bone is a **branch off the chain path** (`lowerarm_twist_01_l` is not on the way from
+`lowerarm_l` to `hand_l`) so FK chain retargeting never touches it.
+
+It was left alone at first: in UE practice twist is often driven procedurally by an AnimBP corrective,
+and baking source twist into such a rig would **apply it twice**. Rather than guess the pipeline's
+intent, the question was turned into a measurable one — **do the animations authored for this skeleton
+animate twist?** Manny: 14 of 34 (41%); DefaultWoman: 26 of 40 (65%), up to 69–81°. So this pipeline
+does put twist in animations, and losing it is a real loss.
+
+**Sample size misled once.** The first six animations read 0.0° on both, which pointed at the
+*opposite* conclusion. Widening to 40 reversed it.
+
+Fixing it went wrong three times, all the same shape — **two sides disagreeing on which bone a label
+names.** The baker logged "73 keys written" while the metric still read 0.0°. Reading the data back
+inside the baker showed the write was fine (10.4° against the source's 10.1°); the baker was writing
+`lowerarm_twist_02_l` (bone-array order) while the metric read `_01` (name order). Matching both to
+"nearest to the role bone" revived 4 of 8; the other 4 were a **tie** at the same distance, broken
+differently on each side. Unifying the tie-break fixed all 8.
+
+| | before | after |
+|---|---|---|
+| twist transfer ratio (eight roles) | 0.00–0.01 | **1.00** |
+| `twist_dropped_worst` | 8 | **0** |
+
+Body, finger and contact metrics did not move by a single digit. This was the **third** time the same
+shape appeared in this project (the aligner's off-by-one segment, finger metacarpals, and this).
+→ [RETARGET_QUALITY.md](Docs/RETARGET_QUALITY.md)
+
 **4. Face animation from a single video** — UE 5.8 MetaHuman Animator → transferred into 5.7
 Solves face control curves from phone footage (mono, no Identity required). FBX import would not
 produce an animation asset in 5.7, so **only the curve values were transferred and the AnimSequence was
