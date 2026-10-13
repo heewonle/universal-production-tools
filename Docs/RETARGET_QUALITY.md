@@ -1039,35 +1039,162 @@ FK Chains op의 기본 회전 모드가 `Interpolated`다. 양쪽 체인을 **�
 네 조합을 돌리고 바로 촬영까지 한다. manifest 쌍 수가 기대와 다르면 에러를 남긴다.
 회귀 기준에도 전체 지표 두 줄을 넣어, 한 조합이 좋아지고 다른 조합이 나빠지는 변화가 통과하지 않게 했다.
 
+## 다르게 리깅된 사족·비인간 쌍을 실제로 만들어 재 봤다 (2026-10-13)
+
+"남은 것"에 **어려운 사족 쌍**을 적어 두고 "서로 다르게 리깅된 사족 에셋이 없다"고 했다.
+그게 틀렸다 — 프로젝트에 이미 들어와 있었다. Fab 라이브러리에서 받아 둔 크리처 팩들을
+훑어 보니 사족이 넷 더 있었고, 그중 둘은 **팔다리를 사람 비유가 아니라 위치로 부르는**
+완전히 다른 리그였다.
+
+| 에셋 | 본 | 앞다리 이름 | 뒷다리 이름 |
+|---|---|---|---|
+| `Wolf_Pa_v2` (3ds Max biped) | 58 | `L_UpperArm` `L_Forearm` `L_Hand` | `L_Thigh` `L_Calf` `L_HorseLink` `L_Foot` |
+| `Polygonal_Wolf_Black` | 37 | `RigFLLeg1` `RigFLLeg2` `RigFLLegAnkle` | `RigBLLeg1..3` `RigBLLegAnkle` |
+| `Polygonal_Dragon` | 68 | `RigLFrontLeg1` `RigLFrontLeg2` `RigLFrontLegAnkle` | `RigLBackLeg1` `RigLBackLeg2` `RigLBackLegAnkle` |
+| `Rat` (Easy Animated Enemy Pack) | 43 | `FrontUpLeg_L` `FrontLowLeg_L` `FrontFoot_L` | `BackUpLeg_L` `BackLowLeg_L` `BackFoot_L` |
+
+### 위치 이름은 하나도 읽히지 않고 있었다
+
+`Polygonal_Wolf_Black`의 준비도는 **0.1875**였고, 매핑은 이랬다.
+
+```
+LeftUpperArm  <- RigSpine3      RightLowerArm <- RigFLLeg1
+LeftLowerArm  <- RigRibcage     RightHand     <- RigFLLeg2
+LeftHand      <- RigNeck2       RightThigh    <- RigFLLegAnkle
+```
+
+좌우가 뒤섞이고 척추가 팔로 들어갔다. 등급이 C라 **자동 경로에서는 거부됐으니 틀린 결과가
+새어 나가지는 않았다.** 그래도 같은 몸을 쓰는 두 리그가 서로 리타기팅되지 않는다는 뜻이다.
+
+대응 규칙은 짐작이 아니라 **다른 리거가 손으로 한 것**을 따랐다. `Wolf_Pa_v2`를 만든 쪽은
+앞다리를 `UpperArm`·`Forearm`·`Hand`로, 뒷다리를 `Thigh`·`Calf`·`Foot`로 이름 붙였다.
+그래서 **앞다리 = 팔 역할, 뒷다리 = 다리 역할**, 관절은 1→위팔/넓적다리, 2→아래팔/정강이,
+`Ankle`→손/발로 잡았다. `Foot1`·`Foot2`는 발가락이라 비워 둔다.
+
+맞는 규칙인지 확인할 수 있는 지점이 있었다 — **체인 길이**. 이 규칙으로 두 늑대의 앞다리가
+3대3, 뒷다리가 4대4로 맞는다(`RigBLLeg3` ↔ `L_HorseLink`). 사람↔사람 쌍과 같은 조건이다.
+
+어순은 네 가지를 모두 받는다(`FLLeg1` / `LFrontLeg1` / `LLegFront1` / `FrontUpLeg_L`).
+좌우 부호 추정(`IsLikelyLeftName`)에도 같은 꼴을 넣었다. 그게 없으면 왼쪽 본이 하나도
+식별되지 않아 기본값으로 추측하고, 맞는 본에 음수 공간 점수가 붙는다.
+
+| 에셋 | 준비도 전 | 후 | 등급 | 자세 판정 |
+|---|---|---|---|---|
+| `Polygonal_Wolf_Black` | 0.1875 | **0.9375** | C → A | 사족 (유지) |
+| `Polygonal_Dragon` | 0.1875 | **0.9375** | C → A | 사족 (유지) |
+| `Polygonal_Treant` | 0.3125 | 0.6875 | C (유지) | 사족 |
+| `Rat` | 0.25 | 0.4375 | C (유지) | 이족 → **사족** (교정) |
+| `Frog` | 0.25 | 0.4375 | C (유지) | 이족 → **사족** (교정) |
+| `Spider` | 0.125 | 0.0625 | C (유지) | 이족 → **사족** (교정) |
+
+늑대와 드래곤은 16개 역할이 **좌우 대칭으로, 강제 배정 0개로** 붙었다. 쥐도 매핑은 16개가
+전부 맞는데 준비도가 0.4375에 머문다 — 아홉 역할이 신뢰도 0.40이고 준비 기준(0.55) 아래다.
+`FrontUpLeg_L`이 Spine 역할로 뽑힌 `Torso`의 자손이 아니라서 계층 점수 −0.18이 붙는다.
+**매핑은 맞고 점수만 낮은 경우**이므로 등급이 과소평가다. 고치려면 "부모 역할의 자손은
+아니지만 펠비스 아래에는 있다"를 따로 세는 게 맞고, 1,691개 감사에 영향이 가니 따로 잰다.
+
+### 쌍 다섯을 측정 묶음에 넣었다 (19 → 22 → 35쌍)
+
+| 조합 | 쌍 | 마디 중앙 | 최악 | 최악 마디 |
+|---|---|---|---|---|
+| Synty → Manny | 5 | 0.1° | 8.4° | `calf→foot` |
+| Synty → Forest Golem | 5 | 0.1° | 7.8° | `calf→foot` |
+| Synty → X_Bot | 5 | 0.1° | 7.1° | `calf→foot` |
+| UE4 → Forest Golem | 4 | 0.0° | 2.6° | `calf→foot` |
+| Wolf_Cub → Wolf_Pa_v2 (골격 공유) | 3 | 0.0° | 0.8° | `calf→foot` |
+| **Polygonal_Wolf → Wolf_Pa_v2** | 3 | 0.7° | 12.2° | `lowerarm→hand` |
+| **Wolf_Cub → Polygonal_Wolf** | 3 | 0.4° | 35.3° | `upperarm→lowerarm` |
+| **Polygonal_Dragon → Wolf_Pa_v2** | 2 | 1.4° | 8.6° | `neck→head` |
+| **Synty → Polygonal_Golem** | 5 | 0.1° | 13.3° | `lowerarm→hand` |
+
+기존 22쌍의 수치는 **한 자리도 바뀌지 않았다**(이름 토큰을 늘렸을 뿐 기존 리그의 매핑은
+그대로다). 사족 쌍은 **같은 자세끼리만** 성립하고, 자세가 다르면 P4 가드가 그대로 막는다.
+
+### 원인은 이미 알던 것이었다 — 그리고 한 쌍은 아니었다
+
+새 조합의 최악 마디가 전부 **체인 끝**(`lowerarm→hand`, `calf→foot`)인 것이 이미 찾아 둔
+FK 체인 길이 비율 보간과 같은 모양이다. `UPT.FKOneToOne 1`로 35쌍을 다시 쟀다.
+
+| 조합 | 최악 (기본) | 최악 (One to One) | 발 높이 오차 |
+|---|---|---|---|
+| Synty → Manny | 8.4° | **0.1°** | 0.0121 → 0.0252 |
+| Synty → Forest Golem | 7.8° | **0.1°** | 0.0248 → 0.0511 |
+| Synty → X_Bot | 7.1° | **0.1°** | 0.0222 → 0.0308 |
+| Synty → Polygonal_Golem | 13.3° | **0.1°** | 0.0359 → 0.0457 |
+| Polygonal_Wolf → Wolf_Pa_v2 | 12.2° | **4.5°** | 0.0198 → 0.0197 |
+| Wolf_Cub → Polygonal_Wolf | 35.3° | **35.3°** | 0.0092 → 0.0099 |
+| Polygonal_Dragon → Wolf_Pa_v2 | 8.6° | 8.6° | 0.0824 → 0.0824 |
+
+여섯 조합에서 각도가 떨어지고 접지가 나빠지는 **같은 거래**가 재현됐다. 기본값은 그대로
+보간을 쓴다(발이 땅에 붙는 쪽이 쓸모가 크다). 드래곤의 목은 본이 6개 대 1개라 개수가
+달라 1:1이 적용되지 않는다 — 8.6°는 그 구조 차이다.
+
+`Wolf_Cub → Polygonal_Wolf`의 35.3°는 **1:1로도 소수 첫째 자리까지 그대로**였다. 즉 FK 보간이
+원인이 아니다. 세 애니메이션 중 `Wolfr_Howl` 하나에서만 크고(Idle 2.8° / Bark 8.5° / Howl 27.7°),
+움직임 성분은 5.2°뿐이라 **포즈에 따라 달라지는 상수 오프셋**이다. 레스트 포즈 회전 오프셋
+하나로는 관절 축이 다른 리그를 보정할 수 없다는 쪽이 유력하지만, **아직 증명하지 않았다.**
+수치를 이름으로 못 박아 두었으니 조용히 나빠지지는 않는다.
+
+### 쇄골 체인 중복을 고쳐 봤지만 효과가 없어 되돌렸다
+
+`LeftClavicle → LeftUpperArm` 체인은 위팔을 삼킨다. 위팔은 `LeftArm` 체인의 시작 본이기도
+해서 **한 본이 두 체인에 동시에 들어간다** — 앞에서 Spine·Neck에 대해 고친 것과 똑같은
+모양이고, 엔진 Auto Characterizer도 쇄골을 한 본으로 끊는다. 쇄골이 한쪽에만 있는 늑대 쌍에서
+특히 아플 것으로 봤다.
+
+같은 방식으로 줄여 35쌍을 다시 쟀다. **소수 둘째 자리까지 한 자리도 바뀌지 않았다.**
+중복 소속은 사실이지만 결과에는 영향이 없다. 효과 없는 변경을 남기지 않기로 하고 되돌렸다
+(IK 목표·바닥 제약·루트 고정과 같은 처리). 코드에는 측정 결과를 주석으로 남겼다.
+
+### 새로 드러난 것: 골렘 손가락이 20°
+
+`Polygonal_Golem`은 손가락이 있는 **세 번째** 대상이고, 손가락 마디 오차가 중앙 **20.2°**,
+최악 43.9°다(Manny 0.0° / X_Bot 0.0°). 라벨 불일치는 아니다 — 손가락 본이 `RigLArmPalm →
+RigLArmIndex1 → Index2 → Index3`의 정상 사슬이고 좌우 대칭이며, C++ 분석기와 파이썬 측정기가
+같은 본을 가리킨다(부모 사슬을 찍어 확인했다). 정렬기도 33마디/33본을 처리했다고 찍는다.
+움직임 성분은 1.3°뿐이라 **상수 오프셋**이다. 원인은 아직 모른다. 수치를 조합별로 못 박았다.
+
 ## 회귀 기준
 
 ```
 length_mismatch                                                  == 0
-pairs                                                            >= 19
+pairs                                                            >= 35
 segment_angle_median_deg                                         <= 0.5
-worst_segment_deg                                                <= 9.0
-targets.Retrieve_DefaultWoman->SKM_Manny.*                        중앙 <= 0.5 / 최악 <= 9.0
-targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.*           중앙 <= 0.5 / 최악 <= 8.5
-targets.Retrieve_DefaultWoman->X_Bot.*                            중앙 <= 0.5 / 최악 <= 7.5
-targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.*                중앙 <= 0.5 / 최악 <= 3.5
-motion_deviation_worst_deg                                       <= 3.0
+worst_segment_deg                                                <= 36.0   (Wolfr_Howl -> Polygonal_Wolf 한 쌍의 값)
+motion_deviation_worst_deg                                       <= 6.0    (같은 쌍)
 foot_slide_target                                                <= 0.06
 foot_clearance_error                                             <= 0.02
-foot_clearance_worst                                             <= 0.06
+foot_clearance_worst                                             <= 0.09   (드래곤 -> 늑대 쌍의 값)
 contact_mismatch                                                 <= 0.06
-pairs_with_fingers                                               >= 10
+pairs_with_fingers                                               >= 15
 finger_angle_median_deg                                          <= 0.5
-finger_worst_deg                                                 <= 1.0
+finger_worst_deg                                                 <= 45.0   (Polygonal_Golem 손가락)
 pairs_with_twist                                                 >= 5
 twist_dropped_worst                                              == 0
 twist_ratio_worst_error                                          <= 0.05
+
+targets.Retrieve_DefaultWoman->SKM_Manny.*                        중앙 <= 0.5 / 최악 <= 9.0  / 손가락 <= 0.5
+targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.*           중앙 <= 0.5 / 최악 <= 8.5
+targets.Retrieve_DefaultWoman->X_Bot.*                            중앙 <= 0.5 / 최악 <= 7.5  / 손가락 <= 0.5
+targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.*                중앙 <= 0.5 / 최악 <= 3.5
+targets.Wolf_Cub->Wolf_Pa_v2.*                                    중앙 <= 0.5 / 최악 <= 1.5
+targets.Polygonal_Wolf_Black->Wolf_Pa_v2.*                        중앙 <= 1.0 / 최악 <= 13.0
+targets.Wolf_Cub->Polygonal_Wolf_Black.*                          중앙 <= 1.0 / 최악 <= 36.0
+targets.Polygonal_Dragon->Wolf_Pa_v2.*                            중앙 <= 2.0 / 최악 <= 9.0
+                                                                  발 높이 <= 0.09 / 접지 <= 0.55
+targets.Retrieve_DefaultWoman->Polygonal_Golem.*                  중앙 <= 0.5 / 최악 <= 14.0
+                                                                  손가락 <= 22.0 / 접지 <= 0.25
 ```
 
-마지막 네 줄이 각도와 독립인 접지 지표다. 펠비스 이동을 직접 구워 넣은 뒤 크게 조였다.
+접지 지표(`foot_*` / `contact_mismatch`)는 각도와 독립이다. 펠비스 이동을 직접 구워 넣은 뒤 크게 조였다.
 
-전체 지표(`segment_angle_median_deg` / `worst_segment_deg`) 두 줄은 역할 그래프 정렬에서 새로 넣었다.
-조합별 기준만 있으면 **한 조합이 좋아지고 다른 조합이 나빠지는 변화를 통과시킨다.** 접선 보간을
-시도했을 때 실제로 그랬다(UE4 팔은 절반, 표준 묶음은 13.3° → 18.1°).
+전체 지표와 조합별 지표를 **둘 다** 둔다. 조합별 기준만 있으면 한 조합이 좋아지고 다른
+조합이 나빠지는 변화를 통과시킨다(접선 보간을 시도했을 때 실제로 그랬다 — UE4 팔은 절반,
+표준 묶음은 13.3° → 18.1°). 거꾸로 전체 기준만 있으면 **어려운 조합을 하나 넣는 순간
+전체 가드가 그 조합에 맞춰 느슨해지고 사람 쌍의 퇴행이 그 밑에 숨는다.** 사족·비인간 쌍을
+넣을 때 발 높이 최악이 0.0413 → 0.0824로 뛴 것이 그 경우였다. 그래서 느슨해진 전체 기준
+세 줄(`worst_segment_deg` / `foot_clearance_worst` / `finger_worst_deg`)은 **어느 쌍의 값인지
+이름을 적어** 두고, 실제 조임은 조합별 기준이 담당한다.
 
 `run_regression.py --only retarget`으로 돌린다.
 전체 12개 스위트 모두 통과 상태다(비디오·자세 스위트는 `ThirdParty/UPTAnalyzer/.venv`의 파이썬으로 돌려야 한다).

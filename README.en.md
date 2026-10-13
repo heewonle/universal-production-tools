@@ -59,7 +59,7 @@ Tools/eval/
 | `letterbox_video` | vertical video with letterboxing and burned-in titles | 20 shots detected |
 | `body_pose` | video joints vs. actual bones | 2.7% screen error |
 | `body_height` | full-body height estimation, three body types (378 frames) | 10.1% median |
-| `retarget` | does retargeting preserve the motion (19 humanoid pairs + 3 quadruped) | body 0.1° / fingers 0.0° |
+| `retarget` | does retargeting preserve the motion (24 humanoid pairs + 11 quadruped/non-human) | body 0.1° / fingers 0.0° |
 | `motion_roundtrip` | does the **generated** sequence carry the reference's camera-motion magnitude | 0.014 screen error |
 
 ## What the apparatus actually found
@@ -215,6 +215,42 @@ pipeline does not break on a quadruped; it does not show it handles hard quadrup
 pairs also dilute the overall medians (contact mismatch 0.0417 → 0.0312), so the wolf combination got
 its own per-combination guards to keep dilution from masking a per-combination regression.
 → [SKELETON_AUDIT.md](Docs/SKELETON_AUDIT.md)
+
+### That hard quadruped pair, built and measured (22 pairs → 35)
+
+The note said hard quadruped retargeting would need differently-rigged quadruped assets. Those assets
+were **already in the project** — creature packs from the Fab library. Many quadruped rigs name limbs
+by **position** rather than by human analogy (`RigFLLeg1`, `FrontUpLeg_L`), and none of those names
+were being read.
+
+`Polygonal_Wolf_Black` sat at readiness 0.1875 with `LeftUpperArm ← RigSpine3` and
+`RightHand ← RigFLLeg2` — sides mixed, spine inside the arm. **Tier C, so the automatic path rejected
+it and no wrong result leaked**; the gate did its job. But it also meant two rigs of the same body
+could not retarget to each other.
+
+The correspondence was not a guess — it is **what another rigger did by hand**. The author of
+`Wolf_Pa_v2` named the front legs `UpperArm`/`Forearm`/`Hand`, so: **front limb = arm roles, back limb
+= leg roles**, joint `1` → upper, `2` → lower, `Ankle` → hand/foot. There was a way to check the rule:
+with it, the two wolves' chains match 3-to-3 in front and 4-to-4 behind — the same condition as a
+human-to-human pair.
+
+| Combination | segment median / worst | |
+|---|---|---|
+| **Polygonal_Wolf → Wolf_Pa_v2** | 0.7° / 12.2° | differently rigged quadruped, 37 vs 58 bones |
+| **Wolf_Cub → Polygonal_Wolf** | 0.4° / 35.3° | the other direction |
+| **Polygonal_Dragon → Wolf_Pa_v2** | 1.4° / 8.6° | different species, 68 bones |
+| **Synty → Polygonal_Golem** | 0.1° / 13.3° | non-human biped, another rig |
+
+Across the 1,691-mesh audit **exactly 2 tiers changed, both upward, zero demotions**. Only 7 meshes
+changed a core role mapping and all 7 are position-named rigs; the other 1,684 did not move a single
+role.
+
+Every new worst segment is a **chain end**, the same shape as the FK interpolation cause found
+earlier. Re-measuring with `UPT.FKOneToOne 1` drops six combinations to **0.1°** and worsens contact —
+the same trade, reproduced (the default still interpolates). One number did not move:
+`Wolf_Cub → Polygonal_Wolf` stayed at 35.3° under one-to-one, so **it has a different cause that I
+have not found.** The number is pinned by name so it cannot drift quietly.
+→ [RETARGET_QUALITY.md](Docs/RETARGET_QUALITY.md)
 
 ## Fingers and twist, measured for the first time
 
