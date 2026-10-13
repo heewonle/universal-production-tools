@@ -124,6 +124,48 @@ bool FUPTSkeletonPostureTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUPTSkeletonPositionNamedLimbsTest, "UniversalProductionTools.Skeleton.PositionNamedLimbs", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FUPTSkeletonPositionNamedLimbsTest::RunTest(const FString& Parameters)
+{
+    // 사족 리그는 팔다리를 사람 비유가 아니라 **위치**로 부르기도 한다. 그런 리그는 이름 근거가
+    // 하나도 없어 준비도 0.1875로 떨어지고 역할이 엉뚱하게 붙었다(LeftUpperArm ← RigSpine3).
+    // 등급이 C라 거부되긴 했지만, 같은 몸을 쓰는 두 리그가 서로 리타기팅되지 않는다는 뜻이다.
+    // 대응 규칙은 **앞다리 = 팔 역할, 뒷다리 = 다리 역할**이고, 이는 사람 비유로 이름 붙인
+    // 리거(Wolf_Pa_v2)가 손으로 한 것과 같다.
+    auto Analyze = [](const TCHAR* Path) -> FUPTSkeletonAnalysisData
+    {
+        USkeletalMesh* Mesh = LoadObject<USkeletalMesh>(nullptr, Path);
+        return Mesh ? FUPTSkeletonAnalyzer::AnalyzeDetailed(Mesh, FString()) : FUPTSkeletonAnalysisData();
+    };
+
+    struct FCase { const TCHAR* Path; const TCHAR* Role; const TCHAR* Bone; };
+    const FCase Cases[] = {
+        // 측면이 먼저 오는 꼴(RigFLLeg1)과 측면→위치 꼴(RigLFrontLeg1)을 모두 본다.
+        {TEXT("/Game/External/PolygonalCreaturesPack/PolygonalWolf/Polygonal_Wolf_Black.Polygonal_Wolf_Black"),
+         TEXT("LeftUpperArm"), TEXT("RigFLLeg1")},
+        {TEXT("/Game/External/PolygonalCreaturesPack/PolygonalWolf/Polygonal_Wolf_Black.Polygonal_Wolf_Black"),
+         TEXT("RightFoot"), TEXT("RigBRLegAnkle")},
+        {TEXT("/Game/External/PolygonalCreaturesPack/PolygonalDragon/Polygonal_Dragon.Polygonal_Dragon"),
+         TEXT("LeftUpperArm"), TEXT("RigLFrontLeg1")},
+        {TEXT("/Game/External/PolygonalCreaturesPack/PolygonalDragon/Polygonal_Dragon.Polygonal_Dragon"),
+         TEXT("LeftThigh"), TEXT("RigLBackLeg1")},
+    };
+    for (const FCase& Case : Cases)
+    {
+        const FUPTSkeletonAnalysisData Data = Analyze(Case.Path);
+        if (Data.BoneMappings.IsEmpty()) continue;  // 에셋이 없는 환경에서는 건너뛴다
+        const FName* Bone = Data.BoneMappings.Find(Case.Role);
+        TestTrue(FString::Printf(TEXT("%s의 %s가 매핑된다"), Case.Path, Case.Role), Bone != nullptr);
+        if (Bone) TestEqual(FString::Printf(TEXT("%s의 %s"), Case.Path, Case.Role), Bone->ToString(), FString(Case.Bone));
+        // 위치 이름을 읽기 전에는 준비도가 0.1875였다. 자동 경로 가드(0.70)를 넘어야 쌍이 성립한다.
+        TestTrue(FString::Printf(TEXT("%s 준비도 %.2f"), Case.Path, Data.Readiness), Data.Readiness >= 0.90f);
+        // 이름을 읽게 되었다고 자세 판정이 무력해지면 안 된다. 사족은 여전히 사족이다.
+        TestFalse(FString::Printf(TEXT("%s는 직립 이족이 아니다 (손 높이 %.2f)"), Case.Path, Data.HandAboveFootRatio),
+            Data.bUprightBiped);
+    }
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FUPTReferenceRoleCapacityTest, "UniversalProductionTools.ReferencePlan.RoleCapacity", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FUPTReferenceRoleCapacityTest::RunTest(const FString& Parameters)
 {

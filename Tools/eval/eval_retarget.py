@@ -270,6 +270,14 @@ def by_target(rows: list) -> dict:
     for target, group in groups.items():
         angles = [row["segment_angle_median_deg"] for row in group if row["segment_angle_median_deg"] is not None]
         worst = [row["worst_segment_deg"] for row in group if row["worst_segment_deg"] is not None]
+        # 접지·왜곡도 조합별로 남긴다. 전체 최악값 하나만 보면 **어려운 조합을 하나 넣는 순간
+        # 전체 가드가 그 조합에 맞춰 느슨해진다** — 드래곤→늑대 쌍을 넣었을 때 발 높이 최악이
+        # 0.0413에서 0.0824로 뛰었고, 전체 가드를 올리면 사람 쌍의 퇴행이 그 밑에 숨는다.
+        clearance = [row["foot_clearance_error"] for row in group if row.get("foot_clearance_error") is not None]
+        mismatch = [row["contact_mismatch"] for row in group if row.get("contact_mismatch") is not None]
+        motion = [row["motion_deviation_worst_deg"] for row in group if row.get("motion_deviation_worst_deg") is not None]
+        fingers = [row["finger_angle_median_deg"] for row in group
+                   if row.get("finger_segments_compared") and row.get("finger_angle_median_deg") is not None]
         summary[target] = {
             "pairs": len(group),
             "segment_angle_median_deg": round(float(np.median(angles)), 1) if angles else None,
@@ -277,6 +285,10 @@ def by_target(rows: list) -> dict:
             "worst_segment": max(
                 (row for row in group if row["worst_segment_deg"] is not None),
                 key=lambda row: row["worst_segment_deg"], default={}).get("worst_segment"),
+            "foot_clearance_worst": round(float(max(clearance)), 4) if clearance else None,
+            "contact_mismatch_worst": round(float(max(mismatch)), 4) if mismatch else None,
+            "motion_deviation_worst_deg": round(float(max(motion)), 2) if motion else None,
+            "finger_angle_median_deg": round(float(np.median(fingers)), 1) if fingers else None,
         }
     return summary
 

@@ -279,9 +279,32 @@ bool IsLikelyLeftName(const FString& Name)
 {
     const FString N = Normalize(Name);
     return N.Contains(TEXT("left")) || N.StartsWith(TEXT("l_")) || N.EndsWith(TEXT("_l")) ||
-        N.Contains(TEXT("riglarm")) || N.Contains(TEXT("riglleg")) || N.Contains(TEXT("_larm")) || N.Contains(TEXT("_lleg"));
+        N.Contains(TEXT("riglarm")) || N.Contains(TEXT("riglleg")) || N.Contains(TEXT("_larm")) || N.Contains(TEXT("_lleg")) ||
+        // 위치로 이름 붙은 사족 리그의 왼쪽. 이것이 없으면 왼쪽 본이 하나도 식별되지 않아
+        // 좌우 부호를 기본값(-1)으로 추측하게 되고, 맞는 본에 음수 공간 점수가 붙는다.
+        N.Contains(TEXT("flleg")) || N.Contains(TEXT("blleg")) ||
+        N.Contains(TEXT("lfrontleg")) || N.Contains(TEXT("lbackleg")) ||
+        N.Contains(TEXT("llegfront")) || N.Contains(TEXT("llegback"));
 }
 
+/**
+ * 사족 리그는 팔다리를 **사람 비유**로 부르기도 하고 **위치**로 부르기도 한다.
+ *
+ *   Wolf_Pa_v2 (3ds Max biped)   L_UpperArm · L_Forearm · L_Hand / L_Thigh · L_Calf · L_HorseLink · L_Foot
+ *   Polygonal_Wolf_Black         RigFLLeg1 · RigFLLeg2 · RigFLLegAnkle / RigBLLeg1..3 · RigBLLegAnkle
+ *
+ * 앞의 것은 이름만으로 전부 매핑돼 A등급으로 통과하지만, 뒤의 것은 준비도 0.1875로 떨어지고
+ * 역할이 엉뚱하게 붙었다(LeftUpperArm←RigSpine3, RightHand←RigFLLeg2). 등급이 C라 거부되긴
+ * 했지만 **같은 몸을 쓰는 두 리그가 서로 리타기팅되지 않는다**는 뜻이다.
+ *
+ * 그래서 위치 이름을 근거로 받아들인다. 대응 규칙은 Wolf_Pa_v2의 리거가 손으로 한 것과 같다 —
+ * **앞다리는 팔 역할, 뒷다리는 다리 역할**. 관절은 1→위팔/넓적다리, 2→아래팔/정강이,
+ * `Ankle`→손/발. `Foot1`·`Foot2`는 발가락이므로 비워 둔다. 이 규칙으로 두 늑대의 체인 길이가
+ * 앞다리 3대3, 뒷다리 4대4로 맞는다(사람↔사람 쌍과 같은 조건).
+ *
+ * 세 가지 어순을 모두 받는다. 늑대는 측면이 먼저(`FLLeg1`), 드래곤은 측면→위치(`LFrontLeg1`),
+ * 트리언트는 위치가 뒤(`LLegFront1`), Easy Animated Enemy Pack의 쥐는 밑줄 꼴(`FrontUpLeg_L`)이다.
+ */
 TArray<FRoleSpec> GetHumanoidSpecs()
 {
     return {
@@ -291,19 +314,31 @@ TArray<FRoleSpec> GetHumanoidSpecs()
         {TEXT("Neck"), {TEXT("neck"), TEXT("rigneck1")}, TEXT("Spine"), EBodyZone::CenterUpper, 0, false},
         {TEXT("Head"), {TEXT("head"), TEXT("righead")}, TEXT("Spine"), EBodyZone::Head, 0, true},
         {TEXT("LeftClavicle"), {TEXT("clavicle_l"), TEXT("leftshoulder"), TEXT("shoulder_l"), TEXT("l_clavicle"), TEXT("riglarmcollarbone")}, TEXT("Spine"), EBodyZone::Arm, -1, false},
-        {TEXT("LeftUpperArm"), {TEXT("upperarm_l"), TEXT("leftarm"), TEXT("l_upperarm"), TEXT("riglarm1")}, TEXT("Spine"), EBodyZone::Arm, -1, true},
-        {TEXT("LeftLowerArm"), {TEXT("lowerarm_l"), TEXT("leftforearm"), TEXT("forearm_l"), TEXT("l_forearm"), TEXT("riglarm2")}, TEXT("LeftUpperArm"), EBodyZone::Arm, -1, true},
-        {TEXT("LeftHand"), {TEXT("hand_l"), TEXT("lefthand"), TEXT("l_hand"), TEXT("riglarmpalm")}, TEXT("LeftLowerArm"), EBodyZone::Hand, -1, true},
+        {TEXT("LeftUpperArm"), {TEXT("upperarm_l"), TEXT("leftarm"), TEXT("l_upperarm"), TEXT("riglarm1"),
+            TEXT("flleg1"), TEXT("lfrontleg1"), TEXT("llegfront1"), TEXT("frontupleg_l")}, TEXT("Spine"), EBodyZone::Arm, -1, true},
+        {TEXT("LeftLowerArm"), {TEXT("lowerarm_l"), TEXT("leftforearm"), TEXT("forearm_l"), TEXT("l_forearm"), TEXT("riglarm2"),
+            TEXT("flleg2"), TEXT("lfrontleg2"), TEXT("llegfront2"), TEXT("frontlowleg_l")}, TEXT("LeftUpperArm"), EBodyZone::Arm, -1, true},
+        {TEXT("LeftHand"), {TEXT("hand_l"), TEXT("lefthand"), TEXT("l_hand"), TEXT("riglarmpalm"),
+            TEXT("fllegankle"), TEXT("lfrontlegankle"), TEXT("llegfrontankle"), TEXT("frontfoot_l")}, TEXT("LeftLowerArm"), EBodyZone::Hand, -1, true},
         {TEXT("RightClavicle"), {TEXT("clavicle_r"), TEXT("rightshoulder"), TEXT("shoulder_r"), TEXT("r_clavicle"), TEXT("rigrarmcollarbone")}, TEXT("Spine"), EBodyZone::Arm, 1, false},
-        {TEXT("RightUpperArm"), {TEXT("upperarm_r"), TEXT("rightarm"), TEXT("r_upperarm"), TEXT("rigrarm1")}, TEXT("Spine"), EBodyZone::Arm, 1, true},
-        {TEXT("RightLowerArm"), {TEXT("lowerarm_r"), TEXT("rightforearm"), TEXT("forearm_r"), TEXT("r_forearm"), TEXT("rigrarm2")}, TEXT("RightUpperArm"), EBodyZone::Arm, 1, true},
-        {TEXT("RightHand"), {TEXT("hand_r"), TEXT("righthand"), TEXT("r_hand"), TEXT("rigrarmpalm")}, TEXT("RightLowerArm"), EBodyZone::Hand, 1, true},
-        {TEXT("LeftThigh"), {TEXT("thigh_l"), TEXT("leftupleg"), TEXT("l_thigh"), TEXT("riglleg1")}, TEXT("Pelvis"), EBodyZone::Leg, -1, true},
-        {TEXT("LeftCalf"), {TEXT("calf_l"), TEXT("leftleg"), TEXT("shin_l"), TEXT("l_calf"), TEXT("riglleg2")}, TEXT("LeftThigh"), EBodyZone::Leg, -1, true},
-        {TEXT("LeftFoot"), {TEXT("foot_l"), TEXT("leftfoot"), TEXT("l_foot"), TEXT("ankle_l"), TEXT("rigllegankle"), TEXT("rigllegfoot1")}, TEXT("LeftCalf"), EBodyZone::Foot, -1, true},
-        {TEXT("RightThigh"), {TEXT("thigh_r"), TEXT("rightupleg"), TEXT("r_thigh"), TEXT("rigrleg1")}, TEXT("Pelvis"), EBodyZone::Leg, 1, true},
-        {TEXT("RightCalf"), {TEXT("calf_r"), TEXT("rightleg"), TEXT("shin_r"), TEXT("r_calf"), TEXT("rigrleg2")}, TEXT("RightThigh"), EBodyZone::Leg, 1, true},
-        {TEXT("RightFoot"), {TEXT("foot_r"), TEXT("rightfoot"), TEXT("r_foot"), TEXT("ankle_r"), TEXT("rigrlegankle"), TEXT("rigrlegfoot1")}, TEXT("RightCalf"), EBodyZone::Foot, 1, true}
+        {TEXT("RightUpperArm"), {TEXT("upperarm_r"), TEXT("rightarm"), TEXT("r_upperarm"), TEXT("rigrarm1"),
+            TEXT("frleg1"), TEXT("rfrontleg1"), TEXT("rlegfront1"), TEXT("frontupleg_r")}, TEXT("Spine"), EBodyZone::Arm, 1, true},
+        {TEXT("RightLowerArm"), {TEXT("lowerarm_r"), TEXT("rightforearm"), TEXT("forearm_r"), TEXT("r_forearm"), TEXT("rigrarm2"),
+            TEXT("frleg2"), TEXT("rfrontleg2"), TEXT("rlegfront2"), TEXT("frontlowleg_r")}, TEXT("RightUpperArm"), EBodyZone::Arm, 1, true},
+        {TEXT("RightHand"), {TEXT("hand_r"), TEXT("righthand"), TEXT("r_hand"), TEXT("rigrarmpalm"),
+            TEXT("frlegankle"), TEXT("rfrontlegankle"), TEXT("rlegfrontankle"), TEXT("frontfoot_r")}, TEXT("RightLowerArm"), EBodyZone::Hand, 1, true},
+        {TEXT("LeftThigh"), {TEXT("thigh_l"), TEXT("leftupleg"), TEXT("l_thigh"), TEXT("riglleg1"),
+            TEXT("blleg1"), TEXT("lbackleg1"), TEXT("llegback1"), TEXT("backupleg_l")}, TEXT("Pelvis"), EBodyZone::Leg, -1, true},
+        {TEXT("LeftCalf"), {TEXT("calf_l"), TEXT("leftleg"), TEXT("shin_l"), TEXT("l_calf"), TEXT("riglleg2"),
+            TEXT("blleg2"), TEXT("lbackleg2"), TEXT("llegback2"), TEXT("backlowleg_l")}, TEXT("LeftThigh"), EBodyZone::Leg, -1, true},
+        {TEXT("LeftFoot"), {TEXT("foot_l"), TEXT("leftfoot"), TEXT("l_foot"), TEXT("ankle_l"), TEXT("rigllegankle"), TEXT("rigllegfoot1"),
+            TEXT("bllegankle"), TEXT("lbacklegankle"), TEXT("llegbackankle"), TEXT("backfoot_l")}, TEXT("LeftCalf"), EBodyZone::Foot, -1, true},
+        {TEXT("RightThigh"), {TEXT("thigh_r"), TEXT("rightupleg"), TEXT("r_thigh"), TEXT("rigrleg1"),
+            TEXT("brleg1"), TEXT("rbackleg1"), TEXT("rlegback1"), TEXT("backupleg_r")}, TEXT("Pelvis"), EBodyZone::Leg, 1, true},
+        {TEXT("RightCalf"), {TEXT("calf_r"), TEXT("rightleg"), TEXT("shin_r"), TEXT("r_calf"), TEXT("rigrleg2"),
+            TEXT("brleg2"), TEXT("rbackleg2"), TEXT("rlegback2"), TEXT("backlowleg_r")}, TEXT("RightThigh"), EBodyZone::Leg, 1, true},
+        {TEXT("RightFoot"), {TEXT("foot_r"), TEXT("rightfoot"), TEXT("r_foot"), TEXT("ankle_r"), TEXT("rigrlegankle"), TEXT("rigrlegfoot1"),
+            TEXT("brlegankle"), TEXT("rbacklegankle"), TEXT("rlegbackankle"), TEXT("backfoot_r")}, TEXT("RightCalf"), EBodyZone::Foot, 1, true}
     };
 }
 

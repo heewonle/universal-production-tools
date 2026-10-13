@@ -337,6 +337,14 @@ UIKRigDefinition* FUPTIKRigBuilder::CreateIKRig(UUPTSkeletonProfile* Profile, FS
     else if (bHasHead) TrimChainEnd(TEXT("Spine"), HeadBone);
     if (bHasHead) TrimChainEnd(TEXT("Neck"), HeadBone);
 
+    // 쇄골 체인(`LeftClavicle → LeftUpperArm`)은 위팔을 삼킨다 — 위팔은 LeftArm 체인의 시작
+    // 본이기도 해서 한 본이 두 체인에 동시에 들어간다. 위의 Spine·Neck과 똑같은 모양이라
+    // 같은 방식으로 쇄골 한 본까지 줄여 봤다(엔진 Auto Characterizer도 그렇게 끊는다).
+    // **측정은 소수 둘째 자리까지 한 자리도 바뀌지 않았다**(35쌍, 마디 중앙 0.1° / 최악 35.3°,
+    // 손가락·접지·트위스트 전부 동일). 중복 소속은 사실이지만 FK 체인 리타기팅 결과에는
+    // 영향이 없다 — 쇄골 체인이 위팔에 쓰는 회전이 Arm 체인이 쓰는 값과 사실상 같기 때문이다.
+    // 효과 없는 변경을 남기지 않기로 하고 되돌렸다(IK 목표·바닥 제약·루트 고정과 같은 처리).
+
     FString SafeName = ObjectTools::SanitizeObjectName(Mesh->GetName());
     if (SafeName.IsEmpty()) SafeName = TEXT("Skeleton");
     UIKRigDefinition* IKRig = AcquireIKRig(FString(TEXT("IK_UPT_")) + SafeName);

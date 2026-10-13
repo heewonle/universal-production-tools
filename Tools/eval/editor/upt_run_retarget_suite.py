@@ -1,12 +1,13 @@
 """언리얼 에디터 전용: 리타기팅 품질 측정 한 벌을 한 번에 돌린다.
 
-리타기팅을 손보고 나면 **같은 19쌍**을 다시 재서 전후를 비교해야 한다. 그 전까지는
+리타기팅을 손보고 나면 **같은 쌍 묶음**을 다시 재서 전후를 비교해야 한다. 그 전까지는
 콘솔 명령 네 줄을 손으로 치고 촬영 스크립트를 따로 돌렸는데, 조합을 하나 빠뜨리거나
 manifest를 섞으면 수치가 조용히 달라져 비교가 무의미해진다. 그래서 조합 목록을 코드에 두고
 한 번에 돌린다.
 
-조합은 원본 2종(Synty Goblin, UE4 Mannequin) × 대상 3종(Manny, Forest Golem, Mixamo X_Bot)이고,
-명명 규칙·본 개수·체형이 모두 달라 일반성을 보기에 쓸 만한 묶음이다.
+조합은 사람 쪽 원본 2종(Synty Goblin, UE4 Mannequin) × 대상 4종(Manny, Forest Golem, Mixamo X_Bot,
+Polygonal Golem)에 사족 네 쌍(늑대 둘끼리, 다르게 리깅된 늑대 양방향, 드래곤→늑대)을 더한 것이다.
+명명 규칙·본 개수·체형·자세가 모두 달라 일반성을 보기에 쓸 만한 묶음이다.
 
 사용:
   UnrealEditor.exe <프로젝트> -ExecCmds="py \"<이 파일>\"" -unattended
@@ -45,6 +46,20 @@ WOLF = [
     "/Game/External/3D_ModelsCharactersAnimals/Animations/Actions/Wolfr_Howl.Wolfr_Howl",
 ]
 
+# **다르게 리깅된** 사족 원본. 위의 늑대 둘(Wolf_Cub / Wolf_Pa_v2)은 골격을 공유해서 쉬운 쌍이고,
+# 이쪽은 팔다리를 위치로 부르는 전혀 다른 리그다(RigFLLeg1 / RigBLLegAnkle, 본 37개 대 58개).
+POLY_WOLF = [
+    "/Game/External/PolygonalCreaturesPack/PolygonalWolf/Animations/Polygonal_Wolf_BlackIdle.Polygonal_Wolf_BlackIdle",
+    "/Game/External/PolygonalCreaturesPack/PolygonalWolf/Animations/Polygonal_Wolf_BlackWalk_Forward_WO_Root.Polygonal_Wolf_BlackWalk_Forward_WO_Root",
+    "/Game/External/PolygonalCreaturesPack/PolygonalWolf/Animations/Polygonal_Wolf_BlackRun_Forward_WO_Root.Polygonal_Wolf_BlackRun_Forward_WO_Root",
+]
+
+# 종이 다른 사족. 드래곤은 다리 넷에 날개까지 달려 본이 68개이고, 뒷다리 마디 수도 늑대와 다르다.
+POLY_DRAGON = [
+    "/Game/External/PolygonalCreaturesPack/PolygonalDragon/Animations/Polygonal_Dragon_AnimationIdle.Polygonal_Dragon_AnimationIdle",
+    "/Game/External/PolygonalCreaturesPack/PolygonalDragon/Animations/Polygonal_Dragon_AnimationWalk_Forward_WO_Root.Polygonal_Dragon_AnimationWalk_Forward_WO_Root",
+]
+
 # (manifest 이름, 대상 메시, 애니메이션 목록)
 COMBINATIONS = [
     ("retarget_manifest.json",
@@ -59,6 +74,18 @@ COMBINATIONS = [
     # 불필요하다고 올바르게 건너뛴다). 성체를 대상으로 두면 실제 쌍이 된다.
     ("retarget_manifest_wolf.json",
      "/Game/External/3D_ModelsCharactersAnimals/Wolf_PA/Wolf_Pa_v2.Wolf_Pa_v2", WOLF),
+    # 어려운 사족 쌍, 양방향. 이름 규칙이 서로 겹치지 않으므로 역할 그래프가 실제로 두 리그를
+    # 같은 몸으로 읽는지 재는 쌍이다.
+    ("retarget_manifest_polywolf.json",
+     "/Game/External/3D_ModelsCharactersAnimals/Wolf_PA/Wolf_Pa_v2.Wolf_Pa_v2", POLY_WOLF),
+    ("retarget_manifest_wolf2poly.json",
+     "/Game/External/PolygonalCreaturesPack/PolygonalWolf/Polygonal_Wolf_Black.Polygonal_Wolf_Black", WOLF),
+    # 종이 다른 사족(드래곤 → 늑대).
+    ("retarget_manifest_dragon.json",
+     "/Game/External/3D_ModelsCharactersAnimals/Wolf_PA/Wolf_Pa_v2.Wolf_Pa_v2", POLY_DRAGON),
+    # 사람이 아닌 이족, 다른 리그. ForestGolem과 달리 손·발을 `RigLArmPalm`·`RigLLegAnkle`로 부른다.
+    ("retarget_manifest_polygolem.json",
+     "/Game/External/PolygonalCreaturesPack/PolygonalGolem/Polygonal_Golem.Polygonal_Golem", SYNTY),
 ]
 
 

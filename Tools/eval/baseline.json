@@ -234,19 +234,55 @@
       "equals": 0
     },
     "pairs": {
-      "min": 22
+      "min": 35
     },
     "segment_angle_median_deg": {
       "max": 0.5
     },
     "worst_segment_deg": {
-      "max": 9.0
+      "max": 36.0
+    },
+    "motion_deviation_worst_deg": {
+      "max": 6.0
+    },
+    "foot_slide_target": {
+      "max": 0.06
+    },
+    "foot_clearance_error": {
+      "max": 0.02
+    },
+    "foot_clearance_worst": {
+      "max": 0.09
+    },
+    "contact_mismatch": {
+      "max": 0.06
+    },
+    "pairs_with_fingers": {
+      "min": 15
+    },
+    "finger_angle_median_deg": {
+      "max": 0.5
+    },
+    "finger_worst_deg": {
+      "max": 45.0
+    },
+    "pairs_with_twist": {
+      "min": 5
+    },
+    "twist_dropped_worst": {
+      "equals": 0
+    },
+    "twist_ratio_worst_error": {
+      "max": 0.05
     },
     "targets.Retrieve_DefaultWoman->SKM_Manny.segment_angle_median_deg": {
       "max": 0.5
     },
     "targets.Retrieve_DefaultWoman->SKM_Manny.worst_segment_deg": {
       "max": 9.0
+    },
+    "targets.Retrieve_DefaultWoman->SKM_Manny.finger_angle_median_deg": {
+      "max": 0.5
     },
     "targets.Retrieve_DefaultWoman->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
       "max": 0.5
@@ -260,41 +296,14 @@
     "targets.Retrieve_DefaultWoman->X_Bot.worst_segment_deg": {
       "max": 7.5
     },
+    "targets.Retrieve_DefaultWoman->X_Bot.finger_angle_median_deg": {
+      "max": 0.5
+    },
     "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.segment_angle_median_deg": {
       "max": 0.5
     },
     "targets.SK_Mannequin_DK2->Forest_Golem_1_PolyArt.worst_segment_deg": {
       "max": 3.5
-    },
-    "motion_deviation_worst_deg": {
-      "max": 3.0
-    },
-    "foot_slide_target": {
-      "max": 0.06
-    },
-    "foot_clearance_error": {
-      "max": 0.02
-    },
-    "foot_clearance_worst": {
-      "max": 0.06
-    },
-    "contact_mismatch": {
-      "max": 0.06
-    },
-    "pairs_with_fingers": {
-      "min": 10
-    },
-    "finger_angle_median_deg": {
-      "max": 0.5
-    },
-    "finger_worst_deg": {
-      "max": 1.0
-    },
-    "pairs_with_twist": {
-      "min": 5
-    },
-    "twist_dropped_worst": {
-      "equals": 0
     },
     "targets.Wolf_Cub->Wolf_Pa_v2.segment_angle_median_deg": {
       "max": 0.5
@@ -302,8 +311,41 @@
     "targets.Wolf_Cub->Wolf_Pa_v2.worst_segment_deg": {
       "max": 1.5
     },
-    "twist_ratio_worst_error": {
-      "max": 0.05
+    "targets.Polygonal_Wolf_Black->Wolf_Pa_v2.segment_angle_median_deg": {
+      "max": 1.0
+    },
+    "targets.Polygonal_Wolf_Black->Wolf_Pa_v2.worst_segment_deg": {
+      "max": 13.0
+    },
+    "targets.Wolf_Cub->Polygonal_Wolf_Black.segment_angle_median_deg": {
+      "max": 1.0
+    },
+    "targets.Wolf_Cub->Polygonal_Wolf_Black.worst_segment_deg": {
+      "max": 36.0
+    },
+    "targets.Polygonal_Dragon->Wolf_Pa_v2.segment_angle_median_deg": {
+      "max": 2.0
+    },
+    "targets.Polygonal_Dragon->Wolf_Pa_v2.worst_segment_deg": {
+      "max": 9.0
+    },
+    "targets.Retrieve_DefaultWoman->Polygonal_Golem.segment_angle_median_deg": {
+      "max": 0.5
+    },
+    "targets.Retrieve_DefaultWoman->Polygonal_Golem.worst_segment_deg": {
+      "max": 14.0
+    },
+    "targets.Retrieve_DefaultWoman->Polygonal_Golem.finger_angle_median_deg": {
+      "max": 22.0
+    },
+    "targets.Polygonal_Dragon->Wolf_Pa_v2.foot_clearance_worst": {
+      "max": 0.09
+    },
+    "targets.Polygonal_Dragon->Wolf_Pa_v2.contact_mismatch_worst": {
+      "max": 0.55
+    },
+    "targets.Retrieve_DefaultWoman->Polygonal_Golem.contact_mismatch_worst": {
+      "max": 0.25
     }
   },
   "motion_roundtrip": {
