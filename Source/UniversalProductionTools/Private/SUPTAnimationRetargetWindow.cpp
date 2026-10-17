@@ -1,6 +1,7 @@
 #include "SUPTAnimationRetargetWindow.h"
 
 #include "UPTIKRetargeterBuilder.h"
+#include "UPTRetargetQualityReport.h"
 #include "UPTIKRigBuilder.h"
 #include "UPTPelvisMotionBaker.h"
 #include "UPTTwistMotionBaker.h"
@@ -33,6 +34,9 @@
 #include "Widgets/Text/STextBlock.h"
 
 #define LOCTEXT_NAMESPACE "UPTAnimationRetargetWindow"
+
+// 일괄 변환과 그 품질 점검이 같은 기록으로 남도록 파일 전체에서 쓰는 로그 카테고리다.
+DEFINE_LOG_CATEGORY_STATIC(LogUPTRetarget, Log, All);
 
 namespace
 {
@@ -358,6 +362,7 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
 
     int32 CreatedCount = 0;
     TArray<FString> Errors;
+    TArray<FUPTRetargetQualityRow> QualityRows;
     for (const TPair<USkeletalMesh*, TArray<FAssetData>>& Pair : AssetsBySourceMesh)
     {
         UIKRetargeter* Retargeter = nullptr;
@@ -370,6 +375,23 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
         const TArray<FAssetData> Results = RetargetIntoSettingsFolder(Pair.Value, Pair.Key, Target, Retargeter, Suffix);
         CreatedCount += Results.Num();
         for (const FAssetData& Result : Results) if (UObject* Asset = Result.GetAsset()) LastGeneratedAssets.Add(Asset);
+
+        // 변환한 자리에서 바로 잰다. 50개를 만들어 놓고 "눈으로 보세요"로 끝내면
+        // 품질을 아는 쪽은 우리뿐이고 쓰는 쪽은 모른다.
+        // 결과는 이름으로 짝짓는다 — 폴더 순서는 입력 순서와 같다는 보장이 없다(E2E와 같은 이유).
+        for (const FAssetData& SourceAsset : Pair.Value)
+        {
+            const FString SourceName = SourceAsset.AssetName.ToString();
+            const FAssetData* Match = Results.FindByPredicate([&SourceName](const FAssetData& Candidate)
+            {
+                return Candidate.AssetName.ToString().StartsWith(SourceName, ESearchCase::CaseSensitive);
+            });
+            if (!Match) continue;
+            UAnimSequence* SourceAnimation = Cast<UAnimSequence>(SourceAsset.GetAsset());
+            UAnimSequence* TargetAnimation = Cast<UAnimSequence>(Match->GetAsset());
+            if (!SourceAnimation || !TargetAnimation) continue;
+            QualityRows.Add(FUPTRetargetQualityReport::Measure(SourceAnimation, Pair.Key, TargetAnimation, Target));
+        }
     }
 
     FString Summary = FString::Printf(TEXT("'%s'용 %d개 생성, 그대로 사용 가능 %d개"), *Target->GetName(), CreatedCount, DirectlyCompatible);
@@ -377,11 +399,31 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
     if (!Errors.IsEmpty())
     {
         SetStatus(Summary + TEXT("\n실패: ") + FString::Join(Errors, TEXT("\n")), FLinearColor::Red);
+        return FReply::Handled();
     }
-    else
+
+    const FString ReportPath = FUPTRetargetQualityReport::Save(QualityRows,
+        FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UniversalProductionTools")));
+    FString Quality = FUPTRetargetQualityReport::Summarize(QualityRows);
+
+    // 검토가 필요한 것만, 사유와 함께 올린다. 전부 통과면 그 사실만 적는다.
+    TArray<FString> Review;
+    for (const FUPTRetargetQualityRow& Row : QualityRows)
     {
-        SetStatus(TEXT("완료: ") + Summary + TEXT(". '④ 원본/대상 비교'로 동작을 확인하세요."), FLinearColor::Green);
+        if (!Row.bNeedsReview) continue;
+        if (Review.Num() < 5) Review.Add(FString::Printf(TEXT("  · %s — %s"), *Row.Animation, *FString::Join(Row.Reasons, TEXT(", "))));
+        UE_LOG(LogUPTRetarget, Warning, TEXT("UPT_QUALITY 검토 필요: %s — %s"), *Row.Animation, *FString::Join(Row.Reasons, TEXT(", ")));
     }
+    if (!Review.IsEmpty())
+    {
+        Quality += TEXT("\n") + FString::Join(Review, TEXT("\n"));
+        const int32 Hidden = QualityRows.FilterByPredicate([](const FUPTRetargetQualityRow& Row) { return Row.bNeedsReview; }).Num() - Review.Num();
+        if (Hidden > 0) Quality += FString::Printf(TEXT("\n  · 외 %d개 (전체는 리포트 파일에)"), Hidden);
+    }
+    if (!ReportPath.IsEmpty()) Quality += TEXT("\n리포트: ") + ReportPath;
+
+    const bool bAllClear = !QualityRows.ContainsByPredicate([](const FUPTRetargetQualityRow& Row) { return Row.bNeedsReview; });
+    SetStatus(TEXT("완료: ") + Summary + TEXT("\n") + Quality, bAllClear ? FLinearColor::Green : FLinearColor::Yellow);
     return FReply::Handled();
 }
 
@@ -418,7 +460,6 @@ FReply SUPTAnimationRetargetWindow::OpenComparisonRetargeters()
 
 namespace
 {
-DEFINE_LOG_CATEGORY_STATIC(LogUPTRetarget, Log, All);
 
 // 패널을 거치지 않고 같은 리타기팅 경로를 돌린다. 결과 품질을 스크립트로 재기 위한 진입점이다.
 // 사용: UPT.RetargetE2E <대상 메시 경로> <애니메이션 경로...> [-out=결과.json]

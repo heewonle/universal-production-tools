@@ -21,3 +21,6 @@ __pycache__/
 .vscode/
 Thumbs.db
 desktop.ini
+
+# 플러그인 루트에서 측정 스크립트를 돌리면 생기는 임시 출력(결과는 Tools/eval/eval_output)
+/eval_output/

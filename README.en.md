@@ -39,6 +39,24 @@ Green X is where the reference asked the subject to be; red + is where it actual
 
 The core of this repository is not the feature list — it is **the apparatus that measures accuracy**.
 
+And the apparatus now ships **inside the product.** When a batch retarget finishes, the result is
+measured on the spot and only the ones worth looking at are raised. Returning `50 created` for a
+50-animation batch means the person who built it knows the quality and the person using it has to
+eyeball all fifty.
+
+```
+Quality check: 7 of 35 need review
+  · Wolfr_Howl_Polygonal_Wolf_Black — segment RightUpperArm->RightLowerArm at 35.3° (threshold 15°)
+  · Polygonal_Dragon_AnimationIdle_Wolf_Pa_v2 — foot clearance 0.082 (threshold 0.06), contact mismatch 0.50 (threshold 0.25)
+  · A_MOD_GBL_Run_F_Neut_Polygonal_Golem — fingers 43.9° (threshold 25°)
+```
+
+No single blended score: each metric has its own threshold, and the ones that crossed are reported
+**by name and value**. The in-product measurement was then checked against the development suite on
+**the same 35 pairs** — largest difference 0.05°, which is the width of the suite's one-decimal
+rounding. Two copies of a definition drift silently, so the command that compares them
+(`UPT.QualityReport`) ships alongside.
+
 Generated sequences are re-captured and re-measured with the same pose analyzer, compared against
 the reference, and the resulting numbers are locked down by a regression suite. Because the engine
 knows the camera and the bone positions, ground truth can be generated directly.

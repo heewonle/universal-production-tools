@@ -15,6 +15,7 @@
 #include "Serialization/JsonSerializer.h"
 #include "HAL/FileManager.h"
 #include "HAL/PlatformProcess.h"
+#include "Interfaces/IPluginManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Misc/SecureHash.h"
@@ -25,10 +26,38 @@ namespace
 {
 std::atomic<bool> bPoseAnalysisRunning{false};
 
+/**
+ * 설정값의 상대 경로를 실제 경로로 바꾼다.
+ *
+ * 기본값은 `Plugins/UniversalProductionTools/Tools/...`처럼 **프로젝트 기준**으로 적혀 있는데,
+ * 플러그인이 엔진에 설치되면(스토어 설치의 기본 위치) 그 경로에 아무것도 없다. 파이썬
+ * 스크립트를 못 찾으면 영상 분석이 통째로 실패한다. 그래서 프로젝트 기준으로 찾지 못하면
+ * **플러그인 기준으로 한 번 더** 찾는다. 사용자가 적은 절대 경로나 프로젝트 안의 사본은
+ * 그대로 우선한다.
+ */
 FString ResolveProjectPath(const FString& Value)
 {
     const FString Trimmed = Value.TrimStartAndEnd();
-    return FPaths::IsRelative(Trimmed) ? FPaths::ConvertRelativePathToFull(FPaths::ProjectDir(), Trimmed) : FPaths::ConvertRelativePathToFull(Trimmed);
+    if (!FPaths::IsRelative(Trimmed)) return FPaths::ConvertRelativePathToFull(Trimmed);
+
+    const FString FromProject = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir(), Trimmed);
+    if (FPaths::FileExists(FromProject) || FPaths::DirectoryExists(FromProject)) return FromProject;
+
+    const TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin(TEXT("UniversalProductionTools"));
+    if (!Plugin.IsValid()) return FromProject;
+
+    // 설정값에서 플러그인 폴더 앞부분을 떼어 내고 플러그인 기준으로 붙인다.
+    // `Plugins/UniversalProductionTools/Tools/x.py` -> `<플러그인>/Tools/x.py`
+    FString Relative = Trimmed;
+    Relative.ReplaceInline(TEXT("\\"), TEXT("/"));
+    const FString Marker = TEXT("UniversalProductionTools/");
+    int32 MarkerIndex = INDEX_NONE;
+    if (Relative.FindLastChar(TEXT('/'), MarkerIndex) && Relative.Contains(Marker))
+    {
+        Relative = Relative.RightChop(Relative.Find(Marker) + Marker.Len());
+    }
+    const FString FromPlugin = FPaths::ConvertRelativePathToFull(Plugin->GetBaseDir(), Relative);
+    return (FPaths::FileExists(FromPlugin) || FPaths::DirectoryExists(FromPlugin)) ? FromPlugin : FromProject;
 }
 
 bool IsPureAscii(const FString& Value)

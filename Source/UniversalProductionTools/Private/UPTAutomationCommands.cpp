@@ -4,10 +4,12 @@
 #include "UPTPoseReferenceAnalyzer.h"
 #include "UPTReferenceBlockingSolver.h"
 #include "UPTReferencePlanParser.h"
+#include "UPTRetargetQualityReport.h"
 #include "UPTSequenceBuilder.h"
 #include "UPTSkeletonAnalyzer.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Animation/AnimSequence.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Engine/SkeletalMesh.h"
 #include "Dom/JsonObject.h"
@@ -395,4 +397,81 @@ FAutoConsoleCommandWithWorldAndArgs GUPTSkeletonAuditCommand(
     TEXT("UPT.SkeletonAudit"),
     TEXT("Runs the skeleton analyzer over every Skeletal Mesh and writes a readiness distribution: [-limit=N] [-filter=substring] [-out=path]"),
     FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&RunSkeletonAudit));
+
+// manifest에 적힌 쌍을 **제품에 들어간 측정기**로 잰다.
+// 파이썬 스위트와 같은 쌍을 재서 두 수치가 맞는지 확인하는 것이 이 명령의 목적이다.
+// 정의를 두 곳에 두면 조용히 갈라지므로, 갈라졌는지 볼 수 있어야 한다.
+// 사용: UPT.QualityReport <manifest.json> [-out=경로]
+void RunQualityReport(const TArray<FString>& Args, UWorld* World)
+{
+    if (Args.IsEmpty())
+    {
+        UE_LOG(LogUPTAutomation, Error, TEXT("UPT_QUALITY 사용법: UPT.QualityReport <manifest.json> [-out=경로]"));
+        return;
+    }
+    FString OutputFile = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UniversalProductionTools"));
+    for (const FString& Arg : Args)
+    {
+        if (Arg.StartsWith(TEXT("-out="))) OutputFile = Arg.RightChop(5);
+    }
+
+    FString Text;
+    if (!FFileHelper::LoadFileToString(Text, *Args[0]))
+    {
+        UE_LOG(LogUPTAutomation, Error, TEXT("UPT_QUALITY manifest를 읽지 못했습니다: %s"), *Args[0]);
+        return;
+    }
+    TSharedPtr<FJsonObject> Root;
+    const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Text);
+    if (!FJsonSerializer::Deserialize(Reader, Root) || !Root.IsValid())
+    {
+        UE_LOG(LogUPTAutomation, Error, TEXT("UPT_QUALITY manifest 형식이 올바르지 않습니다: %s"), *Args[0]);
+        return;
+    }
+
+    TArray<FUPTRetargetQualityRow> Rows;
+    const TArray<TSharedPtr<FJsonValue>>* Pairs = nullptr;
+    if (Root->TryGetArrayField(TEXT("pairs"), Pairs))
+    {
+        for (const TSharedPtr<FJsonValue>& Value : *Pairs)
+        {
+            const TSharedPtr<FJsonObject> Pair = Value->AsObject();
+            if (!Pair.IsValid()) continue;
+            UAnimSequence* SourceAnimation = LoadObject<UAnimSequence>(nullptr, *Pair->GetStringField(TEXT("source_animation")));
+            UAnimSequence* TargetAnimation = LoadObject<UAnimSequence>(nullptr, *Pair->GetStringField(TEXT("retargeted_animation")));
+            USkeletalMesh* SourceMesh = LoadObject<USkeletalMesh>(nullptr, *Pair->GetStringField(TEXT("source_mesh")));
+            USkeletalMesh* TargetMesh = LoadObject<USkeletalMesh>(nullptr, *Pair->GetStringField(TEXT("target_mesh")));
+            if (!SourceAnimation || !TargetAnimation || !SourceMesh || !TargetMesh)
+            {
+                // 무엇이 없는지 적는다. "열지 못했다"만 적으면 경로가 틀린 것인지 에셋이 사라진
+                // 것인지 가릴 수 없다.
+                UE_LOG(LogUPTAutomation, Warning,
+                    TEXT("UPT_QUALITY 쌍을 열지 못했습니다. 원본애니 %s=%d | 결과애니 %s=%d | 원본메시 %s=%d | 대상메시 %s=%d"),
+                    *Pair->GetStringField(TEXT("source_animation")), SourceAnimation ? 1 : 0,
+                    *Pair->GetStringField(TEXT("retargeted_animation")), TargetAnimation ? 1 : 0,
+                    *Pair->GetStringField(TEXT("source_mesh")), SourceMesh ? 1 : 0,
+                    *Pair->GetStringField(TEXT("target_mesh")), TargetMesh ? 1 : 0);
+                continue;
+            }
+            const FUPTRetargetQualityRow Row = FUPTRetargetQualityReport::Measure(SourceAnimation, SourceMesh, TargetAnimation, TargetMesh);
+            UE_LOG(LogUPTAutomation, Log,
+                TEXT("UPT_QUALITY_ROW %s | %s -> %s | 중앙 %.1f 최악 %.1f (%s) 왜곡 %.2f | 발높이 %.4f 접지 %.4f | 손가락 %.1f/%d | 트위스트 %.3f/%d | 검토 %d"),
+                *Row.Animation, *Row.SourceMesh, *Row.TargetMesh,
+                Row.SegmentMedianDeg, Row.WorstSegmentDeg, *Row.WorstSegment, Row.MotionDeviationWorstDeg,
+                Row.FootClearanceError, Row.ContactMismatch,
+                Row.FingerMedianDeg, Row.FingerSegmentsCompared,
+                Row.TwistRatioWorstError, Row.TwistCompared, Row.bNeedsReview ? 1 : 0);
+            Rows.Add(Row);
+        }
+    }
+
+    const FString Saved = FUPTRetargetQualityReport::Save(Rows, OutputFile);
+    UE_LOG(LogUPTAutomation, Log, TEXT("UPT_QUALITY_DONE %d쌍 | %s → %s"),
+        Rows.Num(), *FUPTRetargetQualityReport::Summarize(Rows), *Saved);
+}
+
+FAutoConsoleCommandWithWorldAndArgs GUPTQualityReportCommand(
+    TEXT("UPT.QualityReport"),
+    TEXT("Measures retarget quality for every pair in a manifest: <manifest.json> [-out=dir]"),
+    FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&RunQualityReport));
 }
