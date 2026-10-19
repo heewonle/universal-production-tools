@@ -1,0 +1,772 @@
+{
+ "entries": [
+  {
+   "namespace": "UniversalProductionTools",
+   "key": "MenuTooltip",
+   "source": "Opens the LLM cinematic generator and the skeleton analyzer.",
+   "ko": "LLM 시네마틱 생성기와 스켈레톤 분석기를 엽니다."
+  },
+  {
+   "namespace": "UniversalProductionTools",
+   "key": "UniversalAnimationRetarget",
+   "source": "Universal Animation Retarget",
+   "ko": "애니메이션 범용화"
+  },
+  {
+   "namespace": "UniversalProductionTools",
+   "key": "UniversalAnimationRetargetTooltip",
+   "source": "Select several animations and retarget them to this Skeletal Mesh in one batch.",
+   "ko": "여러 애니메이션을 선택해 이 Skeletal Mesh용으로 일괄 리타기팅합니다."
+  },
+  {
+   "namespace": "UniversalProductionTools",
+   "key": "RetargetWindowTitle",
+   "source": "Universal Animation Retarget",
+   "ko": "애니메이션 범용화"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "TargetMesh",
+   "source": "Target mesh: {0}",
+   "ko": "대상 메시: {0}"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "Guide",
+   "source": "(1) Pick animations (Ctrl/Shift for several)  ->  (2) Pre-flight check  ->  (3) Batch retarget  ->  (4) Compare source and target",
+   "ko": "① 변환할 애니메이션 선택 (Ctrl/Shift로 여러 개)  →  ② 사전 점검  →  ③ 일괄 리타기팅  →  ④ 원본/대상 비교"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "NoSelection",
+   "source": "No animation selected",
+   "ko": "선택된 애니메이션 없음"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "Ready",
+   "source": "Set up the cast and a reference video (or a script), then generate.",
+   "ko": "준비됨"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "Close",
+   "source": "Close",
+   "ko": "닫기"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "Validate",
+   "source": "(2) Pre-flight check",
+   "ko": "② 사전 점검"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "Retarget",
+   "source": "(3) Batch retarget the selected animations",
+   "ko": "③ 선택 애니메이션 일괄 리타기팅"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "OpenResults",
+   "source": "Open generated assets",
+   "ko": "생성 결과 열기"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "Compare",
+   "source": "(4) Compare source and target",
+   "ko": "④ 원본/대상 비교"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "CompareTooltip",
+   "source": "Opens the IK Retargeter used by the last retarget so you can compare source and target motion side by side.",
+   "ko": "마지막 리타기팅에 사용한 IK Retargeter를 열어 원본과 대상 동작을 나란히 비교합니다."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "SelectionCount",
+   "source": "{0} animations selected",
+   "ko": "{0}개 애니메이션 선택됨"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "NoSelection2",
+   "source": "No animation selected",
+   "ko": "선택된 애니메이션 없음"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SizeECU",
+   "source": "Extreme close-up",
+   "ko": "익스트림 클로즈업"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SizeCU",
+   "source": "Close-up",
+   "ko": "클로즈업"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SizeMedium",
+   "source": "Medium",
+   "ko": "미디엄"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SizeFull",
+   "source": "Full shot",
+   "ko": "풀샷"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SizeWide",
+   "source": "Wide",
+   "ko": "와이드"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AngleLow",
+   "source": "Low angle",
+   "ko": "로우앵글"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AngleEye",
+   "source": "Eye level",
+   "ko": "눈높이"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AngleHigh",
+   "source": "High angle",
+   "ko": "하이앵글"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AngleOverhead",
+   "source": "Overhead",
+   "ko": "부감"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AngleDutch",
+   "source": "Dutch (tilted)",
+   "ko": "더치(기울임)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LowConfidenceTip",
+   "source": "Analysis confidence is low for this shot. Play it back and adjust the framing with 'Edit selected shot'.",
+   "ko": "분석 신뢰도가 낮은 샷입니다. 재생해 보고 '선택한 샷 수정'으로 구도를 손보세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "CinematicTab",
+   "source": "Create cinematic",
+   "ko": "시네마틱 만들기"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnimationTab",
+   "source": "Universal animation retarget",
+   "ko": "애니메이션 범용화"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LocalModel",
+   "source": "Model: local {0} (no API key or credits needed)",
+   "ko": "모델: 로컬 {0} (API 키·크레딧 불필요)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EndpointInvalid",
+   "source": "Invalid model address: '{0}' / '{1}' (check Editor Preferences > Universal Production Tools)",
+   "ko": "모델 주소 오류: '{0}' / '{1}' (Editor Preferences > Universal Production Tools에서 확인)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ApiReady",
+   "source": "API key: ready",
+   "ko": "API 키: 준비됨"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ApiMissing",
+   "source": "API key: missing (set the environment variable {0} and restart the editor)",
+   "ko": "API 키: 없음 (환경변수 {0} 설정 후 에디터 재시작)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FFmpegMissing",
+   "source": "FFmpeg: missing (required for reference-video mode - install it and add it to PATH, or set the path in Editor Preferences > Universal Production Tools)",
+   "ko": "FFmpeg: 없음 (레퍼런스 영상 모드에 필요 — 설치 후 PATH 추가 또는 Editor Preferences > Universal Production Tools에서 경로 지정)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FFmpegReady",
+   "source": "FFmpeg: ready",
+   "ko": "FFmpeg: 준비됨"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "Step1",
+   "source": "(1) Cast",
+   "ko": "① 등장인물"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ChangeCast",
+   "source": "Reassign cast",
+   "ko": "등장인물 다시 지정"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ChangeCastTip",
+   "source": "Unpins the cast and replaces it with the Actors currently selected in the level.",
+   "ko": "고정을 풀고 현재 레벨에서 선택한 Actor로 등장인물을 바꿉니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "Step2",
+   "source": "(2) What should it be built from?",
+   "ko": "② 무엇을 기반으로 만들까요?"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SourceVideo",
+   "source": "Reference video",
+   "ko": "레퍼런스 영상"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SourceLibrary",
+   "source": "Find a reference by prompt (library)",
+   "ko": "프롬프트로 레퍼런스 찾기 (라이브러리)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SourceScript",
+   "source": "Text script (LLM)",
+   "ko": "텍스트 대본 (LLM)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SourceJson",
+   "source": "Paste Shot Plan JSON (no API needed)",
+   "ko": "Shot Plan JSON 직접 입력 (API 불필요)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "JsonHelp",
+   "source": "Paste a Shot Plan JSON and press 'Generate cinematic'. Works without an API or FFmpeg. Results generated from a video or a script are recorded here as well, so you can edit the values and generate again.",
+   "ko": "Shot Plan JSON을 붙여넣고 '시네마틱 생성'을 누르세요. API와 FFmpeg 없이 동작합니다. 영상·대본으로 생성한 결과도 여기에 기록되므로 값을 고쳐 다시 생성할 수 있습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SelectVideo",
+   "source": "Choose video...",
+   "ko": "영상 선택..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoVideo",
+   "source": "No video selected (MP4 / MOV / M4V / AVI)",
+   "ko": "선택된 영상 없음 (MP4 / MOV / M4V / AVI)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LinkLabel",
+   "source": "or a video link",
+   "ko": "또는 영상 링크"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LinkHint",
+   "source": "https://www.youtube.com/watch?v=... or a Pexels/Pixabay video address (a link takes precedence over the file above)",
+   "ko": "https://www.youtube.com/watch?v=... 또는 Pexels·Pixabay 영상 주소 (넣으면 위 파일 대신 링크를 씁니다)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SectionLabel",
+   "source": "Section",
+   "ko": "구간"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SectionHint",
+   "source": "e.g. 1:20-2:05",
+   "ko": "예: 1:20-2:05"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LinkRights",
+   "source": "Rights confirmed: I have the right or permission to use this video for analysis, including sites such as YouTube that do not allow downloading. (A low-resolution copy is fetched temporarily, used only for pose analysis, and deleted right away. Pexels, Pixabay, Internet Archive and Wikimedia are fetched without this checkbox. Links are always handled by local pose analysis.)",
+   "ko": "권리 확인: YouTube 등 다운로드를 허용하지 않는 사이트의 영상을 분석에 쓸 권리·허락이 있습니다. (저해상도로 임시로 받아 포즈 분석만 하고 영상은 바로 지웁니다. Pexels·Pixabay·Internet Archive·Wikimedia는 체크 없이 받습니다. 링크는 항상 로컬 포즈 분석으로 처리합니다.)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MatchModeLabel",
+   "source": "Match on",
+   "ko": "분석 기준"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SceneMode",
+   "source": "Scene composition (ignore subtitles and logos)",
+   "ko": "장면 구도 (자막·로고 무시)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditMode",
+   "source": "Edit rhythm (keep zoom, shake and cut timing)",
+   "ko": "편집 리듬 (줌·흔들림·컷 타이밍 유지)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnalysisMethodLabel",
+   "source": "Analysis method",
+   "ko": "분석 방식"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LocalPoseMethod",
+   "source": "Local pose analysis (no API needed, recommended)",
+   "ko": "로컬 포즈 분석 (API 불필요, 권장)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "VisionMethod",
+   "source": "Vision model (the configured LLM)",
+   "ko": "Vision 모델 (설정된 LLM)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LibraryHelp",
+   "source": "Searches a folder of reference videos for the segment whose staging and shot structure (shot size, angle, camera motion, number of people) is closest to what you described, and uses it as the reference. Runs on local pose analysis without an API, and each video in the folder is analyzed only once.",
+   "ko": "레퍼런스 영상을 모아 둔 폴더에서, 적은 연출과 샷 구성(샷 크기·앵글·카메라 모션·인원)이 가장 비슷한 영상 구간을 찾아 레퍼런스로 씁니다. API 없이 로컬 포즈 분석으로 동작하며 폴더의 영상은 처음 한 번만 분석합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LibraryFolderLabel",
+   "source": "Library folder",
+   "ko": "라이브러리 폴더"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LibraryFolderHint",
+   "source": "e.g. D:/RefVideos",
+   "ko": "예: D:/RefVideos"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "BrowseLibrary",
+   "source": "Choose folder...",
+   "ko": "폴더 선택..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LibraryPromptHint",
+   "source": "e.g. two people stand in a two-shot, talk over the shoulder, and it ends on a close-up of one of them",
+   "ko": "예: 두 사람이 투샷으로 서 있다가 어깨 너머로 대화하고, 한 사람 클로즈업으로 마무리"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SearchLibrary",
+   "source": "Search only",
+   "ko": "검색만 하기"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LibraryGenerateHint",
+   "source": "'Generate cinematic' uses the result picked in the list (the top one if nothing is picked). If the list is empty or the folder or prompt changed, it searches first.",
+   "ko": "'시네마틱 생성'은 목록에서 고른 결과(고르지 않으면 1위)로 바로 만듭니다. 목록이 비었거나 폴더·프롬프트가 바뀌었으면 먼저 검색합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ScriptHint",
+   "source": "e.g. A ruined temple. The hero walks to the altar and the goddess appears. Open on a wide shot and cut to a close-up of her face.",
+   "ko": "예: 폐허가 된 신전. 주인공이 제단으로 걸어가고 여신이 나타난다. 와이드 샷으로 시작해 여신 얼굴 클로즈업으로 전환."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MediaLabel",
+   "source": "Animation and audio (optional)",
+   "ko": "애니메이션·오디오 (선택)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AddMedia",
+   "source": "Add Content Browser selection",
+   "ko": "Content Browser 선택 항목 추가"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ClearMedia",
+   "source": "Clear",
+   "ko": "비우기"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "Step3",
+   "source": "(3) Generate",
+   "ko": "③ 생성"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "Generating",
+   "source": "Generating...",
+   "ko": "생성 중..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "Generate",
+   "source": "Generate cinematic",
+   "ko": "시네마틱 생성"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "Ready",
+   "source": "Set up the cast and a reference video (or a script), then generate.",
+   "ko": "등장인물과 레퍼런스 영상(또는 대본)을 준비한 뒤 생성하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "Step4",
+   "source": "(4) Review",
+   "ko": "④ 결과 검토"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoSequence",
+   "source": "No cinematic has been generated yet.",
+   "ko": "아직 생성된 시네마틱이 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OpenSequence",
+   "source": "Open in Sequencer",
+   "ko": "Sequencer에서 열기"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ColName",
+   "source": "Shot",
+   "ko": "샷"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ColDuration",
+   "source": "Length",
+   "ko": "길이"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ColLens",
+   "source": "Lens",
+   "ko": "렌즈"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ColSubject",
+   "source": "Subject",
+   "ko": "피사체"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ColScreen",
+   "source": "Screen position",
+   "ko": "화면 위치"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ColMotion",
+   "source": "Camera motion",
+   "ko": "카메라 모션"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ColConfidence",
+   "source": "Confidence",
+   "ko": "신뢰도"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "PlayShot",
+   "source": "Play selected shot",
+   "ko": "선택 샷 재생"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "PlayShotTip",
+   "source": "Double-clicking a row in the shot list plays it as well.",
+   "ko": "샷 목록에서 행을 더블클릭해도 재생됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "CaptureCamera",
+   "source": "Keep my camera adjustments",
+   "ko": "수정한 카메라 구도 보존"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "CaptureCameraTip",
+   "source": "Press this after moving a camera in Sequencer and the same framing is kept on the next generation.",
+   "ko": "Sequencer에서 카메라를 옮긴 뒤 누르면 다음 생성 때 같은 구도가 유지됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnalyzeComposition",
+   "source": "Check framing",
+   "ko": "구도 점검"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnalyzeCompositionTip",
+   "source": "Checks each shot for head cropping, subject size and occlusion.",
+   "ko": "머리 잘림, 피사체 크기, 가림 여부를 샷별로 점검합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OpenPoseDebug",
+   "source": "Open pose analysis images",
+   "ko": "포즈 분석 이미지 열기"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OpenPoseDebugTip",
+   "source": "Shows the detected person boxes, joints and aim points from the reference video as one image per shot.",
+   "ko": "레퍼런스 영상에서 검출한 인물 박스·관절·조준점을 샷별 이미지로 확인합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ShotEditTitle",
+   "source": "Edit selected shot - #{0} {1}",
+   "ko": "선택한 샷 수정 — {0}번 {1}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ShotEditHelp",
+   "source": "Edits only the shot picked in the list. Changing the shot size or angle recomputes the lens, distance and height the same way reference generation does, and the number fields let you fine-tune. 'Apply to this shot' updates the same sequence in place and plays that shot.",
+   "ko": "샷 목록에서 고른 샷만 고칩니다. 샷 크기·앵글을 바꾸면 렌즈·거리·높이를 레퍼런스 생성과 같은 식으로 다시 계산하고, 숫자 칸으로 미세 조정할 수 있습니다. '이 샷에 적용'을 누르면 같은 시퀀스를 그 자리에서 갱신하고 그 샷을 재생합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditSize",
+   "source": "Shot size",
+   "ko": "샷 크기"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditAngle",
+   "source": "Angle",
+   "ko": "앵글"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditMotion",
+   "source": "Camera motion",
+   "ko": "카메라 모션"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditSubject",
+   "source": "Subject",
+   "ko": "대상 인물"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditDuration",
+   "source": "Length (s)",
+   "ko": "길이(초)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditFocal",
+   "source": "Lens (mm)",
+   "ko": "렌즈(mm)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditOverShoulder",
+   "source": "Over-the-shoulder foreground",
+   "ko": "어깨 너머 앞사람"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditOverShoulderTip",
+   "source": "Puts the camera behind that Actor's shoulder and shoots the main subject. The camera is computed from the foreground Actor's position instead of distance and azimuth, and the lens keeps the shot size.",
+   "ko": "고르면 카메라를 그 Actor의 어깨 뒤에 두고 주 피사체를 찍습니다. 거리·방위각 대신 앞사람 위치로 카메라를 계산하고, 렌즈로 샷 크기를 유지합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditOverShoulderSide",
+   "source": "Foreground side",
+   "ko": "앞사람 위치"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OverShoulderLeft",
+   "source": "Screen left",
+   "ko": "화면 왼쪽"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OverShoulderRight",
+   "source": "Screen right",
+   "ko": "화면 오른쪽"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditScreenX",
+   "source": "Screen X",
+   "ko": "화면 가로"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditScreenY",
+   "source": "Screen Y",
+   "ko": "화면 세로"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditAzimuth",
+   "source": "Azimuth (deg)",
+   "ko": "방위각(°)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditDistance",
+   "source": "Distance (cm)",
+   "ko": "거리(cm)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "EditAnimation",
+   "source": "Animation: {0}",
+   "ko": "애니메이션: {0}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AssignAnimation",
+   "source": "Apply Content Browser animation",
+   "ko": "Content Browser 선택 애니메이션 적용"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ClearAnimation",
+   "source": "Remove animation",
+   "ko": "애니메이션 빼기"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ApplyShotEdit",
+   "source": "Apply to this shot and update the sequence",
+   "ko": "이 샷에 적용하고 시퀀스 갱신"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ResetShotEdit",
+   "source": "Revert (re-read current values)",
+   "ko": "되돌리기(현재 값 다시 읽기)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ReportHint",
+   "source": "Analysis results and error details appear here.",
+   "ko": "분석 결과와 오류 상세가 여기에 표시됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "Advanced",
+   "source": "Advanced (role mapping)",
+   "ko": "고급 설정 (역할 매핑)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "RoleHelp",
+   "source": "Role to Actor mapping - fill this in only when a person in the video is assigned to the wrong Actor.",
+   "ko": "역할 → Actor 매핑 — 영상 속 인물이 엉뚱한 Actor에 배정될 때만 입력하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnimTitle",
+   "source": "Convert another character's animation to fit mine",
+   "ko": "다른 캐릭터의 애니메이션을 내 캐릭터에 맞게 변환"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OpenRetarget",
+   "source": "Open the retarget window for the selected Skeletal Mesh",
+   "ko": "선택한 Skeletal Mesh로 범용화 창 열기"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnimReady",
+   "source": "Ready",
+   "ko": "준비됨"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "BoneFixTitle",
+   "source": "Advanced: manual bone mapping (when auto-detection fails)",
+   "ko": "고급: 본 매핑 수동 보정 (자동 인식 실패 시)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnalyzeMesh",
+   "source": "Analyze selected mesh",
+   "ko": "선택 메시 분석"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SaveOverride",
+   "source": "Save correction",
+   "ko": "보정값 저장"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SkeletonReportHint",
+   "source": "Analysis results appear here.",
+   "ko": "분석 결과가 여기에 표시됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoCast",
+   "source": "Select the cast Actors in the level viewport (Ctrl+click for several).",
+   "ko": "레벨 뷰포트에서 등장인물 Actor를 선택하세요 (여러 명은 Ctrl+클릭)."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoMedia",
+   "source": "None - to add character motion or dialogue, select assets in the Content Browser and add them.",
+   "ko": "없음 — 캐릭터 동작이나 대사를 넣으려면 Content Browser에서 선택 후 추가하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "RoleHint",
+   "source": "e.g. {\"main_character\":\"Hero\",\"enemy\":\"Boss\"}",
+   "ko": "예: {\"main_character\":\"Hero\",\"enemy\":\"Boss\"}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OverrideHint",
+   "source": "Enter only the wrong bones. e.g. {\"Pelvis\":\"pelvis\",\"LeftHand\":\"hand_l\"}",
+   "ko": "틀린 본만 입력. 예: {\"Pelvis\":\"pelvis\",\"LeftHand\":\"hand_l\"}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnimGuide",
+   "source": "1. In the Content Browser, select the Skeletal Mesh the animations should be applied to.\n2. Open the window with the button below (or right-click the mesh > Universal Animation Retarget), pick the animations and retarget them in one batch.\nHumanoid bone structures such as MetaHuman, UE Mannequin and Mixamo are recognized automatically.",
+   "ko": "1. Content Browser에서 애니메이션을 적용할 대상 Skeletal Mesh를 선택합니다.\n2. 아래 버튼(또는 메시 우클릭 > 애니메이션 범용화)으로 창을 열고, 변환할 애니메이션을 골라 일괄 리타기팅합니다.\nMetaHuman · UE Mannequin · Mixamo 등 휴머노이드 본 구조는 자동으로 인식합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "BoneFixHelp",
+   "source": "Use this only for a mesh the retarget window reported as 'bone structure not recognized'. Select that mesh in the Content Browser and analyze it, then fix only the wrong bones as JSON and save - the retarget window picks the correction up automatically.",
+   "ko": "범용화 창에서 '본 구조 인식 실패'가 뜬 메시에만 사용합니다. Content Browser에서 그 메시를 선택해 분석하고, 틀린 본만 JSON으로 고쳐 저장하면 범용화 창이 자동으로 이 보정값을 사용합니다."
+  }
+ ]
+}

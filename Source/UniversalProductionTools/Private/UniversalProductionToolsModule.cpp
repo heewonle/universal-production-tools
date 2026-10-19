@@ -35,7 +35,7 @@ void FUniversalProductionToolsModule::RegisterMenus()
     Section.AddMenuEntry(
         TEXT("OpenUniversalProductionTools"),
         LOCTEXT("MenuLabel", "Universal Production Tools"),
-        LOCTEXT("MenuTooltip", "LLM 시네마틱 생성기와 스켈레톤 분석기를 엽니다."),
+        LOCTEXT("MenuTooltip", "Opens the LLM cinematic generator and the skeleton analyzer."),
         FSlateIcon(),
         FUIAction(FExecuteAction::CreateLambda([] { FGlobalTabmanager::Get()->TryInvokeTab(UPTMainTabName); })));
 
@@ -54,8 +54,8 @@ void FUniversalProductionToolsModule::RegisterSkeletalMeshContextMenu()
         const FAssetData TargetAsset = Context->SelectedAssets[0];
         InSection.AddMenuEntry(
             TEXT("UPTUniversalAnimationRetarget"),
-            LOCTEXT("UniversalAnimationRetarget", "애니메이션 범용화"),
-            LOCTEXT("UniversalAnimationRetargetTooltip", "여러 애니메이션을 선택해 이 Skeletal Mesh용으로 일괄 리타기팅합니다."),
+            LOCTEXT("UniversalAnimationRetarget", "Universal Animation Retarget"),
+            LOCTEXT("UniversalAnimationRetargetTooltip", "Select several animations and retarget them to this Skeletal Mesh in one batch."),
             FSlateIcon(),
             FUIAction(FExecuteAction::CreateLambda([TargetAsset]
             {
@@ -68,7 +68,7 @@ void FUniversalProductionToolsModule::OpenAnimationRetargetWindow(USkeletalMesh*
 {
     if (!TargetMesh) return;
     const TSharedRef<SWindow> Window = SNew(SWindow)
-        .Title(LOCTEXT("RetargetWindowTitle", "애니메이션 범용화"))
+        .Title(LOCTEXT("RetargetWindowTitle", "Universal Animation Retarget"))
         .ClientSize(FVector2D(920.0f, 680.0f))
         .SupportsMaximize(true)
         .SupportsMinimize(false);

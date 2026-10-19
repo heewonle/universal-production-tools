@@ -310,32 +310,32 @@ void SUPTAnimationRetargetWindow::Construct(const FArguments& InArgs)
             [
                 SNew(STextBlock)
                 .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
-                .Text(FText::Format(LOCTEXT("TargetMesh", "대상 메시: {0}"), FText::FromString(TargetMesh.IsValid() ? TargetMesh->GetName() : TEXT("없음"))))
+                .Text(FText::Format(LOCTEXT("TargetMesh", "Target mesh: {0}"), FText::FromString(TargetMesh.IsValid() ? TargetMesh->GetName() : TEXT("없음"))))
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 8)
-            [ SNew(STextBlock).Text(LOCTEXT("Guide", "① 변환할 애니메이션 선택 (Ctrl/Shift로 여러 개)  →  ② 사전 점검  →  ③ 일괄 리타기팅  →  ④ 원본/대상 비교")) ]
+            [ SNew(STextBlock).Text(LOCTEXT("Guide", "(1) Pick animations (Ctrl/Shift for several)  ->  (2) Pre-flight check  ->  (3) Batch retarget  ->  (4) Compare source and target")) ]
             + SVerticalBox::Slot().FillHeight(1.0f)
             [ Picker ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 4)
-            [ SAssignNew(SelectionSummaryText, STextBlock).Text(LOCTEXT("NoSelection", "선택된 애니메이션 없음")) ]
+            [ SAssignNew(SelectionSummaryText, STextBlock).Text(LOCTEXT("NoSelection", "No animation selected")) ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 4)
-            [ SAssignNew(StatusText, STextBlock).AutoWrapText(true).Text(LOCTEXT("Ready", "준비됨")) ]
+            [ SAssignNew(StatusText, STextBlock).AutoWrapText(true).Text(LOCTEXT("Ready", "Set up the cast and a reference video (or a script), then generate.")) ]
             + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(0, 8, 0, 0)
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
-                [ SNew(SButton).Text(LOCTEXT("Close", "닫기")).OnClicked_Lambda([this] { if (OwnerWindow.IsValid()) OwnerWindow.Pin()->RequestDestroyWindow(); return FReply::Handled(); }) ]
+                [ SNew(SButton).Text(LOCTEXT("Close", "Close")).OnClicked_Lambda([this] { if (OwnerWindow.IsValid()) OwnerWindow.Pin()->RequestDestroyWindow(); return FReply::Handled(); }) ]
                 + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
-                [ SNew(SButton).Text(LOCTEXT("Validate", "② 사전 점검")).OnClicked(this, &SUPTAnimationRetargetWindow::ValidatePipeline) ]
+                [ SNew(SButton).Text(LOCTEXT("Validate", "(2) Pre-flight check")).OnClicked(this, &SUPTAnimationRetargetWindow::ValidatePipeline) ]
                 + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
-                [ SNew(SButton).Text(LOCTEXT("Retarget", "③ 선택 애니메이션 일괄 리타기팅")).OnClicked(this, &SUPTAnimationRetargetWindow::RetargetSelectedAnimations) ]
+                [ SNew(SButton).Text(LOCTEXT("Retarget", "(3) Batch retarget the selected animations")).OnClicked(this, &SUPTAnimationRetargetWindow::RetargetSelectedAnimations) ]
                 + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
-                [ SNew(SButton).Text(LOCTEXT("OpenResults", "생성 결과 열기")).IsEnabled_Lambda([this] { return !LastGeneratedAssets.IsEmpty(); }).OnClicked(this, &SUPTAnimationRetargetWindow::OpenGeneratedAssets) ]
+                [ SNew(SButton).Text(LOCTEXT("OpenResults", "Open generated assets")).IsEnabled_Lambda([this] { return !LastGeneratedAssets.IsEmpty(); }).OnClicked(this, &SUPTAnimationRetargetWindow::OpenGeneratedAssets) ]
                 + SHorizontalBox::Slot().AutoWidth()
                 [
                     SNew(SButton)
-                    .Text(LOCTEXT("Compare", "④ 원본/대상 비교"))
-                    .ToolTipText(LOCTEXT("CompareTooltip", "마지막 리타기팅에 사용한 IK Retargeter를 열어 원본과 대상 동작을 나란히 비교합니다."))
+                    .Text(LOCTEXT("Compare", "(4) Compare source and target"))
+                    .ToolTipText(LOCTEXT("CompareTooltip", "Opens the IK Retargeter used by the last retarget so you can compare source and target motion side by side."))
                     .IsEnabled_Lambda([this] { return !LastRetargeters.IsEmpty(); })
                     .OnClicked(this, &SUPTAnimationRetargetWindow::OpenComparisonRetargeters)
                 ]
@@ -347,7 +347,7 @@ void SUPTAnimationRetargetWindow::Construct(const FArguments& InArgs)
 FText SUPTAnimationRetargetWindow::GetSelectionSummary() const
 {
     const int32 Count = GetCurrentSelectionDelegate.IsBound() ? GetCurrentSelectionDelegate.Execute().Num() : 0;
-    return Count > 0 ? FText::Format(LOCTEXT("SelectionCount", "{0}개 애니메이션 선택됨"), Count) : LOCTEXT("NoSelection2", "선택된 애니메이션 없음");
+    return Count > 0 ? FText::Format(LOCTEXT("SelectionCount", "{0} animations selected"), Count) : LOCTEXT("NoSelection2", "No animation selected");
 }
 
 FReply SUPTAnimationRetargetWindow::ValidatePipeline()

@@ -1,0 +1,953 @@
+﻿# UPT English translation.
+# Fill out your copyright notice in the Description page of Project Settings.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: UPT\n"
+"POT-Creation-Date: 2026-10-19 06:24\n"
+"PO-Revision-Date: 2026-10-19 06:24\n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Key:	TargetMesh
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(313)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(313)
+msgctxt "UPTAnimationRetargetWindow,TargetMesh"
+msgid "Target mesh: {0}"
+msgstr "Target mesh: {0}"
+
+#. Key:	Guide
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(316)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(316)
+msgctxt "UPTAnimationRetargetWindow,Guide"
+msgid "(1) Pick animations (Ctrl/Shift for several)  ->  (2) Pre-flight check  ->  (3) Batch retarget  ->  (4) Compare source and target"
+msgstr "(1) Pick animations (Ctrl/Shift for several)  ->  (2) Pre-flight check  ->  (3) Batch retarget  ->  (4) Compare source and target"
+
+#. Key:	NoSelection
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(320)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(320)
+msgctxt "UPTAnimationRetargetWindow,NoSelection"
+msgid "No animation selected"
+msgstr "No animation selected"
+
+#. Key:	Ready
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(322)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(322)
+msgctxt "UPTAnimationRetargetWindow,Ready"
+msgid "Set up the cast and a reference video (or a script), then generate."
+msgstr "Set up the cast and a reference video (or a script), then generate."
+
+#. Key:	Close
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(327)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(327)
+msgctxt "UPTAnimationRetargetWindow,Close"
+msgid "Close"
+msgstr "Close"
+
+#. Key:	Validate
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(329)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(329)
+msgctxt "UPTAnimationRetargetWindow,Validate"
+msgid "(2) Pre-flight check"
+msgstr "(2) Pre-flight check"
+
+#. Key:	Retarget
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(331)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(331)
+msgctxt "UPTAnimationRetargetWindow,Retarget"
+msgid "(3) Batch retarget the selected animations"
+msgstr "(3) Batch retarget the selected animations"
+
+#. Key:	OpenResults
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(333)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(333)
+msgctxt "UPTAnimationRetargetWindow,OpenResults"
+msgid "Open generated assets"
+msgstr "Open generated assets"
+
+#. Key:	Compare
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(337)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(337)
+msgctxt "UPTAnimationRetargetWindow,Compare"
+msgid "(4) Compare source and target"
+msgstr "(4) Compare source and target"
+
+#. Key:	CompareTooltip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(338)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(338)
+msgctxt "UPTAnimationRetargetWindow,CompareTooltip"
+msgid "Opens the IK Retargeter used by the last retarget so you can compare source and target motion side by side."
+msgstr "Opens the IK Retargeter used by the last retarget so you can compare source and target motion side by side."
+
+#. Key:	NoSelection2
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(350)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(350)
+msgctxt "UPTAnimationRetargetWindow,NoSelection2"
+msgid "No animation selected"
+msgstr "No animation selected"
+
+#. Key:	SelectionCount
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(350)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(350)
+msgctxt "UPTAnimationRetargetWindow,SelectionCount"
+msgid "{0} animations selected"
+msgstr "{0} animations selected"
+
+#. Key:	LowConfidenceTip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(295)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(295)
+msgctxt "SUPTMainPanel,LowConfidenceTip"
+msgid "Analysis confidence is low for this shot. Play it back and adjust the framing with 'Edit selected shot'."
+msgstr "Analysis confidence is low for this shot. Play it back and adjust the framing with 'Edit selected shot'."
+
+#. Key:	CinematicTab
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(333)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(333)
+msgctxt "SUPTMainPanel,CinematicTab"
+msgid "Create cinematic"
+msgstr "Create cinematic"
+
+#. Key:	AnimationTab
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(334)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(334)
+msgctxt "SUPTMainPanel,AnimationTab"
+msgid "Universal animation retarget"
+msgstr "Universal animation retarget"
+
+#. Key:	LocalModel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(367)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(367)
+msgctxt "SUPTMainPanel,LocalModel"
+msgid "Model: local {0} (no API key or credits needed)"
+msgstr "Model: local {0} (no API key or credits needed)"
+
+#. Key:	EndpointInvalid
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(371)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(371)
+msgctxt "SUPTMainPanel,EndpointInvalid"
+msgid "Invalid model address: '{0}' / '{1}' (check Editor Preferences > Universal Production Tools)"
+msgstr "Invalid model address: '{0}' / '{1}' (check Editor Preferences > Universal Production Tools)"
+
+#. Key:	ApiReady
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(375)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(375)
+msgctxt "SUPTMainPanel,ApiReady"
+msgid "API key: ready"
+msgstr "API key: ready"
+
+#. Key:	ApiMissing
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(376)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(376)
+msgctxt "SUPTMainPanel,ApiMissing"
+msgid "API key: missing (set the environment variable {0} and restart the editor)"
+msgstr "API key: missing (set the environment variable {0} and restart the editor)"
+
+#. Key:	FFmpegMissing
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(386)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(386)
+msgctxt "SUPTMainPanel,FFmpegMissing"
+msgid "FFmpeg: missing (required for reference-video mode - install it and add it to PATH, or set the path in Editor Preferences > Universal Production Tools)"
+msgstr "FFmpeg: missing (required for reference-video mode - install it and add it to PATH, or set the path in Editor Preferences > Universal Production Tools)"
+
+#. Key:	FFmpegReady
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(387)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(387)
+msgctxt "SUPTMainPanel,FFmpegReady"
+msgid "FFmpeg: ready"
+msgstr "FFmpeg: ready"
+
+#. Key:	Step1
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(394)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(394)
+msgctxt "SUPTMainPanel,Step1"
+msgid "(1) Cast"
+msgstr "(1) Cast"
+
+#. Key:	ChangeCast
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(403)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(403)
+msgctxt "SUPTMainPanel,ChangeCast"
+msgid "Reassign cast"
+msgstr "Reassign cast"
+
+#. Key:	ChangeCastTip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(404)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(404)
+msgctxt "SUPTMainPanel,ChangeCastTip"
+msgid "Unpins the cast and replaces it with the Actors currently selected in the level."
+msgstr "Unpins the cast and replaces it with the Actors currently selected in the level."
+
+#. Key:	Step2
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(411)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(411)
+msgctxt "SUPTMainPanel,Step2"
+msgid "(2) What should it be built from?"
+msgstr "(2) What should it be built from?"
+
+#. Key:	SourceVideo
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(416)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(416)
+msgctxt "SUPTMainPanel,SourceVideo"
+msgid "Reference video"
+msgstr "Reference video"
+
+#. Key:	SourceLibrary
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(418)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(418)
+msgctxt "SUPTMainPanel,SourceLibrary"
+msgid "Find a reference by prompt (library)"
+msgstr "Find a reference by prompt (library)"
+
+#. Key:	SourceScript
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(420)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(420)
+msgctxt "SUPTMainPanel,SourceScript"
+msgid "Text script (LLM)"
+msgstr "Text script (LLM)"
+
+#. Key:	SourceJson
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(422)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(422)
+msgctxt "SUPTMainPanel,SourceJson"
+msgid "Paste Shot Plan JSON (no API needed)"
+msgstr "Paste Shot Plan JSON (no API needed)"
+
+#. Key:	JsonHelp
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(429)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(429)
+msgctxt "SUPTMainPanel,JsonHelp"
+msgid "Paste a Shot Plan JSON and press 'Generate cinematic'. Works without an API or FFmpeg. Results generated from a video or a script are recorded here as well, so you can edit the values and generate again."
+msgstr "Paste a Shot Plan JSON and press 'Generate cinematic'. Works without an API or FFmpeg. Results generated from a video or a script are recorded here as well, so you can edit the values and generate again."
+
+#. Key:	JsonHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(431)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(431)
+msgctxt "SUPTMainPanel,JsonHint"
+msgid "{\"title\":\"...\",\"frame_rate\":30,\"shots\":[...]}"
+msgstr "{\"title\":\"...\",\"frame_rate\":30,\"shots\":[...]}"
+
+#. Key:	SelectVideo
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(441)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(441)
+msgctxt "SUPTMainPanel,SelectVideo"
+msgid "Choose video..."
+msgstr "Choose video..."
+
+#. Key:	NoVideo
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(443)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(443)
+msgctxt "SUPTMainPanel,NoVideo"
+msgid "No video selected (MP4 / MOV / M4V / AVI)"
+msgstr "No video selected (MP4 / MOV / M4V / AVI)"
+
+#. Key:	LinkLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(449)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(449)
+msgctxt "SUPTMainPanel,LinkLabel"
+msgid "or a video link"
+msgstr "or a video link"
+
+#. Key:	LinkHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(453)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(453)
+msgctxt "SUPTMainPanel,LinkHint"
+msgid "https://www.youtube.com/watch?v=... or a Pexels/Pixabay video address (a link takes precedence over the file above)"
+msgstr "https://www.youtube.com/watch?v=... or a Pexels/Pixabay video address (a link takes precedence over the file above)"
+
+#. Key:	SectionLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(456)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(456)
+msgctxt "SUPTMainPanel,SectionLabel"
+msgid "Section"
+msgstr "Section"
+
+#. Key:	SectionHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(460)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(460)
+msgctxt "SUPTMainPanel,SectionHint"
+msgid "e.g. 1:20-2:05"
+msgstr "e.g. 1:20-2:05"
+
+#. Key:	LinkRights
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(470)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(470)
+msgctxt "SUPTMainPanel,LinkRights"
+msgid "Rights confirmed: I have the right or permission to use this video for analysis, including sites such as YouTube that do not allow downloading. (A low-resolution copy is fetched temporarily, used only for pose analysis, and deleted right away. Pexels, Pixabay, Internet Archive and Wikimedia are fetched without this checkbox. Links are always handled by local pose analysis.)"
+msgstr "Rights confirmed: I have the right or permission to use this video for analysis, including sites such as YouTube that do not allow downloading. (A low-resolution copy is fetched temporarily, used only for pose analysis, and deleted right away. Pexels, Pixabay, Internet Archive and Wikimedia are fetched without this checkbox. Links are always handled by local pose analysis.)"
+
+#. Key:	MatchModeLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(477)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(477)
+msgctxt "SUPTMainPanel,MatchModeLabel"
+msgid "Match on"
+msgstr "Match on"
+
+#. Key:	SceneMode
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(479)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(479)
+msgctxt "SUPTMainPanel,SceneMode"
+msgid "Scene composition (ignore subtitles and logos)"
+msgstr "Scene composition (ignore subtitles and logos)"
+
+#. Key:	EditMode
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(481)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(481)
+msgctxt "SUPTMainPanel,EditMode"
+msgid "Edit rhythm (keep zoom, shake and cut timing)"
+msgstr "Edit rhythm (keep zoom, shake and cut timing)"
+
+#. Key:	AnalysisMethodLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(487)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(487)
+msgctxt "SUPTMainPanel,AnalysisMethodLabel"
+msgid "Analysis method"
+msgstr "Analysis method"
+
+#. Key:	LocalPoseMethod
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(489)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(489)
+msgctxt "SUPTMainPanel,LocalPoseMethod"
+msgid "Local pose analysis (no API needed, recommended)"
+msgstr "Local pose analysis (no API needed, recommended)"
+
+#. Key:	VisionMethod
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(491)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(491)
+msgctxt "SUPTMainPanel,VisionMethod"
+msgid "Vision model (the configured LLM)"
+msgstr "Vision model (the configured LLM)"
+
+#. Key:	LibraryHelp
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(501)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(501)
+msgctxt "SUPTMainPanel,LibraryHelp"
+msgid "Searches a folder of reference videos for the segment whose staging and shot structure (shot size, angle, camera motion, number of people) is closest to what you described, and uses it as the reference. Runs on local pose analysis without an API, and each video in the folder is analyzed only once."
+msgstr "Searches a folder of reference videos for the segment whose staging and shot structure (shot size, angle, camera motion, number of people) is closest to what you described, and uses it as the reference. Runs on local pose analysis without an API, and each video in the folder is analyzed only once."
+
+#. Key:	LibraryFolderLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(507)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(507)
+msgctxt "SUPTMainPanel,LibraryFolderLabel"
+msgid "Library folder"
+msgstr "Library folder"
+
+#. Key:	LibraryFolderHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(512)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(512)
+msgctxt "SUPTMainPanel,LibraryFolderHint"
+msgid "e.g. D:/RefVideos"
+msgstr "e.g. D:/RefVideos"
+
+#. Key:	BrowseLibrary
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(521)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(521)
+msgctxt "SUPTMainPanel,BrowseLibrary"
+msgid "Choose folder..."
+msgstr "Choose folder..."
+
+#. Key:	LibraryPromptHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(526)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(526)
+msgctxt "SUPTMainPanel,LibraryPromptHint"
+msgid "e.g. two people stand in a two-shot, talk over the shoulder, and it ends on a close-up of one of them"
+msgstr "e.g. two people stand in a two-shot, talk over the shoulder, and it ends on a close-up of one of them"
+
+#. Key:	SearchLibrary
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(532)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(532)
+msgctxt "SUPTMainPanel,SearchLibrary"
+msgid "Search only"
+msgstr "Search only"
+
+#. Key:	LibraryGenerateHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(534)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(534)
+msgctxt "SUPTMainPanel,LibraryGenerateHint"
+msgid "'Generate cinematic' uses the result picked in the list (the top one if nothing is picked). If the list is empty or the folder or prompt changed, it searches first."
+msgstr "'Generate cinematic' uses the result picked in the list (the top one if nothing is picked). If the list is empty or the folder or prompt changed, it searches first."
+
+#. Key:	ScriptHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(554)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(554)
+msgctxt "SUPTMainPanel,ScriptHint"
+msgid "e.g. A ruined temple. The hero walks to the altar and the goddess appears. Open on a wide shot and cut to a close-up of her face."
+msgstr "e.g. A ruined temple. The hero walks to the altar and the goddess appears. Open on a wide shot and cut to a close-up of her face."
+
+#. Key:	MediaLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(561)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(561)
+msgctxt "SUPTMainPanel,MediaLabel"
+msgid "Animation and audio (optional)"
+msgstr "Animation and audio (optional)"
+
+#. Key:	AddMedia
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(563)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(563)
+msgctxt "SUPTMainPanel,AddMedia"
+msgid "Add Content Browser selection"
+msgstr "Add Content Browser selection"
+
+#. Key:	ClearMedia
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(565)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(565)
+msgctxt "SUPTMainPanel,ClearMedia"
+msgid "Clear"
+msgstr "Clear"
+
+#. Key:	Step3
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(571)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(571)
+msgctxt "SUPTMainPanel,Step3"
+msgid "(3) Generate"
+msgstr "(3) Generate"
+
+#. Key:	Generate
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(584)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(584)
+msgctxt "SUPTMainPanel,Generate"
+msgid "Generate cinematic"
+msgstr "Generate cinematic"
+
+#. Key:	Generating
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(584)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(584)
+msgctxt "SUPTMainPanel,Generating"
+msgid "Generating..."
+msgstr "Generating..."
+
+#. Key:	Ready
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(588)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(588)
+msgctxt "SUPTMainPanel,Ready"
+msgid "Set up the cast and a reference video (or a script), then generate."
+msgstr "Set up the cast and a reference video (or a script), then generate."
+
+#. Key:	Step4
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(592)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(592)
+msgctxt "SUPTMainPanel,Step4"
+msgid "(4) Review"
+msgstr "(4) Review"
+
+#. Key:	NoSequence
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(601)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(601)
+msgctxt "SUPTMainPanel,NoSequence"
+msgid "No cinematic has been generated yet."
+msgstr "No cinematic has been generated yet."
+
+#. Key:	OpenSequence
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(605)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(605)
+msgctxt "SUPTMainPanel,OpenSequence"
+msgid "Open in Sequencer"
+msgstr "Open in Sequencer"
+
+#. Key:	ColIndex
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(621)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(621)
+msgctxt "SUPTMainPanel,ColIndex"
+msgid "#"
+msgstr "#"
+
+#. Key:	ColName
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(622)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(622)
+msgctxt "SUPTMainPanel,ColName"
+msgid "Shot"
+msgstr "Shot"
+
+#. Key:	ColDuration
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(623)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(623)
+msgctxt "SUPTMainPanel,ColDuration"
+msgid "Length"
+msgstr "Length"
+
+#. Key:	ColLens
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(624)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(624)
+msgctxt "SUPTMainPanel,ColLens"
+msgid "Lens"
+msgstr "Lens"
+
+#. Key:	ColSubject
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(625)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(625)
+msgctxt "SUPTMainPanel,ColSubject"
+msgid "Subject"
+msgstr "Subject"
+
+#. Key:	ColScreen
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(626)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(626)
+msgctxt "SUPTMainPanel,ColScreen"
+msgid "Screen position"
+msgstr "Screen position"
+
+#. Key:	ColMotion
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(627)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(627)
+msgctxt "SUPTMainPanel,ColMotion"
+msgid "Camera motion"
+msgstr "Camera motion"
+
+#. Key:	ColConfidence
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(628)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(628)
+msgctxt "SUPTMainPanel,ColConfidence"
+msgid "Confidence"
+msgstr "Confidence"
+
+#. Key:	PlayShot
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(636)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(636)
+msgctxt "SUPTMainPanel,PlayShot"
+msgid "Play selected shot"
+msgstr "Play selected shot"
+
+#. Key:	PlayShotTip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(636)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(636)
+msgctxt "SUPTMainPanel,PlayShotTip"
+msgid "Double-clicking a row in the shot list plays it as well."
+msgstr "Double-clicking a row in the shot list plays it as well."
+
+#. Key:	CaptureCamera
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(638)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(638)
+msgctxt "SUPTMainPanel,CaptureCamera"
+msgid "Keep my camera adjustments"
+msgstr "Keep my camera adjustments"
+
+#. Key:	CaptureCameraTip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(638)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(638)
+msgctxt "SUPTMainPanel,CaptureCameraTip"
+msgid "Press this after moving a camera in Sequencer and the same framing is kept on the next generation."
+msgstr "Press this after moving a camera in Sequencer and the same framing is kept on the next generation."
+
+#. Key:	AnalyzeComposition
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(640)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(640)
+msgctxt "SUPTMainPanel,AnalyzeComposition"
+msgid "Check framing"
+msgstr "Check framing"
+
+#. Key:	AnalyzeCompositionTip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(640)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(640)
+msgctxt "SUPTMainPanel,AnalyzeCompositionTip"
+msgid "Checks each shot for head cropping, subject size and occlusion."
+msgstr "Checks each shot for head cropping, subject size and occlusion."
+
+#. Key:	OpenPoseDebug
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(644)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(644)
+msgctxt "SUPTMainPanel,OpenPoseDebug"
+msgid "Open pose analysis images"
+msgstr "Open pose analysis images"
+
+#. Key:	OpenPoseDebugTip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(645)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(645)
+msgctxt "SUPTMainPanel,OpenPoseDebugTip"
+msgid "Shows the detected person boxes, joints and aim points from the reference video as one image per shot."
+msgstr "Shows the detected person boxes, joints and aim points from the reference video as one image per shot."
+
+#. Key:	ShotEditTitle
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(657)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(657)
+msgctxt "SUPTMainPanel,ShotEditTitle"
+msgid "Edit selected shot - #{0} {1}"
+msgstr "Edit selected shot - #{0} {1}"
+
+#. Key:	ShotEditHelp
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(666)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(666)
+msgctxt "SUPTMainPanel,ShotEditHelp"
+msgid "Edits only the shot picked in the list. Changing the shot size or angle recomputes the lens, distance and height the same way reference generation does, and the number fields let you fine-tune. 'Apply to this shot' updates the same sequence in place and plays that shot."
+msgstr "Edits only the shot picked in the list. Changing the shot size or angle recomputes the lens, distance and height the same way reference generation does, and the number fields let you fine-tune. 'Apply to this shot' updates the same sequence in place and plays that shot."
+
+#. Key:	EditSize
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(672)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(672)
+msgctxt "SUPTMainPanel,EditSize"
+msgid "Shot size"
+msgstr "Shot size"
+
+#. Key:	EditAngle
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(674)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(674)
+msgctxt "SUPTMainPanel,EditAngle"
+msgid "Angle"
+msgstr "Angle"
+
+#. Key:	EditMotion
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(676)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(676)
+msgctxt "SUPTMainPanel,EditMotion"
+msgid "Camera motion"
+msgstr "Camera motion"
+
+#. Key:	EditSubject
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(683)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(683)
+msgctxt "SUPTMainPanel,EditSubject"
+msgid "Subject"
+msgstr "Subject"
+
+#. Key:	EditDuration
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(692)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(692)
+msgctxt "SUPTMainPanel,EditDuration"
+msgid "Length (s)"
+msgstr "Length (s)"
+
+#. Key:	EditFocal
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(694)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(694)
+msgctxt "SUPTMainPanel,EditFocal"
+msgid "Lens (mm)"
+msgstr "Lens (mm)"
+
+#. Key:	EditOverShoulder
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(701)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(701)
+msgctxt "SUPTMainPanel,EditOverShoulder"
+msgid "Over-the-shoulder foreground"
+msgstr "Over-the-shoulder foreground"
+
+#. Key:	EditOverShoulderTip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(703)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(703)
+msgctxt "SUPTMainPanel,EditOverShoulderTip"
+msgid "Puts the camera behind that Actor's shoulder and shoots the main subject. The camera is computed from the foreground Actor's position instead of distance and azimuth, and the lens keeps the shot size."
+msgstr "Puts the camera behind that Actor's shoulder and shoots the main subject. The camera is computed from the foreground Actor's position instead of distance and azimuth, and the lens keeps the shot size."
+
+#. Key:	EditOverShoulderSide
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(712)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(712)
+msgctxt "SUPTMainPanel,EditOverShoulderSide"
+msgid "Foreground side"
+msgstr "Foreground side"
+
+#. Key:	OverShoulderLeft
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(714)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(714)
+msgctxt "SUPTMainPanel,OverShoulderLeft"
+msgid "Screen left"
+msgstr "Screen left"
+
+#. Key:	OverShoulderRight
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(714)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(714)
+msgctxt "SUPTMainPanel,OverShoulderRight"
+msgid "Screen right"
+msgstr "Screen right"
+
+#. Key:	EditScreenX
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(722)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(722)
+msgctxt "SUPTMainPanel,EditScreenX"
+msgid "Screen X"
+msgstr "Screen X"
+
+#. Key:	EditScreenY
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(724)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(724)
+msgctxt "SUPTMainPanel,EditScreenY"
+msgid "Screen Y"
+msgstr "Screen Y"
+
+#. Key:	EditAzimuth
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(726)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(726)
+msgctxt "SUPTMainPanel,EditAzimuth"
+msgid "Azimuth (deg)"
+msgstr "Azimuth (deg)"
+
+#. Key:	EditDistance
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(728)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(728)
+msgctxt "SUPTMainPanel,EditDistance"
+msgid "Distance (cm)"
+msgstr "Distance (cm)"
+
+#. Key:	EditAnimation
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(739)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(739)
+msgctxt "SUPTMainPanel,EditAnimation"
+msgid "Animation: {0}"
+msgstr "Animation: {0}"
+
+#. Key:	AssignAnimation
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(743)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(743)
+msgctxt "SUPTMainPanel,AssignAnimation"
+msgid "Apply Content Browser animation"
+msgstr "Apply Content Browser animation"
+
+#. Key:	ClearAnimation
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(745)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(745)
+msgctxt "SUPTMainPanel,ClearAnimation"
+msgid "Remove animation"
+msgstr "Remove animation"
+
+#. Key:	ApplyShotEdit
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(753)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(753)
+msgctxt "SUPTMainPanel,ApplyShotEdit"
+msgid "Apply to this shot and update the sequence"
+msgstr "Apply to this shot and update the sequence"
+
+#. Key:	ResetShotEdit
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(758)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(758)
+msgctxt "SUPTMainPanel,ResetShotEdit"
+msgid "Revert (re-read current values)"
+msgstr "Revert (re-read current values)"
+
+#. Key:	ReportHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(766)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(766)
+msgctxt "SUPTMainPanel,ReportHint"
+msgid "Analysis results and error details appear here."
+msgstr "Analysis results and error details appear here."
+
+#. Key:	Advanced
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(774)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(774)
+msgctxt "SUPTMainPanel,Advanced"
+msgid "Advanced (role mapping)"
+msgstr "Advanced (role mapping)"
+
+#. Key:	RoleHelp
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(779)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(779)
+msgctxt "SUPTMainPanel,RoleHelp"
+msgid "Role to Actor mapping - fill this in only when a person in the video is assigned to the wrong Actor."
+msgstr "Role to Actor mapping - fill this in only when a person in the video is assigned to the wrong Actor."
+
+#. Key:	SizeECU
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(78)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(78)
+msgctxt "SUPTMainPanel,SizeECU"
+msgid "Extreme close-up"
+msgstr "Extreme close-up"
+
+#. Key:	RoleHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(783)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(783)
+msgctxt "SUPTMainPanel,RoleHint"
+msgid "e.g. {\"main_character\":\"Hero\",\"enemy\":\"Boss\"}"
+msgstr "e.g. {\"main_character\":\"Hero\",\"enemy\":\"Boss\"}"
+
+#. Key:	SizeCU
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(79)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(79)
+msgctxt "SUPTMainPanel,SizeCU"
+msgid "Close-up"
+msgstr "Close-up"
+
+#. Key:	AnimTitle
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(796)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(796)
+msgctxt "SUPTMainPanel,AnimTitle"
+msgid "Convert another character's animation to fit mine"
+msgstr "Convert another character's animation to fit mine"
+
+#. Key:	AnimGuide
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(799)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(799)
+msgctxt "SUPTMainPanel,AnimGuide"
+msgid "1. In the Content Browser, select the Skeletal Mesh the animations should be applied to.\n2. Open the window with the button below (or right-click the mesh > Universal Animation Retarget), pick the animations and retarget them in one batch.\nHumanoid bone structures such as MetaHuman, UE Mannequin and Mixamo are recognized automatically."
+msgstr "1. In the Content Browser, select the Skeletal Mesh the animations should be applied to.\n2. Open the window with the button below (or right-click the mesh > Universal Animation Retarget), pick the animations and retarget them in one batch.\nHumanoid bone structures such as MetaHuman, UE Mannequin and Mixamo are recognized automatically."
+
+#. Key:	SizeMedium
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(80)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(80)
+msgctxt "SUPTMainPanel,SizeMedium"
+msgid "Medium"
+msgstr "Medium"
+
+#. Key:	SizeFull
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(81)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(81)
+msgctxt "SUPTMainPanel,SizeFull"
+msgid "Full shot"
+msgstr "Full shot"
+
+#. Key:	OpenRetarget
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(812)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(812)
+msgctxt "SUPTMainPanel,OpenRetarget"
+msgid "Open the retarget window for the selected Skeletal Mesh"
+msgstr "Open the retarget window for the selected Skeletal Mesh"
+
+#. Key:	AnimReady
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(815)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(815)
+msgctxt "SUPTMainPanel,AnimReady"
+msgid "Ready"
+msgstr "Ready"
+
+#. Key:	SizeWide
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(82)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(82)
+msgctxt "SUPTMainPanel,SizeWide"
+msgid "Wide"
+msgstr "Wide"
+
+#. Key:	BoneFixTitle
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(821)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(821)
+msgctxt "SUPTMainPanel,BoneFixTitle"
+msgid "Advanced: manual bone mapping (when auto-detection fails)"
+msgstr "Advanced: manual bone mapping (when auto-detection fails)"
+
+#. Key:	BoneFixHelp
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(827)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(827)
+msgctxt "SUPTMainPanel,BoneFixHelp"
+msgid "Use this only for a mesh the retarget window reported as 'bone structure not recognized'. Select that mesh in the Content Browser and analyze it, then fix only the wrong bones as JSON and save - the retarget window picks the correction up automatically."
+msgstr "Use this only for a mesh the retarget window reported as 'bone structure not recognized'. Select that mesh in the Content Browser and analyze it, then fix only the wrong bones as JSON and save - the retarget window picks the correction up automatically."
+
+#. Key:	AnalyzeMesh
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(835)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(835)
+msgctxt "SUPTMainPanel,AnalyzeMesh"
+msgid "Analyze selected mesh"
+msgstr "Analyze selected mesh"
+
+#. Key:	SaveOverride
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(837)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(837)
+msgctxt "SUPTMainPanel,SaveOverride"
+msgid "Save correction"
+msgstr "Save correction"
+
+#. Key:	OverrideHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(842)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(842)
+msgctxt "SUPTMainPanel,OverrideHint"
+msgid "Enter only the wrong bones. e.g. {\"Pelvis\":\"pelvis\",\"LeftHand\":\"hand_l\"}"
+msgstr "Enter only the wrong bones. e.g. {\"Pelvis\":\"pelvis\",\"LeftHand\":\"hand_l\"}"
+
+#. Key:	SkeletonReportHint
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(847)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(847)
+msgctxt "SUPTMainPanel,SkeletonReportHint"
+msgid "Analysis results appear here."
+msgstr "Analysis results appear here."
+
+#. Key:	AngleLow
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(88)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(88)
+msgctxt "SUPTMainPanel,AngleLow"
+msgid "Low angle"
+msgstr "Low angle"
+
+#. Key:	AngleEye
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(89)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(89)
+msgctxt "SUPTMainPanel,AngleEye"
+msgid "Eye level"
+msgstr "Eye level"
+
+#. Key:	NoCast
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(899)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(899)
+msgctxt "SUPTMainPanel,NoCast"
+msgid "Select the cast Actors in the level viewport (Ctrl+click for several)."
+msgstr "Select the cast Actors in the level viewport (Ctrl+click for several)."
+
+#. Key:	AngleHigh
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(90)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(90)
+msgctxt "SUPTMainPanel,AngleHigh"
+msgid "High angle"
+msgstr "High angle"
+
+#. Key:	AngleOverhead
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(91)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(91)
+msgctxt "SUPTMainPanel,AngleOverhead"
+msgid "Overhead"
+msgstr "Overhead"
+
+#. Key:	AngleDutch
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(92)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(92)
+msgctxt "SUPTMainPanel,AngleDutch"
+msgid "Dutch (tilted)"
+msgstr "Dutch (tilted)"
+
+#. Key:	NoMedia
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(993)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(993)
+msgctxt "SUPTMainPanel,NoMedia"
+msgid "None - to add character motion or dialogue, select assets in the Content Browser and add them."
+msgstr "None - to add character motion or dialogue, select assets in the Content Browser and add them."
+
+#. Key:	TabTitle
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(18)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(18)
+msgctxt "UniversalProductionTools,TabTitle"
+msgid "Universal Production Tools"
+msgstr "Universal Production Tools"
+
+#. Key:	MenuLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(37)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(37)
+msgctxt "UniversalProductionTools,MenuLabel"
+msgid "Universal Production Tools"
+msgstr "Universal Production Tools"
+
+#. Key:	MenuTooltip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(38)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(38)
+msgctxt "UniversalProductionTools,MenuTooltip"
+msgid "Opens the LLM cinematic generator and the skeleton analyzer."
+msgstr "Opens the LLM cinematic generator and the skeleton analyzer."
+
+#. Key:	UniversalAnimationRetarget
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(57)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(57)
+msgctxt "UniversalProductionTools,UniversalAnimationRetarget"
+msgid "Universal Animation Retarget"
+msgstr "Universal Animation Retarget"
+
+#. Key:	UniversalAnimationRetargetTooltip
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(58)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(58)
+msgctxt "UniversalProductionTools,UniversalAnimationRetargetTooltip"
+msgid "Select several animations and retarget them to this Skeletal Mesh in one batch."
+msgstr "Select several animations and retarget them to this Skeletal Mesh in one batch."
+
+#. Key:	RetargetWindowTitle
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(71)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UniversalProductionToolsModule.cpp(71)
+msgctxt "UniversalProductionTools,RetargetWindowTitle"
+msgid "Universal Animation Retarget"
+msgstr "Universal Animation Retarget"
+
+#. Key:	BakePelvisMotion
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UPTPelvisMotionBaker.cpp(214)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UPTPelvisMotionBaker.cpp(214)
+msgctxt "UPT,BakePelvisMotion"
+msgid "Bake pelvis motion"
+msgstr "Bake pelvis motion"
+
+#. Key:	BakeTwistMotion
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UPTTwistMotionBaker.cpp(102)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/UPTTwistMotionBaker.cpp(102)
+msgctxt "UPT,BakeTwistMotion"
+msgid "Bake twist motion"
+msgstr "Bake twist motion"
+

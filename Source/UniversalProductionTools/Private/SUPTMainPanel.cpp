@@ -75,21 +75,21 @@ const FName ShotColumnConfidence(TEXT("Confidence"));
 
 FText ShotSizeLabel(const FString& Id)
 {
-    if (Id == TEXT("extreme_close_up")) return LOCTEXT("SizeECU", "익스트림 클로즈업");
-    if (Id == TEXT("close_up")) return LOCTEXT("SizeCU", "클로즈업");
-    if (Id == TEXT("medium")) return LOCTEXT("SizeMedium", "미디엄");
-    if (Id == TEXT("full")) return LOCTEXT("SizeFull", "풀샷");
-    if (Id == TEXT("wide")) return LOCTEXT("SizeWide", "와이드");
+    if (Id == TEXT("extreme_close_up")) return LOCTEXT("SizeECU", "Extreme close-up");
+    if (Id == TEXT("close_up")) return LOCTEXT("SizeCU", "Close-up");
+    if (Id == TEXT("medium")) return LOCTEXT("SizeMedium", "Medium");
+    if (Id == TEXT("full")) return LOCTEXT("SizeFull", "Full shot");
+    if (Id == TEXT("wide")) return LOCTEXT("SizeWide", "Wide");
     return FText::FromString(Id);
 }
 
 FText CameraAngleLabel(const FString& Id)
 {
-    if (Id == TEXT("low")) return LOCTEXT("AngleLow", "로우앵글");
-    if (Id == TEXT("eye")) return LOCTEXT("AngleEye", "눈높이");
-    if (Id == TEXT("high")) return LOCTEXT("AngleHigh", "하이앵글");
-    if (Id == TEXT("overhead")) return LOCTEXT("AngleOverhead", "부감");
-    if (Id == TEXT("dutch")) return LOCTEXT("AngleDutch", "더치(기울임)");
+    if (Id == TEXT("low")) return LOCTEXT("AngleLow", "Low angle");
+    if (Id == TEXT("eye")) return LOCTEXT("AngleEye", "Eye level");
+    if (Id == TEXT("high")) return LOCTEXT("AngleHigh", "High angle");
+    if (Id == TEXT("overhead")) return LOCTEXT("AngleOverhead", "Overhead");
+    if (Id == TEXT("dutch")) return LOCTEXT("AngleDutch", "Dutch (tilted)");
     return FText::FromString(Id);
 }
 
@@ -292,7 +292,7 @@ public:
             SNew(STextBlock)
             .Text(FText::FromString(Value))
             .ColorAndOpacity(bWarn ? FSlateColor(FLinearColor(1.0f, 0.75f, 0.2f)) : FSlateColor::UseForeground())
-            .ToolTipText(bWarn ? LOCTEXT("LowConfidenceTip", "분석 신뢰도가 낮은 샷입니다. 재생해 보고 '선택한 샷 수정'으로 구도를 손보세요.") : FText::GetEmpty())
+            .ToolTipText(bWarn ? LOCTEXT("LowConfidenceTip", "Analysis confidence is low for this shot. Play it back and adjust the framing with 'Edit selected shot'.") : FText::GetEmpty())
         ];
     }
 
@@ -330,8 +330,8 @@ void SUPTMainPanel::Construct(const FArguments& InArgs)
         + SVerticalBox::Slot().AutoHeight().Padding(12, 10, 12, 6)
         [
             SNew(SHorizontalBox)
-            + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 4, 0)[ MakeTabButton(0, LOCTEXT("CinematicTab", "시네마틱 만들기")) ]
-            + SHorizontalBox::Slot().AutoWidth()[ MakeTabButton(1, LOCTEXT("AnimationTab", "애니메이션 범용화")) ]
+            + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 4, 0)[ MakeTabButton(0, LOCTEXT("CinematicTab", "Create cinematic")) ]
+            + SHorizontalBox::Slot().AutoWidth()[ MakeTabButton(1, LOCTEXT("AnimationTab", "Universal animation retarget")) ]
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(12, 0)[ SNew(SSeparator) ]
         + SVerticalBox::Slot().FillHeight(1.0f)
@@ -364,16 +364,16 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                     const UUPTSettings* Settings = GetDefault<UUPTSettings>();
                     if (UPTEndpoint::IsLocal(Settings->ApiEndpoint) && UPTEndpoint::IsLocal(Settings->VisionApiEndpoint))
                     {
-                        return FText::Format(LOCTEXT("LocalModel", "모델: 로컬 {0} (API 키·크레딧 불필요)"), FText::FromString(Settings->VisionModel));
+                        return FText::Format(LOCTEXT("LocalModel", "Model: local {0} (no API key or credits needed)"), FText::FromString(Settings->VisionModel));
                     }
                     if (!UPTEndpoint::IsAllowed(Settings->ApiEndpoint) || !UPTEndpoint::IsAllowed(Settings->VisionApiEndpoint))
                     {
-                        return FText::Format(LOCTEXT("EndpointInvalid", "모델 주소 오류: '{0}' / '{1}' (Editor Preferences > Universal Production Tools에서 확인)"),
+                        return FText::Format(LOCTEXT("EndpointInvalid", "Invalid model address: '{0}' / '{1}' (check Editor Preferences > Universal Production Tools)"),
                             FText::FromString(Settings->ApiEndpoint), FText::FromString(Settings->VisionApiEndpoint));
                     }
                     return bApiKeyReady
-                        ? LOCTEXT("ApiReady", "API 키: 준비됨")
-                        : FText::Format(LOCTEXT("ApiMissing", "API 키: 없음 (환경변수 {0} 설정 후 에디터 재시작)"), FText::FromString(GetDefault<UUPTSettings>()->ApiKeyEnvironmentVariable));
+                        ? LOCTEXT("ApiReady", "API key: ready")
+                        : FText::Format(LOCTEXT("ApiMissing", "API key: missing (set the environment variable {0} and restart the editor)"), FText::FromString(GetDefault<UUPTSettings>()->ApiKeyEnvironmentVariable));
                 })
                 .ColorAndOpacity_Lambda([this] { return bApiKeyReady ? FSlateColor(FLinearColor(0.3f, 0.85f, 0.4f)) : FSlateColor(FLinearColor(1.0f, 0.4f, 0.35f)); })
             ]
@@ -383,15 +383,15 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                 .Text_Lambda([this]
                 {
                     return ResolvedFFmpegPath.IsEmpty()
-                        ? LOCTEXT("FFmpegMissing", "FFmpeg: 없음 (레퍼런스 영상 모드에 필요 — 설치 후 PATH 추가 또는 Editor Preferences > Universal Production Tools에서 경로 지정)")
-                        : LOCTEXT("FFmpegReady", "FFmpeg: 준비됨");
+                        ? LOCTEXT("FFmpegMissing", "FFmpeg: missing (required for reference-video mode - install it and add it to PATH, or set the path in Editor Preferences > Universal Production Tools)")
+                        : LOCTEXT("FFmpegReady", "FFmpeg: ready");
                 })
                 .ColorAndOpacity_Lambda([this] { return ResolvedFFmpegPath.IsEmpty() ? FSlateColor(FLinearColor(1.0f, 0.4f, 0.35f)) : FSlateColor(FLinearColor(0.3f, 0.85f, 0.4f)); })
             ]
         ]
 
         // ① 등장인물
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 4)[ MakeStepHeader(LOCTEXT("Step1", "① 등장인물")) ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 4)[ MakeStepHeader(LOCTEXT("Step1", "(1) Cast")) ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 0, 0, 0)
         [
             SNew(SHorizontalBox)
@@ -400,33 +400,33 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
             + SHorizontalBox::Slot().AutoWidth().Padding(8, 0, 0, 0)
             [
                 SNew(SButton)
-                .Text(LOCTEXT("ChangeCast", "등장인물 다시 지정"))
-                .ToolTipText(LOCTEXT("ChangeCastTip", "고정을 풀고 현재 레벨에서 선택한 Actor로 등장인물을 바꿉니다."))
+                .Text(LOCTEXT("ChangeCast", "Reassign cast"))
+                .ToolTipText(LOCTEXT("ChangeCastTip", "Unpins the cast and replaces it with the Actors currently selected in the level."))
                 .Visibility_Lambda([this] { return bCastLocked ? EVisibility::Visible : EVisibility::Collapsed; })
                 .OnClicked(this, &SUPTMainPanel::UnlockCast)
             ]
         ]
 
         // ② 소스
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 4)[ MakeStepHeader(LOCTEXT("Step2", "② 무엇을 기반으로 만들까요?")) ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 4)[ MakeStepHeader(LOCTEXT("Step2", "(2) What should it be built from?")) ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 0, 0, 4)
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 20, 0)
-            [ MakeRadio([this] { return Source == EUPTCinematicSource::ReferenceVideo; }, [this] { Source = EUPTCinematicSource::ReferenceVideo; }, LOCTEXT("SourceVideo", "레퍼런스 영상")) ]
+            [ MakeRadio([this] { return Source == EUPTCinematicSource::ReferenceVideo; }, [this] { Source = EUPTCinematicSource::ReferenceVideo; }, LOCTEXT("SourceVideo", "Reference video")) ]
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 20, 0)
-            [ MakeRadio([this] { return Source == EUPTCinematicSource::PromptSearch; }, [this] { Source = EUPTCinematicSource::PromptSearch; }, LOCTEXT("SourceLibrary", "프롬프트로 레퍼런스 찾기 (라이브러리)")) ]
+            [ MakeRadio([this] { return Source == EUPTCinematicSource::PromptSearch; }, [this] { Source = EUPTCinematicSource::PromptSearch; }, LOCTEXT("SourceLibrary", "Find a reference by prompt (library)")) ]
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 20, 0)
-            [ MakeRadio([this] { return Source == EUPTCinematicSource::Script; }, [this] { Source = EUPTCinematicSource::Script; }, LOCTEXT("SourceScript", "텍스트 대본 (LLM)")) ]
+            [ MakeRadio([this] { return Source == EUPTCinematicSource::Script; }, [this] { Source = EUPTCinematicSource::Script; }, LOCTEXT("SourceScript", "Text script (LLM)")) ]
             + SHorizontalBox::Slot().AutoWidth()
-            [ MakeRadio([this] { return Source == EUPTCinematicSource::ShotPlanJson; }, [this] { Source = EUPTCinematicSource::ShotPlanJson; }, LOCTEXT("SourceJson", "Shot Plan JSON 직접 입력 (API 불필요)")) ]
+            [ MakeRadio([this] { return Source == EUPTCinematicSource::ShotPlanJson; }, [this] { Source = EUPTCinematicSource::ShotPlanJson; }, LOCTEXT("SourceJson", "Paste Shot Plan JSON (no API needed)")) ]
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 4, 0, 0)
         [
             SNew(SVerticalBox)
             .Visibility_Lambda([this] { return Source == EUPTCinematicSource::ShotPlanJson ? EVisibility::Visible : EVisibility::Collapsed; })
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 4)
-            [ SNew(STextBlock).AutoWrapText(true).Text(LOCTEXT("JsonHelp", "Shot Plan JSON을 붙여넣고 '시네마틱 생성'을 누르세요. API와 FFmpeg 없이 동작합니다. 영상·대본으로 생성한 결과도 여기에 기록되므로 값을 고쳐 다시 생성할 수 있습니다.")) ]
+            [ SNew(STextBlock).AutoWrapText(true).Text(LOCTEXT("JsonHelp", "Paste a Shot Plan JSON and press 'Generate cinematic'. Works without an API or FFmpeg. Results generated from a video or a script are recorded here as well, so you can edit the values and generate again.")) ]
             + SVerticalBox::Slot().AutoHeight()
             [ SNew(SBox).HeightOverride(200)[ SAssignNew(JsonInput, SMultiLineEditableTextBox).HintText(LOCTEXT("JsonHint", "{\"title\":\"...\",\"frame_rate\":30,\"shots\":[...]}")) ] ]
         ]
@@ -438,26 +438,26 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
-                [ SNew(SButton).Text(LOCTEXT("SelectVideo", "영상 선택...")).IsEnabled_Lambda([this] { return !IsGenerationInFlight(); }).OnClicked(this, &SUPTMainPanel::SelectReferenceVideo) ]
+                [ SNew(SButton).Text(LOCTEXT("SelectVideo", "Choose video...")).IsEnabled_Lambda([this] { return !IsGenerationInFlight(); }).OnClicked(this, &SUPTMainPanel::SelectReferenceVideo) ]
                 + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center)
-                [ SNew(STextBlock).Text_Lambda([this] { return ReferenceVideoPath.IsEmpty() ? LOCTEXT("NoVideo", "선택된 영상 없음 (MP4 / MOV / M4V / AVI)") : FText::FromString(FPaths::GetCleanFilename(ReferenceVideoPath)); }) ]
+                [ SNew(STextBlock).Text_Lambda([this] { return ReferenceVideoPath.IsEmpty() ? LOCTEXT("NoVideo", "No video selected (MP4 / MOV / M4V / AVI)") : FText::FromString(FPaths::GetCleanFilename(ReferenceVideoPath)); }) ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 8, 0)
-                [ SNew(STextBlock).Text(LOCTEXT("LinkLabel", "또는 영상 링크")) ]
+                [ SNew(STextBlock).Text(LOCTEXT("LinkLabel", "or a video link")) ]
                 + SHorizontalBox::Slot().FillWidth(1.0f)
                 [
                     SAssignNew(ReferenceLinkInput, SEditableTextBox)
-                    .HintText(LOCTEXT("LinkHint", "https://www.youtube.com/watch?v=... 또는 Pexels·Pixabay 영상 주소 (넣으면 위 파일 대신 링크를 씁니다)"))
+                    .HintText(LOCTEXT("LinkHint", "https://www.youtube.com/watch?v=... or a Pexels/Pixabay video address (a link takes precedence over the file above)"))
                 ]
                 + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(8, 0, 4, 0)
-                [ SNew(STextBlock).Text(LOCTEXT("SectionLabel", "구간")) ]
+                [ SNew(STextBlock).Text(LOCTEXT("SectionLabel", "Section")) ]
                 + SHorizontalBox::Slot().AutoWidth()
                 [
                     SNew(SBox).WidthOverride(110)
-                    [ SAssignNew(ReferenceSectionInput, SEditableTextBox).HintText(LOCTEXT("SectionHint", "예: 1:20-2:05")) ]
+                    [ SAssignNew(ReferenceSectionInput, SEditableTextBox).HintText(LOCTEXT("SectionHint", "e.g. 1:20-2:05")) ]
                 ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 4, 0, 0)
@@ -467,28 +467,28 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                 .OnCheckStateChanged_Lambda([this](const ECheckBoxState State) { bLinkRightsConfirmed = State == ECheckBoxState::Checked; })
                 [
                     SNew(STextBlock).AutoWrapText(true)
-                    .Text(LOCTEXT("LinkRights", "권리 확인: YouTube 등 다운로드를 허용하지 않는 사이트의 영상을 분석에 쓸 권리·허락이 있습니다. (저해상도로 임시로 받아 포즈 분석만 하고 영상은 바로 지웁니다. Pexels·Pixabay·Internet Archive·Wikimedia는 체크 없이 받습니다. 링크는 항상 로컬 포즈 분석으로 처리합니다.)"))
+                    .Text(LOCTEXT("LinkRights", "Rights confirmed: I have the right or permission to use this video for analysis, including sites such as YouTube that do not allow downloading. (A low-resolution copy is fetched temporarily, used only for pose analysis, and deleted right away. Pexels, Pixabay, Internet Archive and Wikimedia are fetched without this checkbox. Links are always handled by local pose analysis.)"))
                 ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 12, 0)
-                [ SNew(STextBlock).Text(LOCTEXT("MatchModeLabel", "분석 기준")) ]
+                [ SNew(STextBlock).Text(LOCTEXT("MatchModeLabel", "Match on")) ]
                 + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 20, 0)
-                [ MakeRadio([this] { return ReferenceMatchMode == TEXT("scene"); }, [this] { ReferenceMatchMode = TEXT("scene"); }, LOCTEXT("SceneMode", "장면 구도 (자막·로고 무시)")) ]
+                [ MakeRadio([this] { return ReferenceMatchMode == TEXT("scene"); }, [this] { ReferenceMatchMode = TEXT("scene"); }, LOCTEXT("SceneMode", "Scene composition (ignore subtitles and logos)")) ]
                 + SHorizontalBox::Slot().AutoWidth()
-                [ MakeRadio([this] { return ReferenceMatchMode == TEXT("edit"); }, [this] { ReferenceMatchMode = TEXT("edit"); }, LOCTEXT("EditMode", "편집 리듬 (줌·흔들림·컷 타이밍 유지)")) ]
+                [ MakeRadio([this] { return ReferenceMatchMode == TEXT("edit"); }, [this] { ReferenceMatchMode = TEXT("edit"); }, LOCTEXT("EditMode", "Edit rhythm (keep zoom, shake and cut timing)")) ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 12, 0)
-                [ SNew(STextBlock).Text(LOCTEXT("AnalysisMethodLabel", "분석 방식")) ]
+                [ SNew(STextBlock).Text(LOCTEXT("AnalysisMethodLabel", "Analysis method")) ]
                 + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 20, 0)
-                [ MakeRadio([this] { return ReferenceAnalysisMethod == EUPTReferenceAnalysisMethod::LocalPose; }, [this] { ReferenceAnalysisMethod = EUPTReferenceAnalysisMethod::LocalPose; }, LOCTEXT("LocalPoseMethod", "로컬 포즈 분석 (API 불필요, 권장)")) ]
+                [ MakeRadio([this] { return ReferenceAnalysisMethod == EUPTReferenceAnalysisMethod::LocalPose; }, [this] { ReferenceAnalysisMethod = EUPTReferenceAnalysisMethod::LocalPose; }, LOCTEXT("LocalPoseMethod", "Local pose analysis (no API needed, recommended)")) ]
                 + SHorizontalBox::Slot().AutoWidth()
-                [ MakeRadio([this] { return ReferenceAnalysisMethod == EUPTReferenceAnalysisMethod::VisionModel; }, [this] { ReferenceAnalysisMethod = EUPTReferenceAnalysisMethod::VisionModel; }, LOCTEXT("VisionMethod", "Vision 모델 (설정된 LLM)")) ]
+                [ MakeRadio([this] { return ReferenceAnalysisMethod == EUPTReferenceAnalysisMethod::VisionModel; }, [this] { ReferenceAnalysisMethod = EUPTReferenceAnalysisMethod::VisionModel; }, LOCTEXT("VisionMethod", "Vision model (the configured LLM)")) ]
             ]
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 4, 0, 0)
@@ -498,18 +498,18 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 4)
             [
                 SNew(STextBlock).AutoWrapText(true)
-                .Text(LOCTEXT("LibraryHelp", "레퍼런스 영상을 모아 둔 폴더에서, 적은 연출과 샷 구성(샷 크기·앵글·카메라 모션·인원)이 가장 비슷한 영상 구간을 찾아 레퍼런스로 씁니다. API 없이 로컬 포즈 분석으로 동작하며 폴더의 영상은 처음 한 번만 분석합니다."))
+                .Text(LOCTEXT("LibraryHelp", "Searches a folder of reference videos for the segment whose staging and shot structure (shot size, angle, camera motion, number of people) is closest to what you described, and uses it as the reference. Runs on local pose analysis without an API, and each video in the folder is analyzed only once."))
             ]
             + SVerticalBox::Slot().AutoHeight()
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 8, 0)
-                [ SNew(STextBlock).Text(LOCTEXT("LibraryFolderLabel", "라이브러리 폴더")) ]
+                [ SNew(STextBlock).Text(LOCTEXT("LibraryFolderLabel", "Library folder")) ]
                 + SHorizontalBox::Slot().FillWidth(1.0f)
                 [
                     SAssignNew(LibraryFolderInput, SEditableTextBox)
                     .Text(FText::FromString(GetDefault<UUPTSettings>()->ReferenceLibraryDirectory))
-                    .HintText(LOCTEXT("LibraryFolderHint", "예: D:/RefVideos"))
+                    .HintText(LOCTEXT("LibraryFolderHint", "e.g. D:/RefVideos"))
                     .OnTextCommitted_Lambda([](const FText& Text, ETextCommit::Type)
                     {
                         UUPTSettings* Settings = GetMutableDefault<UUPTSettings>();
@@ -518,20 +518,20 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                     })
                 ]
                 + SHorizontalBox::Slot().AutoWidth().Padding(8, 0, 0, 0)
-                [ SNew(SButton).Text(LOCTEXT("BrowseLibrary", "폴더 선택...")).IsEnabled_Lambda([this] { return !IsGenerationInFlight(); }).OnClicked(this, &SUPTMainPanel::BrowseLibraryFolder) ]
+                [ SNew(SButton).Text(LOCTEXT("BrowseLibrary", "Choose folder...")).IsEnabled_Lambda([this] { return !IsGenerationInFlight(); }).OnClicked(this, &SUPTMainPanel::BrowseLibraryFolder) ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
             [
                 SNew(SBox).HeightOverride(70)
-                [ SAssignNew(LibraryPromptInput, SMultiLineEditableTextBox).HintText(LOCTEXT("LibraryPromptHint", "예: 두 사람이 투샷으로 서 있다가 어깨 너머로 대화하고, 한 사람 클로즈업으로 마무리")) ]
+                [ SAssignNew(LibraryPromptInput, SMultiLineEditableTextBox).HintText(LOCTEXT("LibraryPromptHint", "e.g. two people stand in a two-shot, talk over the shoulder, and it ends on a close-up of one of them")) ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
             [
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().AutoWidth()
-                [ SNew(SButton).Text(LOCTEXT("SearchLibrary", "검색만 하기")).IsEnabled_Lambda([this] { return !IsGenerationInFlight(); }).OnClicked(this, &SUPTMainPanel::SearchLibraryOnly) ]
+                [ SNew(SButton).Text(LOCTEXT("SearchLibrary", "Search only")).IsEnabled_Lambda([this] { return !IsGenerationInFlight(); }).OnClicked(this, &SUPTMainPanel::SearchLibraryOnly) ]
                 + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(8, 0, 0, 0)
-                [ SNew(STextBlock).AutoWrapText(true).Text(LOCTEXT("LibraryGenerateHint", "'시네마틱 생성'은 목록에서 고른 결과(고르지 않으면 1위)로 바로 만듭니다. 목록이 비었거나 폴더·프롬프트가 바뀌었으면 먼저 검색합니다.")) ]
+                [ SNew(STextBlock).AutoWrapText(true).Text(LOCTEXT("LibraryGenerateHint", "'Generate cinematic' uses the result picked in the list (the top one if nothing is picked). If the list is empty or the folder or prompt changed, it searches first.")) ]
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
             [
@@ -551,24 +551,24 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
             .Visibility_Lambda([this] { return Source == EUPTCinematicSource::Script ? EVisibility::Visible : EVisibility::Collapsed; })
             [
                 SAssignNew(ScriptInput, SMultiLineEditableTextBox)
-                .HintText(LOCTEXT("ScriptHint", "예: 폐허가 된 신전. 주인공이 제단으로 걸어가고 여신이 나타난다. 와이드 샷으로 시작해 여신 얼굴 클로즈업으로 전환."))
+                .HintText(LOCTEXT("ScriptHint", "e.g. A ruined temple. The hero walks to the altar and the goddess appears. Open on a wide shot and cut to a close-up of her face."))
             ]
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 10, 0, 0)
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 12, 0)
-            [ SNew(STextBlock).Text(LOCTEXT("MediaLabel", "애니메이션·오디오 (선택)")) ]
+            [ SNew(STextBlock).Text(LOCTEXT("MediaLabel", "Animation and audio (optional)")) ]
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 4, 0)
-            [ SNew(SButton).Text(LOCTEXT("AddMedia", "Content Browser 선택 항목 추가")).OnClicked(this, &SUPTMainPanel::AddSelectedMedia) ]
+            [ SNew(SButton).Text(LOCTEXT("AddMedia", "Add Content Browser selection")).OnClicked(this, &SUPTMainPanel::AddSelectedMedia) ]
             + SHorizontalBox::Slot().AutoWidth()
-            [ SNew(SButton).Text(LOCTEXT("ClearMedia", "비우기")).OnClicked(this, &SUPTMainPanel::ClearMedia) ]
+            [ SNew(SButton).Text(LOCTEXT("ClearMedia", "Clear")).OnClicked(this, &SUPTMainPanel::ClearMedia) ]
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 4, 0, 0)
         [ SNew(STextBlock).AutoWrapText(true).Text_Lambda([this] { return GetMediaText(); }) ]
 
         // ③ 생성
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 4)[ MakeStepHeader(LOCTEXT("Step3", "③ 생성")) ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 4)[ MakeStepHeader(LOCTEXT("Step3", "(3) Generate")) ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 0, 0, 0)
         [
             SNew(SHorizontalBox)
@@ -581,15 +581,15 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                 [
                     SNew(STextBlock)
                     .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
-                    .Text_Lambda([this] { return IsGenerationInFlight() ? LOCTEXT("Generating", "생성 중...") : LOCTEXT("Generate", "시네마틱 생성"); })
+                    .Text_Lambda([this] { return IsGenerationInFlight() ? LOCTEXT("Generating", "Generating...") : LOCTEXT("Generate", "Generate cinematic"); })
                 ]
             ]
             + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(12, 0, 0, 0)
-            [ SAssignNew(StatusText, STextBlock).AutoWrapText(true).Text(LOCTEXT("Ready", "등장인물과 레퍼런스 영상(또는 대본)을 준비한 뒤 생성하세요.")) ]
+            [ SAssignNew(StatusText, STextBlock).AutoWrapText(true).Text(LOCTEXT("Ready", "Set up the cast and a reference video (or a script), then generate.")) ]
         ]
 
         // ④ 결과 검토
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 4)[ MakeStepHeader(LOCTEXT("Step4", "④ 결과 검토")) ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 4)[ MakeStepHeader(LOCTEXT("Step4", "(4) Review")) ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 0, 0, 4)
         [
             SNew(SHorizontalBox)
@@ -598,11 +598,11 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                 SNew(STextBlock).Text_Lambda([this]
                 {
                     const ULevelSequence* Sequence = LastCreatedSequence.Get();
-                    return Sequence ? FText::FromString(Sequence->GetPathName()) : LOCTEXT("NoSequence", "아직 생성된 시네마틱이 없습니다.");
+                    return Sequence ? FText::FromString(Sequence->GetPathName()) : LOCTEXT("NoSequence", "No cinematic has been generated yet.");
                 })
             ]
             + SHorizontalBox::Slot().AutoWidth()
-            [ SNew(SButton).Text(LOCTEXT("OpenSequence", "Sequencer에서 열기")).IsEnabled_Lambda([this] { return LastCreatedSequence.IsValid(); }).OnClicked(this, &SUPTMainPanel::OpenLastSequence) ]
+            [ SNew(SButton).Text(LOCTEXT("OpenSequence", "Open in Sequencer")).IsEnabled_Lambda([this] { return LastCreatedSequence.IsValid(); }).OnClicked(this, &SUPTMainPanel::OpenLastSequence) ]
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 0, 0, 4)
         [
@@ -619,13 +619,13 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                 (
                     SNew(SHeaderRow)
                     + SHeaderRow::Column(ShotColumnIndex).DefaultLabel(LOCTEXT("ColIndex", "#")).FixedWidth(32.0f)
-                    + SHeaderRow::Column(ShotColumnName).DefaultLabel(LOCTEXT("ColName", "샷")).FillWidth(0.3f)
-                    + SHeaderRow::Column(ShotColumnDuration).DefaultLabel(LOCTEXT("ColDuration", "길이")).FixedWidth(64.0f)
-                    + SHeaderRow::Column(ShotColumnLens).DefaultLabel(LOCTEXT("ColLens", "렌즈")).FixedWidth(64.0f)
-                    + SHeaderRow::Column(ShotColumnSubject).DefaultLabel(LOCTEXT("ColSubject", "피사체")).FillWidth(0.25f)
-                    + SHeaderRow::Column(ShotColumnScreen).DefaultLabel(LOCTEXT("ColScreen", "화면 위치")).FixedWidth(90.0f)
-                    + SHeaderRow::Column(ShotColumnMotion).DefaultLabel(LOCTEXT("ColMotion", "카메라 모션")).FillWidth(0.2f)
-                    + SHeaderRow::Column(ShotColumnConfidence).DefaultLabel(LOCTEXT("ColConfidence", "신뢰도")).FixedWidth(72.0f)
+                    + SHeaderRow::Column(ShotColumnName).DefaultLabel(LOCTEXT("ColName", "Shot")).FillWidth(0.3f)
+                    + SHeaderRow::Column(ShotColumnDuration).DefaultLabel(LOCTEXT("ColDuration", "Length")).FixedWidth(64.0f)
+                    + SHeaderRow::Column(ShotColumnLens).DefaultLabel(LOCTEXT("ColLens", "Lens")).FixedWidth(64.0f)
+                    + SHeaderRow::Column(ShotColumnSubject).DefaultLabel(LOCTEXT("ColSubject", "Subject")).FillWidth(0.25f)
+                    + SHeaderRow::Column(ShotColumnScreen).DefaultLabel(LOCTEXT("ColScreen", "Screen position")).FixedWidth(90.0f)
+                    + SHeaderRow::Column(ShotColumnMotion).DefaultLabel(LOCTEXT("ColMotion", "Camera motion")).FillWidth(0.2f)
+                    + SHeaderRow::Column(ShotColumnConfidence).DefaultLabel(LOCTEXT("ColConfidence", "Confidence")).FixedWidth(72.0f)
                 )
             ]
         ]
@@ -633,16 +633,16 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 4, 0)
-            [ SNew(SButton).Text(LOCTEXT("PlayShot", "선택 샷 재생")).ToolTipText(LOCTEXT("PlayShotTip", "샷 목록에서 행을 더블클릭해도 재생됩니다.")).IsEnabled_Lambda([this] { return LastCreatedSequence.IsValid(); }).OnClicked(this, &SUPTMainPanel::PlaySelectedShot) ]
+            [ SNew(SButton).Text(LOCTEXT("PlayShot", "Play selected shot")).ToolTipText(LOCTEXT("PlayShotTip", "Double-clicking a row in the shot list plays it as well.")).IsEnabled_Lambda([this] { return LastCreatedSequence.IsValid(); }).OnClicked(this, &SUPTMainPanel::PlaySelectedShot) ]
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 4, 0)
-            [ SNew(SButton).Text(LOCTEXT("CaptureCamera", "수정한 카메라 구도 보존")).ToolTipText(LOCTEXT("CaptureCameraTip", "Sequencer에서 카메라를 옮긴 뒤 누르면 다음 생성 때 같은 구도가 유지됩니다.")).IsEnabled_Lambda([this] { return LastCreatedSequence.IsValid(); }).OnClicked(this, &SUPTMainPanel::CaptureCurrentShotCamera) ]
+            [ SNew(SButton).Text(LOCTEXT("CaptureCamera", "Keep my camera adjustments")).ToolTipText(LOCTEXT("CaptureCameraTip", "Press this after moving a camera in Sequencer and the same framing is kept on the next generation.")).IsEnabled_Lambda([this] { return LastCreatedSequence.IsValid(); }).OnClicked(this, &SUPTMainPanel::CaptureCurrentShotCamera) ]
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 4, 0)
-            [ SNew(SButton).Text(LOCTEXT("AnalyzeComposition", "구도 점검")).ToolTipText(LOCTEXT("AnalyzeCompositionTip", "머리 잘림, 피사체 크기, 가림 여부를 샷별로 점검합니다.")).IsEnabled_Lambda([this] { return bHasValidPlan; }).OnClicked(this, &SUPTMainPanel::AnalyzeComposition) ]
+            [ SNew(SButton).Text(LOCTEXT("AnalyzeComposition", "Check framing")).ToolTipText(LOCTEXT("AnalyzeCompositionTip", "Checks each shot for head cropping, subject size and occlusion.")).IsEnabled_Lambda([this] { return bHasValidPlan; }).OnClicked(this, &SUPTMainPanel::AnalyzeComposition) ]
             + SHorizontalBox::Slot().AutoWidth()
             [
                 SNew(SButton)
-                .Text(LOCTEXT("OpenPoseDebug", "포즈 분석 이미지 열기"))
-                .ToolTipText(LOCTEXT("OpenPoseDebugTip", "레퍼런스 영상에서 검출한 인물 박스·관절·조준점을 샷별 이미지로 확인합니다."))
+                .Text(LOCTEXT("OpenPoseDebug", "Open pose analysis images"))
+                .ToolTipText(LOCTEXT("OpenPoseDebugTip", "Shows the detected person boxes, joints and aim points from the reference video as one image per shot."))
                 .Visibility_Lambda([this] { return LastPoseDebugDirectory.IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible; })
                 .OnClicked(this, &SUPTMainPanel::OpenPoseDebugFolder)
             ]
@@ -654,7 +654,7 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
             .Visibility_Lambda([this] { return bHasValidPlan && CurrentPlan.Shots.IsValidIndex(CurrentShotIndex) ? EVisibility::Visible : EVisibility::Collapsed; })
             .AreaTitle_Lambda([this]
             {
-                return FText::Format(LOCTEXT("ShotEditTitle", "선택한 샷 수정 — {0}번 {1}"), FText::AsNumber(CurrentShotIndex + 1),
+                return FText::Format(LOCTEXT("ShotEditTitle", "Edit selected shot - #{0} {1}"), FText::AsNumber(CurrentShotIndex + 1),
                     FText::FromString(CurrentPlan.Shots.IsValidIndex(CurrentShotIndex) ? CurrentPlan.Shots[CurrentShotIndex].Name : FString()));
             })
             .BodyContent()
@@ -663,24 +663,24 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(STextBlock).AutoWrapText(true)
-                    .Text(LOCTEXT("ShotEditHelp", "샷 목록에서 고른 샷만 고칩니다. 샷 크기·앵글을 바꾸면 렌즈·거리·높이를 레퍼런스 생성과 같은 식으로 다시 계산하고, 숫자 칸으로 미세 조정할 수 있습니다. '이 샷에 적용'을 누르면 같은 시퀀스를 그 자리에서 갱신하고 그 샷을 재생합니다."))
+                    .Text(LOCTEXT("ShotEditHelp", "Edits only the shot picked in the list. Changing the shot size or angle recomputes the lens, distance and height the same way reference generation does, and the number fields let you fine-tune. 'Apply to this shot' updates the same sequence in place and plays that shot."))
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(SHorizontalBox)
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
-                    [ MakeLabeledField(LOCTEXT("EditSize", "샷 크기"), MakeOptionCombo(&ShotSizeOptions, [this] { return EditShotSize; }, [this](const FString& Id) { PreviewShotSize(Id); }, &ShotSizeLabel), 140.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditSize", "Shot size"), MakeOptionCombo(&ShotSizeOptions, [this] { return EditShotSize; }, [this](const FString& Id) { PreviewShotSize(Id); }, &ShotSizeLabel), 140.0f) ]
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
-                    [ MakeLabeledField(LOCTEXT("EditAngle", "앵글"), MakeOptionCombo(&CameraAngleOptions, [this] { return EditCameraAngle; }, [this](const FString& Id) { EditCameraAngle = Id; bEditFramingChanged = true; }, &CameraAngleLabel), 120.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditAngle", "Angle"), MakeOptionCombo(&CameraAngleOptions, [this] { return EditCameraAngle; }, [this](const FString& Id) { EditCameraAngle = Id; bEditFramingChanged = true; }, &CameraAngleLabel), 120.0f) ]
                     + SHorizontalBox::Slot().AutoWidth()
-                    [ MakeLabeledField(LOCTEXT("EditMotion", "카메라 모션"), MakeOptionCombo(&CameraMotionOptions, [this] { return EditCameraMotion; }, [this](const FString& Id) { EditCameraMotion = Id; }, &CameraMotionLabel), 130.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditMotion", "Camera motion"), MakeOptionCombo(&CameraMotionOptions, [this] { return EditCameraMotion; }, [this](const FString& Id) { EditCameraMotion = Id; }, &CameraMotionLabel), 130.0f) ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(SHorizontalBox)
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
                     [
-                        MakeLabeledField(LOCTEXT("EditSubject", "대상 인물"),
+                        MakeLabeledField(LOCTEXT("EditSubject", "Subject"),
                             SAssignNew(SubjectCombo, SComboBox<TSharedPtr<FString>>)
                             .OptionsSource(&SubjectOptions)
                             .OnGenerateWidget_Lambda([](TSharedPtr<FString> Option) { return SNew(STextBlock).Text(FText::FromString(Option.IsValid() ? *Option : FString())); })
@@ -689,18 +689,18 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                             160.0f)
                     ]
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
-                    [ MakeLabeledField(LOCTEXT("EditDuration", "길이(초)"), MakeFloatSpin(0.1f, 120.0f, 0.1f, [this] { return EditDuration; }, [this](const float Value) { EditDuration = Value; }), 80.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditDuration", "Length (s)"), MakeFloatSpin(0.1f, 120.0f, 0.1f, [this] { return EditDuration; }, [this](const float Value) { EditDuration = Value; }), 80.0f) ]
                     + SHorizontalBox::Slot().AutoWidth()
-                    [ MakeLabeledField(LOCTEXT("EditFocal", "렌즈(mm)"), MakeFloatSpin(8.0f, 200.0f, 1.0f, [this] { return EditFocalLength; }, [this](const float Value) { EditFocalLength = Value; }), 80.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditFocal", "Lens (mm)"), MakeFloatSpin(8.0f, 200.0f, 1.0f, [this] { return EditFocalLength; }, [this](const float Value) { EditFocalLength = Value; }), 80.0f) ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(SHorizontalBox)
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
                     [
-                        MakeLabeledField(LOCTEXT("EditOverShoulder", "어깨 너머 앞사람"),
+                        MakeLabeledField(LOCTEXT("EditOverShoulder", "Over-the-shoulder foreground"),
                             SAssignNew(OverShoulderCombo, SComboBox<TSharedPtr<FString>>)
-                            .ToolTipText(LOCTEXT("EditOverShoulderTip", "고르면 카메라를 그 Actor의 어깨 뒤에 두고 주 피사체를 찍습니다. 거리·방위각 대신 앞사람 위치로 카메라를 계산하고, 렌즈로 샷 크기를 유지합니다."))
+                            .ToolTipText(LOCTEXT("EditOverShoulderTip", "Puts the camera behind that Actor's shoulder and shoots the main subject. The camera is computed from the foreground Actor's position instead of distance and azimuth, and the lens keeps the shot size."))
                             .OptionsSource(&OverShoulderOptions)
                             .OnGenerateWidget_Lambda([](TSharedPtr<FString> Option) { return SNew(STextBlock).Text(FText::FromString(Option.IsValid() && !Option->IsEmpty() ? *Option : FString(TEXT("(일반 샷)")))); })
                             .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Option, ESelectInfo::Type) { if (Option.IsValid()) EditOverShoulderActor = *Option; })
@@ -709,9 +709,9 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                     ]
                     + SHorizontalBox::Slot().AutoWidth()
                     [
-                        MakeLabeledField(LOCTEXT("EditOverShoulderSide", "앞사람 위치"),
+                        MakeLabeledField(LOCTEXT("EditOverShoulderSide", "Foreground side"),
                             MakeOptionCombo(&OverShoulderSideOptions, [this] { return EditOverShoulderSide; }, [this](const FString& Id) { EditOverShoulderSide = Id; },
-                                [](const FString& Id) { return Id == TEXT("left") ? LOCTEXT("OverShoulderLeft", "화면 왼쪽") : LOCTEXT("OverShoulderRight", "화면 오른쪽"); }),
+                                [](const FString& Id) { return Id == TEXT("left") ? LOCTEXT("OverShoulderLeft", "Screen left") : LOCTEXT("OverShoulderRight", "Screen right"); }),
                             100.0f)
                     ]
                 ]
@@ -719,13 +719,13 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                 [
                     SNew(SHorizontalBox)
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
-                    [ MakeLabeledField(LOCTEXT("EditScreenX", "화면 가로"), MakeFloatSpin(0.02f, 0.98f, 0.01f, [this] { return EditScreenX; }, [this](const float Value) { EditScreenX = Value; }), 70.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditScreenX", "Screen X"), MakeFloatSpin(0.02f, 0.98f, 0.01f, [this] { return EditScreenX; }, [this](const float Value) { EditScreenX = Value; }), 70.0f) ]
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
-                    [ MakeLabeledField(LOCTEXT("EditScreenY", "화면 세로"), MakeFloatSpin(0.02f, 0.98f, 0.01f, [this] { return EditScreenY; }, [this](const float Value) { EditScreenY = Value; }), 70.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditScreenY", "Screen Y"), MakeFloatSpin(0.02f, 0.98f, 0.01f, [this] { return EditScreenY; }, [this](const float Value) { EditScreenY = Value; }), 70.0f) ]
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
-                    [ MakeLabeledField(LOCTEXT("EditAzimuth", "방위각(°)"), MakeFloatSpin(-75.0f, 75.0f, 1.0f, [this] { return EditAzimuth; }, [this](const float Value) { EditAzimuth = Value; }), 70.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditAzimuth", "Azimuth (deg)"), MakeFloatSpin(-75.0f, 75.0f, 1.0f, [this] { return EditAzimuth; }, [this](const float Value) { EditAzimuth = Value; }), 70.0f) ]
                     + SHorizontalBox::Slot().AutoWidth()
-                    [ MakeLabeledField(LOCTEXT("EditDistance", "거리(cm)"), MakeFloatSpin(50.0f, 10000.0f, 5.0f, [this] { return EditDistance; }, [this](const float Value) { EditDistance = Value; }), 90.0f) ]
+                    [ MakeLabeledField(LOCTEXT("EditDistance", "Distance (cm)"), MakeFloatSpin(50.0f, 10000.0f, 5.0f, [this] { return EditDistance; }, [this](const float Value) { EditDistance = Value; }), 90.0f) ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
@@ -736,13 +736,13 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                         {
                             const TWeakObjectPtr<UAnimSequenceBase>* Animation = Animations.Find(EditAnimationId);
                             const FString Name = EditAnimationId.IsEmpty() ? TEXT("없음") : (Animation && Animation->IsValid() ? Animation->Get()->GetName() : EditAnimationId);
-                            return FText::Format(LOCTEXT("EditAnimation", "애니메이션: {0}"), FText::FromString(Name));
+                            return FText::Format(LOCTEXT("EditAnimation", "Animation: {0}"), FText::FromString(Name));
                         })
                     ]
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 4, 0)
-                    [ SNew(SButton).Text(LOCTEXT("AssignAnimation", "Content Browser 선택 애니메이션 적용")).OnClicked(this, &SUPTMainPanel::AssignSelectedAnimationToShot) ]
+                    [ SNew(SButton).Text(LOCTEXT("AssignAnimation", "Apply Content Browser animation")).OnClicked(this, &SUPTMainPanel::AssignSelectedAnimationToShot) ]
                     + SHorizontalBox::Slot().AutoWidth()
-                    [ SNew(SButton).Text(LOCTEXT("ClearAnimation", "애니메이션 빼기")).OnClicked(this, &SUPTMainPanel::ClearShotAnimation) ]
+                    [ SNew(SButton).Text(LOCTEXT("ClearAnimation", "Remove animation")).OnClicked(this, &SUPTMainPanel::ClearShotAnimation) ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4, 6, 4, 4)
                 [
@@ -750,12 +750,12 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
                     [
                         SNew(SButton)
-                        .Text(LOCTEXT("ApplyShotEdit", "이 샷에 적용하고 시퀀스 갱신"))
+                        .Text(LOCTEXT("ApplyShotEdit", "Apply to this shot and update the sequence"))
                         .IsEnabled_Lambda([this] { return !IsGenerationInFlight() && LastCreatedSequence.IsValid(); })
                         .OnClicked(this, &SUPTMainPanel::ApplyShotEdit)
                     ]
                     + SHorizontalBox::Slot().AutoWidth()
-                    [ SNew(SButton).Text(LOCTEXT("ResetShotEdit", "되돌리기(현재 값 다시 읽기)")).OnClicked_Lambda([this] { LoadShotEditor(); return FReply::Handled(); }) ]
+                    [ SNew(SButton).Text(LOCTEXT("ResetShotEdit", "Revert (re-read current values)")).OnClicked_Lambda([this] { LoadShotEditor(); return FReply::Handled(); }) ]
                 ]
             ]
         ]
@@ -763,7 +763,7 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
         [
             SNew(SBox)
             .HeightOverride(120)
-            [ SAssignNew(ReportOutput, SMultiLineEditableTextBox).IsReadOnly(true).HintText(LOCTEXT("ReportHint", "분석 결과와 오류 상세가 여기에 표시됩니다.")) ]
+            [ SAssignNew(ReportOutput, SMultiLineEditableTextBox).IsReadOnly(true).HintText(LOCTEXT("ReportHint", "Analysis results and error details appear here.")) ]
         ]
 
         // 고급
@@ -771,16 +771,16 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
         [
             SNew(SExpandableArea)
             .InitiallyCollapsed(true)
-            .AreaTitle(LOCTEXT("Advanced", "고급 설정 (역할 매핑)"))
+            .AreaTitle(LOCTEXT("Advanced", "Advanced (role mapping)"))
             .BodyContent()
             [
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
-                [ SNew(STextBlock).AutoWrapText(true).Text(LOCTEXT("RoleHelp", "역할 → Actor 매핑 — 영상 속 인물이 엉뚱한 Actor에 배정될 때만 입력하세요.")) ]
+                [ SNew(STextBlock).AutoWrapText(true).Text(LOCTEXT("RoleHelp", "Role to Actor mapping - fill this in only when a person in the video is assigned to the wrong Actor.")) ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(SBox).HeightOverride(58)
-                    [ SAssignNew(ReferenceRoleMappingInput, SMultiLineEditableTextBox).HintText(LOCTEXT("RoleHint", "예: {\"main_character\":\"Hero\",\"enemy\":\"Boss\"}")) ]
+                    [ SAssignNew(ReferenceRoleMappingInput, SMultiLineEditableTextBox).HintText(LOCTEXT("RoleHint", "e.g. {\"main_character\":\"Hero\",\"enemy\":\"Boss\"}")) ]
                 ]
             ]
         ]
@@ -793,13 +793,13 @@ TSharedRef<SWidget> SUPTMainPanel::BuildAnimationTab()
     + SScrollBox::Slot().Padding(12, 8)
     [
         SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 6)[ MakeStepHeader(LOCTEXT("AnimTitle", "다른 캐릭터의 애니메이션을 내 캐릭터에 맞게 변환")) ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 6)[ MakeStepHeader(LOCTEXT("AnimTitle", "Convert another character's animation to fit mine")) ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 0, 0, 8)
         [
             SNew(STextBlock).AutoWrapText(true).Text(LOCTEXT("AnimGuide",
-                "1. Content Browser에서 애니메이션을 적용할 대상 Skeletal Mesh를 선택합니다.\n"
-                "2. 아래 버튼(또는 메시 우클릭 > 애니메이션 범용화)으로 창을 열고, 변환할 애니메이션을 골라 일괄 리타기팅합니다.\n"
-                "MetaHuman · UE Mannequin · Mixamo 등 휴머노이드 본 구조는 자동으로 인식합니다."))
+                "1. In the Content Browser, select the Skeletal Mesh the animations should be applied to.\n"
+                "2. Open the window with the button below (or right-click the mesh > Universal Animation Retarget), pick the animations and retarget them in one batch.\n"
+                "Humanoid bone structures such as MetaHuman, UE Mannequin and Mixamo are recognized automatically."))
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(16, 0, 0, 4)
         [
@@ -809,42 +809,42 @@ TSharedRef<SWidget> SUPTMainPanel::BuildAnimationTab()
                 SNew(SButton)
                 .ContentPadding(FMargin(28.0f, 8.0f))
                 .OnClicked(this, &SUPTMainPanel::OpenRetargetWindowForSelection)
-                [ SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Bold", 12)).Text(LOCTEXT("OpenRetarget", "선택한 Skeletal Mesh로 범용화 창 열기")) ]
+                [ SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Bold", 12)).Text(LOCTEXT("OpenRetarget", "Open the retarget window for the selected Skeletal Mesh")) ]
             ]
             + SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(12, 0, 0, 0)
-            [ SAssignNew(AnimationStatusText, STextBlock).AutoWrapText(true).Text(LOCTEXT("AnimReady", "준비됨")) ]
+            [ SAssignNew(AnimationStatusText, STextBlock).AutoWrapText(true).Text(LOCTEXT("AnimReady", "Ready")) ]
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(0, 16, 0, 8)
         [
             SNew(SExpandableArea)
             .InitiallyCollapsed(true)
-            .AreaTitle(LOCTEXT("BoneFixTitle", "고급: 본 매핑 수동 보정 (자동 인식 실패 시)"))
+            .AreaTitle(LOCTEXT("BoneFixTitle", "Advanced: manual bone mapping (when auto-detection fails)"))
             .BodyContent()
             [
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(STextBlock).AutoWrapText(true).Text(LOCTEXT("BoneFixHelp",
-                        "범용화 창에서 '본 구조 인식 실패'가 뜬 메시에만 사용합니다. Content Browser에서 그 메시를 선택해 분석하고, "
-                        "틀린 본만 JSON으로 고쳐 저장하면 범용화 창이 자동으로 이 보정값을 사용합니다."))
+                        "Use this only for a mesh the retarget window reported as 'bone structure not recognized'. Select that mesh in the Content Browser and analyze it, "
+                        "then fix only the wrong bones as JSON and save - the retarget window picks the correction up automatically."))
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(SHorizontalBox)
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 4, 0)
-                    [ SNew(SButton).Text(LOCTEXT("AnalyzeMesh", "선택 메시 분석")).OnClicked(this, &SUPTMainPanel::AnalyzeSelectedSkeleton) ]
+                    [ SNew(SButton).Text(LOCTEXT("AnalyzeMesh", "Analyze selected mesh")).OnClicked(this, &SUPTMainPanel::AnalyzeSelectedSkeleton) ]
                     + SHorizontalBox::Slot().AutoWidth()
-                    [ SNew(SButton).Text(LOCTEXT("SaveOverride", "보정값 저장")).OnClicked(this, &SUPTMainPanel::SaveSkeletonOverride) ]
+                    [ SNew(SButton).Text(LOCTEXT("SaveOverride", "Save correction")).OnClicked(this, &SUPTMainPanel::SaveSkeletonOverride) ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(SBox).HeightOverride(80)
-                    [ SAssignNew(SkeletonOverrideInput, SMultiLineEditableTextBox).HintText(LOCTEXT("OverrideHint", "틀린 본만 입력. 예: {\"Pelvis\":\"pelvis\",\"LeftHand\":\"hand_l\"}")) ]
+                    [ SAssignNew(SkeletonOverrideInput, SMultiLineEditableTextBox).HintText(LOCTEXT("OverrideHint", "Enter only the wrong bones. e.g. {\"Pelvis\":\"pelvis\",\"LeftHand\":\"hand_l\"}")) ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(4)
                 [
                     SNew(SBox).HeightOverride(220)
-                    [ SAssignNew(SkeletonReportOutput, SMultiLineEditableTextBox).IsReadOnly(true).HintText(LOCTEXT("SkeletonReportHint", "분석 결과가 여기에 표시됩니다.")) ]
+                    [ SAssignNew(SkeletonReportOutput, SMultiLineEditableTextBox).IsReadOnly(true).HintText(LOCTEXT("SkeletonReportHint", "Analysis results appear here.")) ]
                 ]
             ]
         ]
@@ -896,7 +896,7 @@ FText SUPTMainPanel::GetCastText() const
         if (Pair.Value.IsValid()) Labels.Add(Pair.Key);
     }
     Labels.Sort();
-    if (Labels.IsEmpty()) return LOCTEXT("NoCast", "레벨 뷰포트에서 등장인물 Actor를 선택하세요 (여러 명은 Ctrl+클릭).");
+    if (Labels.IsEmpty()) return LOCTEXT("NoCast", "Select the cast Actors in the level viewport (Ctrl+click for several).");
     return FText::FromString(FString::Join(Labels, TEXT(", ")) + (bCastLocked
         ? TEXT("   — 마지막 생성에 사용 중 (고정됨)")
         : TEXT("   — 레벨 선택이 자동 반영됩니다")));
@@ -990,7 +990,7 @@ FText SUPTMainPanel::GetMediaText() const
     }
     Labels.Sort();
     return Labels.IsEmpty()
-        ? LOCTEXT("NoMedia", "없음 — 캐릭터 동작이나 대사를 넣으려면 Content Browser에서 선택 후 추가하세요.")
+        ? LOCTEXT("NoMedia", "None - to add character motion or dialogue, select assets in the Content Browser and add them.")
         : FText::FromString(FString::Join(Labels, TEXT(", ")));
 }
 

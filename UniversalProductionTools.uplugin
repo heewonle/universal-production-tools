@@ -8,14 +8,38 @@
   "CreatedBy": "Heewon Lee",
   "DocsURL": "https://github.com/heewonle/universal-production-tools",
   "SupportURL": "https://github.com/heewonle/universal-production-tools/issues",
-  "CanContainContent": false,
+  "CanContainContent": true,
   "EnabledByDefault": false,
   "IsBetaVersion": true,
-  "Modules": [{ "Name": "UniversalProductionTools", "Type": "Editor", "LoadingPhase": "Default" }],
+  "Modules": [
+    {
+      "Name": "UniversalProductionTools",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "LocalizationTargets": [
+    {
+      "Name": "UPT",
+      "LoadingPolicy": "Editor"
+    }
+  ],
   "Plugins": [
-    { "Name": "LevelSequenceEditor", "Enabled": true },
-    { "Name": "SequencerScripting", "Enabled": true },
-    { "Name": "IKRig", "Enabled": true },
-    { "Name": "ControlRig", "Enabled": true }
+    {
+      "Name": "LevelSequenceEditor",
+      "Enabled": true
+    },
+    {
+      "Name": "SequencerScripting",
+      "Enabled": true
+    },
+    {
+      "Name": "IKRig",
+      "Enabled": true
+    },
+    {
+      "Name": "ControlRig",
+      "Enabled": true
+    }
   ]
 }
