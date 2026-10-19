@@ -22,6 +22,9 @@ public:
     UPROPERTY(Config, EditAnywhere, Category="Skeleton") FString DefaultRetargeterPath;
     // 리타기팅된 애니메이션이 생성될 폴더. 비워 두면 엔진 기본값(/Game 루트)으로 떨어진다.
     UPROPERTY(Config, EditAnywhere, Category="Skeleton") FString DefaultRetargetedAnimationPath;
+    // 일괄 변환 결과는 만들어지기만 하고 디스크에 저장되지 않는다. 저장하지 않은 채 에디터를
+    // 닫으면 **50개를 변환해 놓고 전부 잃는다.** 리비전 컨트롤 체크아웃 없이 로컬 저장만 한다.
+    UPROPERTY(Config, EditAnywhere, Category="Skeleton", meta=(DisplayName="Save Generated Assets", ToolTip="일괄 리타기팅으로 만든 애니메이션·IK Rig·리타기터를 변환 직후 디스크에 저장합니다. 끄면 에디터를 저장 없이 닫을 때 결과가 사라집니다.")) bool bSaveGeneratedAssets = true;
     UPROPERTY(Config, EditAnywhere, Category="Reference Video", meta=(DisplayName="FFmpeg Executable")) FString FFmpegExecutablePath;
     UPROPERTY(Config, EditAnywhere, Category="Reference Video", meta=(ClampMin="0.1", ClampMax="10.0")) float ReferenceFrameIntervalSeconds = 1.0f;
     UPROPERTY(Config, EditAnywhere, Category="Reference Video", meta=(ClampMin="1", ClampMax="300")) int32 MaxReferenceFrames = 120;

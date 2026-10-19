@@ -23,7 +23,10 @@
 #include "Dom/JsonObject.h"
 #include "HAL/IConsoleManager.h"
 #include "Misc/FileHelper.h"
+#include "Misc/PackageName.h"
 #include "Misc/Paths.h"
+#include "UObject/Package.h"
+#include "UObject/SavePackage.h"
 #include "Serialization/JsonSerializer.h"
 #include "Styling/CoreStyle.h"
 #include "Subsystems/AssetEditorSubsystem.h"
@@ -61,11 +64,60 @@ USkeletalMesh* ResolveSourceMesh(USkeleton* Skeleton)
     return nullptr;
 }
 
+/**
+ * 만들어 둔 에셋을 디스크에 저장한다.
+ *
+ * 리타기팅 결과는 메모리에만 있고 더티 표시만 된다. 에디터 도구로서는 흔한 동작이지만,
+ * **일괄 변환 50개를 만들고 저장 없이 닫으면 전부 사라진다.** 품질 리포트를 별도 세션에서
+ * 돌렸을 때 35쌍을 하나도 열지 못해 알았다 — 디스크에 있었던 적이 없었다.
+ *
+ * 리비전 컨트롤은 건드리지 않는다(체크아웃 없이 로컬 저장만). 읽기 전용 파일은 그대로 두고
+ * 실패로 센다 — 사용자의 소스 컨트롤 상태를 도구가 임의로 바꾸지 않는다.
+ *
+ * @return 저장한 패키지 수. OutFailed에는 저장하지 못한 에셋 이름이 담긴다.
+ */
+int32 SaveAssetsToDisk(const TArray<UObject*>& Assets, TArray<FString>& OutFailed)
+{
+    if (!GetDefault<UUPTSettings>()->bSaveGeneratedAssets) return 0;
+
+    TSet<UPackage*> Packages;
+    for (UObject* Asset : Assets)
+    {
+        if (UPackage* Package = Asset ? Asset->GetOutermost() : nullptr)
+        {
+            if (Package->IsDirty()) Packages.Add(Package);
+        }
+    }
+
+    int32 Saved = 0;
+    for (UPackage* Package : Packages)
+    {
+        const FString FileName = FPackageName::LongPackageNameToFilename(
+            Package->GetName(), FPackageName::GetAssetPackageExtension());
+        FSavePackageArgs Args;
+        Args.TopLevelFlags = RF_Public | RF_Standalone;
+        Args.SaveFlags = SAVE_NoError | SAVE_KeepDirty;  // 실패해도 더티를 유지해 사용자가 다시 저장할 수 있다
+        const FSavePackageResultStruct Result = UPackage::Save(Package, nullptr, *FileName, Args);
+        if (Result.IsSuccessful())
+        {
+            Package->SetDirtyFlag(false);
+            ++Saved;
+        }
+        else
+        {
+            OutFailed.Add(FPackageName::GetShortName(Package->GetName()));
+        }
+    }
+    return Saved;
+}
+
 // 엔진의 DuplicateAndRetarget 편의 함수는 출력 폴더를 받지 않아 결과가 FNameDuplicationRule의
 // 기본값인 /Game 루트에 떨어진다. 설정의 폴더로 떨어지도록 컨텍스트를 직접 채워 돌린다.
 TArray<FAssetData> RetargetIntoSettingsFolder(
     const TArray<FAssetData>& AssetsToRetarget, USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh,
-    UIKRetargeter* Retargeter, const FString& Suffix)
+    UIKRetargeter* Retargeter, const FString& Suffix,
+    // 저장 결과를 패널이 사용자에게 보여 줄 수 있도록 돌려준다. 콘솔 경로는 쓰지 않는다.
+    int32* OutSavedCount = nullptr, TArray<FString>* OutSaveFailures = nullptr)
 {
     FIKRetargetBatchOperationContext Context;
     for (const FAssetData& Asset : AssetsToRetarget)
@@ -120,6 +172,27 @@ TArray<FAssetData> RetargetIntoSettingsFolder(
             FUPTTwistMotionBaker::Bake(SourceSequence, SourceMesh, TargetSequence, TargetMesh);
         }
     }
+
+    // 베이커가 키를 쓴 **뒤에** 저장한다. 먼저 저장하면 베이킹 전 상태가 디스크에 남는다.
+    // 리타기터와 그 IK Rig도 같이 저장한다. 이것들이 없으면 다음 세션에서 결과를 열어도
+    // 'IK Retargeter 열기'로 비교할 수 없다.
+    TArray<UObject*> ToSave;
+    for (const FAssetData& Result : Results) if (UObject* Asset = Result.GetAsset()) ToSave.Add(Asset);
+    if (Retargeter)
+    {
+        ToSave.Add(Retargeter);
+        if (UIKRigDefinition* SourceRig = Retargeter->GetIKRigWriteable(ERetargetSourceOrTarget::Source)) ToSave.Add(SourceRig);
+        if (UIKRigDefinition* TargetRig = Retargeter->GetIKRigWriteable(ERetargetSourceOrTarget::Target)) ToSave.Add(TargetRig);
+    }
+    TArray<FString> Failed;
+    const int32 Saved = SaveAssetsToDisk(ToSave, Failed);
+    if (Saved > 0 || !Failed.IsEmpty())
+    {
+        UE_LOG(LogUPTRetarget, Log, TEXT("UPT_RETARGET_SAVE %d개 저장, 실패 %d개%s"),
+            Saved, Failed.Num(), Failed.IsEmpty() ? TEXT("") : *(TEXT(": ") + FString::Join(Failed, TEXT(", "))));
+    }
+    if (OutSavedCount) *OutSavedCount += Saved;
+    if (OutSaveFailures) OutSaveFailures->Append(Failed);
     return Results;
 }
 
@@ -361,7 +434,9 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
     }
 
     int32 CreatedCount = 0;
+    int32 SavedCount = 0;
     TArray<FString> Errors;
+    TArray<FString> SaveFailures;
     TArray<FUPTRetargetQualityRow> QualityRows;
     for (const TPair<USkeletalMesh*, TArray<FAssetData>>& Pair : AssetsBySourceMesh)
     {
@@ -372,7 +447,8 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
         for (const FAssetData& SourceAsset : Pair.Value) LastSourceAnimationNames.Add(SourceAsset.AssetName.ToString());
 
         const FString Suffix = TEXT("_") + Target->GetName();
-        const TArray<FAssetData> Results = RetargetIntoSettingsFolder(Pair.Value, Pair.Key, Target, Retargeter, Suffix);
+        const TArray<FAssetData> Results = RetargetIntoSettingsFolder(
+            Pair.Value, Pair.Key, Target, Retargeter, Suffix, &SavedCount, &SaveFailures);
         CreatedCount += Results.Num();
         for (const FAssetData& Result : Results) if (UObject* Asset = Result.GetAsset()) LastGeneratedAssets.Add(Asset);
 
@@ -396,6 +472,20 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
 
     FString Summary = FString::Printf(TEXT("'%s'용 %d개 생성, 그대로 사용 가능 %d개"), *Target->GetName(), CreatedCount, DirectlyCompatible);
     if (!Skipped.IsEmpty()) Summary += FString::Printf(TEXT(", 원본 메시를 찾지 못해 건너뜀 %d개"), Skipped.Num());
+    // 저장했는지 아닌지를 분명히 적는다. 저장되지 않은 결과는 에디터를 닫으면 사라진다.
+    if (!GetDefault<UUPTSettings>()->bSaveGeneratedAssets)
+    {
+        Summary += TEXT("\n저장하지 않음(설정 'Save Generated Assets'가 꺼져 있습니다) — 에디터를 닫기 전에 직접 저장하세요.");
+    }
+    else if (!SaveFailures.IsEmpty())
+    {
+        Summary += FString::Printf(TEXT("\n디스크 저장 %d개, 실패 %d개: %s"),
+            SavedCount, SaveFailures.Num(), *FString::Join(SaveFailures, TEXT(", ")));
+    }
+    else
+    {
+        Summary += FString::Printf(TEXT("\n디스크 저장 %d개"), SavedCount);
+    }
     if (!Errors.IsEmpty())
     {
         SetStatus(Summary + TEXT("\n실패: ") + FString::Join(Errors, TEXT("\n")), FLinearColor::Red);

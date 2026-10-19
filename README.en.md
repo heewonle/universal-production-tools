@@ -51,6 +51,11 @@ Quality check: 7 of 35 need review
   · A_MOD_GBL_Run_F_Neut_Polygonal_Golem — fingers 43.9° (threshold 25°)
 ```
 
+The results are also **written to disk**. They used to be created and left dirty, so closing the
+editor without saving threw away a whole batch — found by running the quality report from a separate
+session and failing to open all 35 pairs. Animations, retargeter and IK Rigs are saved after baking
+finishes; revision control is left alone (read-only files are counted as failures and reported).
+
 No single blended score: each metric has its own threshold, and the ones that crossed are reported
 **by name and value**. The in-product measurement was then checked against the development suite on
 **the same 35 pairs** — largest difference 0.05°, which is the width of the suite's one-decimal
