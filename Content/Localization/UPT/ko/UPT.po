@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: UPT\n"
-"POT-Creation-Date: 2026-10-19 06:24\n"
-"PO-Revision-Date: 2026-10-19 06:24\n"
+"POT-Creation-Date: 2026-10-19 06:39\n"
+"PO-Revision-Date: 2026-10-19 06:39\n"
 "Language-Team: \n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
@@ -13,89 +13,1062 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#. Key:	ErrNoMesh
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(212)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(212)
+msgctxt "UPTAnimationRetargetWindow,ErrNoMesh"
+msgid "No source or target Skeletal Mesh."
+msgstr "Source 또는 Target Skeletal Mesh가 없습니다."
+
+#. Key:	ManualOverrideFirst
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(220)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(220)
+msgctxt "UPTAnimationRetargetWindow,ManualOverrideFirst"
+msgid "manual correction takes precedence"
+msgstr "수동 보정값 우선"
+
+#. Key:	ErrSourceUnrecognized
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(240)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(240)
+msgctxt "UPTAnimationRetargetWindow,ErrSourceUnrecognized"
+msgid "Source '{0}': bone structure not recognized (engine: {1} / fallback readiness {2}%). {3}"
+msgstr "원본 '{0}' 본 구조 인식 실패 (엔진 인식: {1} / 보조 분석 준비도 {2}%). {3}"
+
+#. Key:	ErrTargetUnrecognized
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(247)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(247)
+msgctxt "UPTAnimationRetargetWindow,ErrTargetUnrecognized"
+msgid "Target '{0}': bone structure not recognized (engine: {1} / fallback readiness {2}%). {3}"
+msgstr "대상 '{0}' 본 구조 인식 실패 (엔진 인식: {1} / 보조 분석 준비도 {2}%). {3}"
+
+#. Key:	PostureQuadruped
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(264)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(264)
+msgctxt "UPTAnimationRetargetWindow,PostureQuadruped"
+msgid "quadruped or non-upright"
+msgstr "사족·비직립"
+
+#. Key:	PostureUpright
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(264)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(264)
+msgctxt "UPTAnimationRetargetWindow,PostureUpright"
+msgid "upright biped"
+msgstr "직립 이족"
+
+#. Key:	ErrPostureMismatch
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(265)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(265)
+msgctxt "UPTAnimationRetargetWindow,ErrPostureMismatch"
+msgid "The pair has different postures: source '{0}' is {1} (hand height {2}), target '{3}' is {4} (hand height {5}). The role names map on both sides, but when the postures differ the same role does a different job and the result breaks."
+msgstr "자세가 다른 쌍입니다: 원본 '{0}'는 {1}(손 높이 {2}), 대상 '{3}'는 {4}(손 높이 {5}). 역할 이름은 양쪽 다 매핑되지만 자세가 다르면 같은 역할이 다른 일을 하므로 결과가 망가집니다."
+
 #. Key:	TargetMesh
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(313)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(313)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(320)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(320)
 msgctxt "UPTAnimationRetargetWindow,TargetMesh"
 msgid "Target mesh: {0}"
 msgstr "대상 메시: {0}"
 
 #. Key:	Guide
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(316)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(316)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(323)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(323)
 msgctxt "UPTAnimationRetargetWindow,Guide"
 msgid "(1) Pick animations (Ctrl/Shift for several)  ->  (2) Pre-flight check  ->  (3) Batch retarget  ->  (4) Compare source and target"
 msgstr "① 변환할 애니메이션 선택 (Ctrl/Shift로 여러 개)  →  ② 사전 점검  →  ③ 일괄 리타기팅  →  ④ 원본/대상 비교"
 
 #. Key:	NoSelection
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(320)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(320)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(327)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(327)
 msgctxt "UPTAnimationRetargetWindow,NoSelection"
 msgid "No animation selected"
 msgstr "선택된 애니메이션 없음"
 
 #. Key:	Ready
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(322)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(322)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(329)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(329)
 msgctxt "UPTAnimationRetargetWindow,Ready"
 msgid "Set up the cast and a reference video (or a script), then generate."
 msgstr "준비됨"
 
 #. Key:	Close
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(327)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(327)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(334)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(334)
 msgctxt "UPTAnimationRetargetWindow,Close"
 msgid "Close"
 msgstr "닫기"
 
 #. Key:	Validate
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(329)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(329)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(336)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(336)
 msgctxt "UPTAnimationRetargetWindow,Validate"
 msgid "(2) Pre-flight check"
 msgstr "② 사전 점검"
 
 #. Key:	Retarget
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(331)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(331)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(338)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(338)
 msgctxt "UPTAnimationRetargetWindow,Retarget"
 msgid "(3) Batch retarget the selected animations"
 msgstr "③ 선택 애니메이션 일괄 리타기팅"
 
 #. Key:	OpenResults
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(333)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(333)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(340)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(340)
 msgctxt "UPTAnimationRetargetWindow,OpenResults"
 msgid "Open generated assets"
 msgstr "생성 결과 열기"
 
 #. Key:	Compare
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(337)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(337)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(344)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(344)
 msgctxt "UPTAnimationRetargetWindow,Compare"
 msgid "(4) Compare source and target"
 msgstr "④ 원본/대상 비교"
 
 #. Key:	CompareTooltip
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(338)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(338)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(345)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(345)
 msgctxt "UPTAnimationRetargetWindow,CompareTooltip"
 msgid "Opens the IK Retargeter used by the last retarget so you can compare source and target motion side by side."
 msgstr "마지막 리타기팅에 사용한 IK Retargeter를 열어 원본과 대상 동작을 나란히 비교합니다."
 
 #. Key:	NoSelection2
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(350)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(350)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(357)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(357)
 msgctxt "UPTAnimationRetargetWindow,NoSelection2"
 msgid "No animation selected"
 msgstr "선택된 애니메이션 없음"
 
 #. Key:	SelectionCount
-#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(350)
-#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(350)
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(357)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(357)
 msgctxt "UPTAnimationRetargetWindow,SelectionCount"
 msgid "{0} animations selected"
 msgstr "{0}개 애니메이션 선택됨"
+
+#. Key:	CheckNoMesh
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(364)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(364)
+msgctxt "UPTAnimationRetargetWindow,CheckNoMesh"
+msgid "Check failed: no target Skeletal Mesh or Skeleton."
+msgstr "점검 실패: 대상 Skeletal Mesh 또는 Skeleton이 없습니다."
+
+#. Key:	CheckNoSelection
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(366)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(366)
+msgctxt "UPTAnimationRetargetWindow,CheckNoSelection"
+msgid "Check failed: select at least one Animation Sequence to convert."
+msgstr "점검 실패: 변환할 Animation Sequence를 하나 이상 선택하세요."
+
+#. Key:	CheckNoSkeleton
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(375)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(375)
+msgctxt "UPTAnimationRetargetWindow,CheckNoSkeleton"
+msgid ": no Skeleton"
+msgstr ": Skeleton 없음"
+
+#. Key:	CheckNoSourceMesh
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(378)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(378)
+msgctxt "UPTAnimationRetargetWindow,CheckNoSourceMesh"
+msgid ": source character mesh not found"
+msgstr ": 원본 캐릭터 메시를 찾지 못함"
+
+#. Key:	CheckLowReadiness
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(384)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(384)
+msgctxt "UPTAnimationRetargetWindow,CheckLowReadiness"
+msgid "{0}: fallback readiness {1}% - a manual correction is needed if engine auto-detection fails"
+msgstr "{0}: 보조 분석 준비도 {1}% — 엔진 자동 인식이 실패하면 수동 보정이 필요합니다"
+
+#. Key:	CheckNeedsAttention
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(392)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(392)
+msgctxt "UPTAnimationRetargetWindow,CheckNeedsAttention"
+msgid "Needs attention: "
+msgstr "확인 필요: "
+
+#. Key:	CheckPassed
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(396)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(396)
+msgctxt "UPTAnimationRetargetWindow,CheckPassed"
+msgid "Check passed: {0} usable as-is, {1} source characters need conversion."
+msgstr "점검 통과: 그대로 사용 가능 {0}개, 변환이 필요한 원본 캐릭터 {1}종."
+
+#. Key:	NoAssetEditorSubsystem
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(404)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(404)
+msgctxt "UPTAnimationRetargetWindow,NoAssetEditorSubsystem"
+msgid "The Asset Editor Subsystem is not available."
+msgstr "Asset Editor Subsystem을 사용할 수 없습니다."
+
+#. Key:	NoResultsToOpen
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(410)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(410)
+msgctxt "UPTAnimationRetargetWindow,NoResultsToOpen"
+msgid "There are no generated assets to open."
+msgstr "열 수 있는 생성 결과가 없습니다."
+
+#. Key:	OpenedResults
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(410)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(410)
+msgctxt "UPTAnimationRetargetWindow,OpenedResults"
+msgid "Opened {0} generated assets."
+msgstr "생성 결과 {0}개를 열었습니다."
+
+#. Key:	NoTargetOrPicker
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(422)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(422)
+msgctxt "UPTAnimationRetargetWindow,NoTargetOrPicker"
+msgid "The target mesh or the animation picker is not available."
+msgstr "대상 메시 또는 애니메이션 선택기를 사용할 수 없습니다."
+
+#. Key:	SelectAtLeastOne
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(425)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(425)
+msgctxt "UPTAnimationRetargetWindow,SelectAtLeastOne"
+msgid "Select at least one Animation Sequence to convert."
+msgstr "변환할 Animation Sequence를 하나 이상 선택하세요."
+
+#. Key:	RetargetSummary
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(480)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(480)
+msgctxt "UPTAnimationRetargetWindow,RetargetSummary"
+msgid "'{0}': {1} created, {2} usable as-is"
+msgstr "'{0}'용 {1}개 생성, 그대로 사용 가능 {2}개"
+
+#. Key:	RetargetSkipped
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(481)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(481)
+msgctxt "UPTAnimationRetargetWindow,RetargetSkipped"
+msgid ", {0} skipped because the source mesh was not found"
+msgstr ", 원본 메시를 찾지 못해 건너뜀 {0}개"
+
+#. Key:	NotSaved
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(485)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(485)
+msgctxt "UPTAnimationRetargetWindow,NotSaved"
+msgid "\nNot saved ('Save Generated Assets' is off in the settings) - save them yourself before closing the editor."
+msgstr "\\\n저장하지 않음(설정 'Save Generated Assets'가 꺼져 있습니다) — 에디터를 닫기 전에 직접 저장하세요."
+
+#. Key:	SavedWithFailures
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(489)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(489)
+msgctxt "UPTAnimationRetargetWindow,SavedWithFailures"
+msgid "\nSaved {0} to disk, {1} failed: {2}"
+msgstr "\\\n디스크 저장 {0}개, 실패 {1}개: {2}"
+
+#. Key:	ManualFixHintText
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(49)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(49)
+msgctxt "UPTAnimationRetargetWindow,ManualFixHintText"
+msgid "Correct this mesh in Universal Production Tools > Universal animation retarget tab > 'Advanced: manual bone mapping'."
+msgstr "Universal Production Tools > 애니메이션 범용화 탭 > '고급: 본 매핑 수동 보정'에서 이 메시를 보정하세요."
+
+#. Key:	SavedCount
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(494)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(494)
+msgctxt "UPTAnimationRetargetWindow,SavedCount"
+msgid "\nSaved {0} to disk"
+msgstr "\\\n디스크 저장 {0}개"
+
+#. Key:	FailurePrefix
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(498)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(498)
+msgctxt "UPTAnimationRetargetWindow,FailurePrefix"
+msgid "\nFailed: "
+msgstr "\\\n실패: "
+
+#. Key:	ReviewMore
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(518)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(518)
+msgctxt "UPTAnimationRetargetWindow,ReviewMore"
+msgid "\n  and {0} more (the full list is in the report file)"
+msgstr "\\\n  · 외 {0}개 (전체는 리포트 파일에)"
+
+#. Key:	ReportPrefix
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(520)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(520)
+msgctxt "UPTAnimationRetargetWindow,ReportPrefix"
+msgid "\nReport: "
+msgstr "\\\n리포트: "
+
+#. Key:	DonePrefix
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(523)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(523)
+msgctxt "UPTAnimationRetargetWindow,DonePrefix"
+msgid "Done: "
+msgstr "완료: "
+
+#. Key:	NothingToCompare
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(548)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(548)
+msgctxt "UPTAnimationRetargetWindow,NothingToCompare"
+msgid "There is nothing to compare. Run a batch retarget first."
+msgstr "비교할 결과가 없습니다. 먼저 일괄 리타기팅을 실행하세요."
+
+#. Key:	OpenedComparison
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(552)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTAnimationRetargetWindow.cpp(552)
+msgctxt "UPTAnimationRetargetWindow,OpenedComparison"
+msgid "Opened {0} comparison windows. Play the source animation ({1}) from the IK Retargeter's Asset Browser."
+msgstr "비교 창 {0}개를 열었습니다. IK Retargeter의 Asset Browser에서 원본 애니메이션({1})을 재생하세요."
+
+#. Key:	MotionDollyIn
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(100)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(100)
+msgctxt "SUPTMainPanel,MotionDollyIn"
+msgid "Dolly in"
+msgstr "돌리 인"
+
+#. Key:	MotionDollyOut
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(100)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(100)
+msgctxt "SUPTMainPanel,MotionDollyOut"
+msgid "Dolly out"
+msgstr "돌리 아웃"
+
+#. Key:	MotionZoomIn
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(100)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(100)
+msgctxt "SUPTMainPanel,MotionZoomIn"
+msgid "Zoom in"
+msgstr "줌 인"
+
+#. Key:	NeedCast
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1004)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1004)
+msgctxt "SUPTMainPanel,NeedCast"
+msgid "(1) Pick the cast first - click the character Actors in the level viewport."
+msgstr "① 등장인물을 먼저 선택하세요. 레벨 뷰포트에서 캐릭터 Actor를 클릭하면 됩니다."
+
+#. Key:	MotionTruckLeft
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(101)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(101)
+msgctxt "SUPTMainPanel,MotionTruckLeft"
+msgid "Truck left"
+msgstr "트럭 왼쪽"
+
+#. Key:	MotionTruckRight
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(101)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(101)
+msgctxt "SUPTMainPanel,MotionTruckRight"
+msgid "Truck right"
+msgstr "트럭 오른쪽"
+
+#. Key:	MotionZoomOut
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(101)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(101)
+msgctxt "SUPTMainPanel,MotionZoomOut"
+msgid "Zoom out"
+msgstr "줌 아웃"
+
+#. Key:	NeedPromptLong
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1017)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1017)
+msgctxt "SUPTMainPanel,NeedPromptLong"
+msgid "(2) Describe the staging you are looking for. e.g. open on a two-shot, talk over the shoulder, end on a close-up"
+msgstr "② 찾고 싶은 연출을 글로 적어 주세요. 예: 투샷으로 시작해 어깨 너머로 대화, 클로즈업으로 마무리"
+
+#. Key:	MotionOrbit
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(102)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(102)
+msgctxt "SUPTMainPanel,MotionOrbit"
+msgid "Orbit"
+msgstr "궤도"
+
+#. Key:	MotionPedestalUp
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(102)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(102)
+msgctxt "SUPTMainPanel,MotionPedestalUp"
+msgid "Pedestal (up)"
+msgstr "페데스탈(상승)"
+
+#. Key:	MotionTracking
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(102)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(102)
+msgctxt "SUPTMainPanel,MotionTracking"
+msgid "Tracking"
+msgstr "트래킹"
+
+#. Key:	MotionHandheld
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(103)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(103)
+msgctxt "SUPTMainPanel,MotionHandheld"
+msgid "Handheld"
+msgstr "핸드헬드"
+
+#. Key:	ProgUseResult
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1032)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1032)
+msgctxt "SUPTMainPanel,ProgUseResult"
+msgid "[2/4] Using search result #{0} '{1}' ({2}) as the reference."
+msgstr "[2/4] 검색 결과 {0}위 '{1}' ({2})를 레퍼런스로 씁니다."
+
+#. Key:	NeedJson
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1044)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1044)
+msgctxt "SUPTMainPanel,NeedJson"
+msgid "(2) Paste a JSON into the Shot Plan JSON box."
+msgstr "② Shot Plan JSON 칸에 JSON을 붙여넣으세요."
+
+#. Key:	NeedScript
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1055)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1055)
+msgctxt "SUPTMainPanel,NeedScript"
+msgid "(2) Enter a script or staging directions."
+msgstr "② 대본이나 연출 지시를 입력하세요."
+
+#. Key:	NoApiKey
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1060)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1060)
+msgctxt "SUPTMainPanel,NoApiKey"
+msgid "No API key, so the LLM cannot be called. Set the environment variable as described above."
+msgstr "API 키가 없어 LLM을 호출할 수 없습니다. 상단 안내에 따라 환경변수를 설정하세요."
+
+#. Key:	ProgLlmPlan
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1064)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1064)
+msgctxt "SUPTMainPanel,ProgLlmPlan"
+msgid "[1/3] The LLM is building the shot plan..."
+msgstr "[1/3] LLM이 샷 구성을 만드는 중입니다..."
+
+#. Key:	ProgLinkPose
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1082)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1082)
+msgctxt "SUPTMainPanel,ProgLinkPose"
+msgid "[1/4] Fetching the linked video and running local pose analysis (download -> cut detection -> person and joint detection). This can take a few minutes depending on the video length and your connection..."
+msgstr "[1/4] 링크 영상을 받아 로컬 포즈 분석 중입니다 (다운로드 → 컷 검출 → 인물·관절 검출). 영상 길이와 인터넷 속도에 따라 몇 분 걸릴 수 있습니다..."
+
+#. Key:	NeedVideo
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1089)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1089)
+msgctxt "SUPTMainPanel,NeedVideo"
+msgid "(2) Pick a reference video with 'Choose video...'."
+msgstr "② '영상 선택...'으로 레퍼런스 영상을 고르세요."
+
+#. Key:	ProgLocalPose
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1101)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1101)
+msgctxt "SUPTMainPanel,ProgLocalPose"
+msgid "[1/4] Running local pose analysis (cut detection -> person and joint detection). Takes tens of seconds to a few minutes depending on the video length..."
+msgstr "[1/4] 로컬 포즈 분석 중입니다 (컷 검출 → 인물·관절 검출). 영상 길이에 따라 수십 초~몇 분 걸립니다..."
+
+#. Key:	NoFFmpeg
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1107)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1107)
+msgctxt "SUPTMainPanel,NoFFmpeg"
+msgid "FFmpeg was not found. Install it or set its path as described above."
+msgstr "FFmpeg를 찾지 못했습니다. 상단 안내에 따라 설치하거나 경로를 지정하세요."
+
+#. Key:	ProgExtractFrames
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1113)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1113)
+msgctxt "SUPTMainPanel,ProgExtractFrames"
+msgid "[1/4] Extracting representative frames and cut boundaries from the video..."
+msgstr "[1/4] 영상에서 대표 프레임과 컷 경계를 추출하는 중입니다..."
+
+#. Key:	ProgReuseAnalysis
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1130)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1130)
+msgctxt "SUPTMainPanel,ProgReuseAnalysis"
+msgid "[2/4] Reusing the previous analysis of the same video."
+msgstr "[2/4] 같은 영상의 이전 분석 결과를 재사용합니다."
+
+#. Key:	NoVisionKey
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1136)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1136)
+msgctxt "SUPTMainPanel,NoVisionKey"
+msgid "The API key needed for video analysis is missing. Set the environment variable as described above."
+msgstr "영상 분석에 필요한 API 키가 없습니다. 상단 안내에 따라 환경변수를 설정하세요."
+
+#. Key:	ProgVisionAnalyze
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1139)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1139)
+msgctxt "SUPTMainPanel,ProgVisionAnalyze"
+msgid "[2/4] Analyzing {0} candidate cuts with the vision model..."
+msgstr "[2/4] {0}개 컷 후보를 Vision 모델로 분석하는 중입니다..."
+
+#. Key:	ErrVideoAnalysisFormat
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1156)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1156)
+msgctxt "SUPTMainPanel,ErrVideoAnalysisFormat"
+msgid "The video analysis result is not in the expected format: {0}"
+msgstr "영상 분석 결과 형식이 올바르지 않습니다: {0}"
+
+#. Key:	ErrPoseAnalysisFormat
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1189)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1189)
+msgctxt "SUPTMainPanel,ErrPoseAnalysisFormat"
+msgid "The pose analysis result is not in the expected format: {0}"
+msgstr "포즈 분석 결과 형식이 올바르지 않습니다: {0}"
+
+#. Key:	ProgPoseDone
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1198)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1198)
+msgctxt "SUPTMainPanel,ProgPoseDone"
+msgid "[2/4] Pose analysis finished."
+msgstr "[2/4] 포즈 분석을 마쳤습니다."
+
+#. Key:	ProgReusePose
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1198)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1198)
+msgctxt "SUPTMainPanel,ProgReusePose"
+msgid "[2/4] Reusing the pose analysis of the same video."
+msgstr "[2/4] 같은 영상의 포즈 분석 결과를 재사용합니다."
+
+#. Key:	LibraryFolderTitle
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1208)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1208)
+msgctxt "SUPTMainPanel,LibraryFolderTitle"
+msgid "Reference video library folder"
+msgstr "레퍼런스 영상 라이브러리 폴더"
+
+#. Key:	NeedPrompt
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1235)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1235)
+msgctxt "SUPTMainPanel,NeedPrompt"
+msgid "(2) Describe the staging you are looking for."
+msgstr "② 찾고 싶은 연출을 글로 적어 주세요."
+
+#. Key:	NeedLibraryFolder
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1252)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1252)
+msgctxt "SUPTMainPanel,NeedLibraryFolder"
+msgid "(2) Point 'Choose folder...' at the folder that holds your reference videos."
+msgstr "② '폴더 선택...'으로 레퍼런스 영상을 모아 둔 폴더를 지정하세요."
+
+#. Key:	ProgLibrarySearch
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1257)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1257)
+msgctxt "SUPTMainPanel,ProgLibrarySearch"
+msgid "[1/4] Searching the reference library. The first run, or a run after adding videos, analyzes each video and can take a few minutes..."
+msgstr "[1/4] 레퍼런스 라이브러리를 검색하는 중입니다. 처음이거나 영상을 새로 넣었다면 영상마다 포즈 분석을 하므로 몇 분 걸릴 수 있습니다..."
+
+#. Key:	ErrLibraryResult
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1276)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1276)
+msgctxt "SUPTMainPanel,ErrLibraryResult"
+msgid "Could not read the library search result."
+msgstr "라이브러리 검색 결과를 읽지 못했습니다."
+
+#. Key:	ReportPromptRead
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1281)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1281)
+msgctxt "SUPTMainPanel,ReportPromptRead"
+msgid "[Prompt as read]\n"
+msgstr "[프롬프트 해석]\\\n"
+
+#. Key:	OverShoulderWord
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1299)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1299)
+msgctxt "SUPTMainPanel,OverShoulderWord"
+msgid "over the shoulder"
+msgstr "어깨 너머"
+
+#. Key:	PeopleCount
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1300)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1300)
+msgctxt "SUPTMainPanel,PeopleCount"
+msgid "{0} people"
+msgstr "{0}명"
+
+#. Key:	ReportKeywordOnly
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1306)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1306)
+msgctxt "SUPTMainPanel,ReportKeywordOnly"
+msgid "No shot size, angle, camera motion or head count was recognized, so the search used file-name keywords only.\n"
+msgstr "샷 크기·앵글·카메라 모션·인원 표현을 찾지 못해 파일 이름 키워드로만 찾았습니다.\\\n"
+
+#. Key:	ReportResults
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1308)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1308)
+msgctxt "SUPTMainPanel,ReportResults"
+msgid "\n[Search results]\n"
+msgstr "\\\n[검색 결과]\\\n"
+
+#. Key:	ShotRange
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1329)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1329)
+msgctxt "SUPTMainPanel,ShotRange"
+msgid "shots {0}-{1} ({2}-{3}s)"
+msgstr "샷 {0}~{1} ({2}~{3}초)"
+
+#. Key:	ReportRow
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1346)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1346)
+msgctxt "SUPTMainPanel,ReportRow"
+msgid "#{0} {1} pts  {2}  {3}  matched shots: {4}\n"
+msgstr "{0}위 {1}점  {2}  {3}  맞춘 샷: {4}\\\n"
+
+#. Key:	LibraryNoMatch
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1360)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1360)
+msgctxt "SUPTMainPanel,LibraryNoMatch"
+msgid "No similar segment was found in the library. Try different wording, or add more videos."
+msgstr "라이브러리에서 비슷한 구간을 찾지 못했습니다. 표현을 바꾸거나 영상을 더 넣어 보세요."
+
+#. Key:	LibrarySearchDone
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1365)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1365)
+msgctxt "SUPTMainPanel,LibrarySearchDone"
+msgid "Search finished: {0} results. Pick one from the list (the top one by default) and press 'Generate cinematic'."
+msgstr "검색 완료: {0}개 결과. 목록에서 고른 뒤(기본 1위) '시네마틱 생성'을 누르세요."
+
+#. Key:	ProgUseTopResult
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1374)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1374)
+msgctxt "SUPTMainPanel,ProgUseTopResult"
+msgid "[2/4] Using the top result '{0}' ({1}, {2} pts) as the reference."
+msgstr "[2/4] 1위 '{0}' ({1}, {2}점)를 레퍼런스로 씁니다."
+
+#. Key:	ErrSegmentFile
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1383)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1383)
+msgctxt "SUPTMainPanel,ErrSegmentFile"
+msgid "Could not read the reference segment file from the search result. Search again."
+msgstr "검색 결과의 레퍼런스 구간 파일을 읽지 못했습니다. 다시 검색하세요."
+
+#. Key:	ErrSegmentFormat
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1390)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1390)
+msgctxt "SUPTMainPanel,ErrSegmentFormat"
+msgid "The reference segment is not in the expected format: {0}"
+msgstr "레퍼런스 구간 형식이 올바르지 않습니다: {0}"
+
+#. Key:	RankLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1408)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1408)
+msgctxt "SUPTMainPanel,RankLabel"
+msgid "#{0}"
+msgstr "{0}위"
+
+#. Key:	ScoreLabel
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1410)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1410)
+msgctxt "SUPTMainPanel,ScoreLabel"
+msgid "{0} pts"
+msgstr "{0}점"
+
+#. Key:	ProgAssignCast
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1448)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1448)
+msgctxt "SUPTMainPanel,ProgAssignCast"
+msgid "[3/4] Assigning the people in the video to the cast and computing cameras..."
+msgstr "[3/4] 영상 속 인물을 등장인물에 배정하고 카메라를 계산하는 중입니다..."
+
+#. Key:	WarnLowConfidence
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1473)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1473)
+msgctxt "SUPTMainPanel,WarnLowConfidence"
+msgid " [note] {0} shots have low analysis confidence: {1} - play them back and adjust with 'Edit selected shot'."
+msgstr " [주의] 분석 신뢰도가 낮은 샷 {0}개: {1} — 재생해 보고 '선택한 샷 수정'으로 손보세요."
+
+#. Key:	NotePersonless
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1478)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1478)
+msgctxt "SUPTMainPanel,NotePersonless"
+msgid " {0} shots without a person (distant views, inserts) were placed relative to the first cast member."
+msgstr " 인물이 없는 샷 {0}개(원경·인서트 등)는 첫 등장인물 기준으로 배치했습니다."
+
+#. Key:	ProgBuildSequence
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1484)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1484)
+msgctxt "SUPTMainPanel,ProgBuildSequence"
+msgid "[4/4] Building the Level Sequence..."
+msgstr "[4/4] Level Sequence를 만드는 중입니다..."
+
+#. Key:	ProgCompareFraming
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1501)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1501)
+msgctxt "SUPTMainPanel,ProgCompareFraming"
+msgid "[4/4] Comparing the camera framing against the reference... (measurement 1/{0})"
+msgstr "[4/4] 카메라 구도를 레퍼런스와 비교하는 중입니다... (측정 1/{0})"
+
+#. Key:	ProgRefineFraming
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1509)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1509)
+msgctxt "SUPTMainPanel,ProgRefineFraming"
+msgid "[4/4] Refining the camera framing... measurement {0}/{1}, current score {2}"
+msgstr "[4/4] 카메라 구도 자동 보정 중... 측정 {0}/{1}, 현재 점수 {2}"
+
+#. Key:	ErrFramingCheck
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1543)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1543)
+msgctxt "SUPTMainPanel,ErrFramingCheck"
+msgid " (framing check failed: "
+msgstr " (구도 검증 실패: "
+
+#. Key:	FramingScore
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1548)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1548)
+msgctxt "SUPTMainPanel,FramingScore"
+msgid "{0} - framing score against the reference {1} / 100"
+msgstr "{0} — 레퍼런스 대비 구도 점수 {1} / 100"
+
+#. Key:	ErrNoVideoAnalysis
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1557)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1557)
+msgctxt "SUPTMainPanel,ErrNoVideoAnalysis"
+msgid "There is no video analysis result."
+msgstr "영상 분석 결과가 없습니다."
+
+#. Key:	ErrRoleMappingJson
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1567)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1567)
+msgctxt "SUPTMainPanel,ErrRoleMappingJson"
+msgid "The role mapping JSON in the advanced settings is not valid."
+msgstr "고급 설정의 역할 매핑 JSON 형식이 올바르지 않습니다."
+
+#. Key:	ErrRoleMappingValue
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1575)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1575)
+msgctxt "SUPTMainPanel,ErrRoleMappingValue"
+msgid "The value of role mapping '{0}' must be a non-empty Actor label string."
+msgstr "역할 매핑 '{0}'의 값은 비어 있지 않은 Actor 라벨 문자열이어야 합니다."
+
+#. Key:	ProgValidatePlan
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1613)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1613)
+msgctxt "SUPTMainPanel,ProgValidatePlan"
+msgid "[2/3] Validating the shot plan..."
+msgstr "[2/3] 샷 구성을 검증하는 중입니다..."
+
+#. Key:	ErrLlmPlan
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1631)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1631)
+msgctxt "SUPTMainPanel,ErrLlmPlan"
+msgid "There is a problem with the shot plan the LLM produced - {0} (you can fix the Shot Plan JSON in (2) and generate again)"
+msgstr "LLM이 만든 샷 구성에 문제가 있습니다 — {0} (②의 Shot Plan JSON을 고쳐 다시 생성할 수 있습니다)"
+
+#. Key:	ProgBuildSequence3
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1634)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1634)
+msgctxt "SUPTMainPanel,ProgBuildSequence3"
+msgid "[3/3] Building the Level Sequence..."
+msgstr "[3/3] Level Sequence를 만드는 중입니다..."
+
+#. Key:	ReportAutoFix
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1642)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1642)
+msgctxt "SUPTMainPanel,ReportAutoFix"
+msgid "[Automatic corrections]\n"
+msgstr "[자동 보정]\\\n"
+
+#. Key:	NoteAutoFix
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1644)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1644)
+msgctxt "SUPTMainPanel,NoteAutoFix"
+msgid " ({0} automatic corrections to the LLM result)"
+msgstr " (LLM 결과 {0}곳 자동 보정)"
+
+#. Key:	ErrShotPlanJson
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1655)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1655)
+msgctxt "SUPTMainPanel,ErrShotPlanJson"
+msgid "Could not read the Shot Plan JSON: {0}"
+msgstr "Shot Plan JSON을 읽지 못했습니다: {0}"
+
+#. Key:	ErrSubjectMissing
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1664)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1664)
+msgctxt "SUPTMainPanel,ErrSubjectMissing"
+msgid "{0}: subject '{1}' is not in the cast."
+msgstr "{0}: subject '{1}'가 등장인물에 없습니다."
+
+#. Key:	ErrLookAtMissing
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1666)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1666)
+msgctxt "SUPTMainPanel,ErrLookAtMissing"
+msgid "{0}: look_at '{1}' is not in the cast."
+msgstr "{0}: look_at '{1}'가 등장인물에 없습니다."
+
+#. Key:	ErrAnimationMissing
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1668)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1668)
+msgctxt "SUPTMainPanel,ErrAnimationMissing"
+msgid "{0}: animation_id '{1}' is not in the animation list."
+msgstr "{0}: animation_id '{1}'가 애니메이션 목록에 없습니다."
+
+#. Key:	ErrLipSyncMissing
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1670)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1670)
+msgctxt "SUPTMainPanel,ErrLipSyncMissing"
+msgid "{0}: lip_sync_animation_id '{1}' is not in the animation list."
+msgstr "{0}: lip_sync_animation_id '{1}'가 애니메이션 목록에 없습니다."
+
+#. Key:	ErrAudioMissing
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1672)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1672)
+msgctxt "SUPTMainPanel,ErrAudioMissing"
+msgid "{0}: audio_id '{1}' is not in the audio list."
+msgstr "{0}: audio_id '{1}'가 오디오 목록에 없습니다."
+
+#. Key:	ErrValidation
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1679)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1679)
+msgctxt "SUPTMainPanel,ErrValidation"
+msgid "Validation failed: {0}"
+msgstr "검증 실패: {0}"
+
+#. Key:	ErrValidationMore
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1680)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1680)
+msgctxt "SUPTMainPanel,ErrValidationMore"
+msgid "Validation failed: {0} and {1} more (see the details below)"
+msgstr "검증 실패: {0} 외 {1}건 (아래 상세 참고)"
+
+#. Key:	ErrNoShotPlan
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1698)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1698)
+msgctxt "SUPTMainPanel,ErrNoShotPlan"
+msgid "There is no Shot Plan to generate from."
+msgstr "생성할 Shot Plan이 없습니다."
+
+#. Key:	ErrSafetyCheck
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1705)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1705)
+msgctxt "SUPTMainPanel,ErrSafetyCheck"
+msgid "The shot plan failed the safety check. See the details below."
+msgstr "샷 구성 안전성 검증에 실패했습니다. 아래 상세를 확인하세요."
+
+#. Key:	ErrPlanMismatch
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1715)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1715)
+msgctxt "SUPTMainPanel,ErrPlanMismatch"
+msgid "The cast or the animation/audio list does not match the Shot Plan. Check the lists and generate again."
+msgstr "등장인물이나 애니메이션·오디오 목록이 Shot Plan과 맞지 않습니다. 목록을 확인한 뒤 다시 생성하세요."
+
+#. Key:	GenerateDone
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1747)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1747)
+msgctxt "SUPTMainPanel,GenerateDone"
+msgid "Done: {0} - {1} shots. Double-click a row in the shot list to play that section.{2}"
+msgstr "완료: {0} — {1}개 샷. 샷 목록을 더블클릭하면 해당 구간을 재생합니다.{2}"
+
+#. Key:	SecondsValue
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1761)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1761)
+msgctxt "SUPTMainPanel,SecondsValue"
+msgid "{0}s"
+msgstr "{0}초"
+
+#. Key:	AbsoluteCoords
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1763)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1763)
+msgctxt "SUPTMainPanel,AbsoluteCoords"
+msgid "(absolute)"
+msgstr "(절대 좌표)"
+
+#. Key:	NoPerson
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1769)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1769)
+msgctxt "SUPTMainPanel,NoPerson"
+msgid "no person"
+msgstr "인물 없음"
+
+#. Key:	PickAnimationFirst
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1883)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1883)
+msgctxt "SUPTMainPanel,PickAnimationFirst"
+msgid "Select an Animation Sequence or Montage in the Content Browser first."
+msgstr "Content Browser에서 Animation Sequence 또는 Montage를 선택한 뒤 누르세요."
+
+#. Key:	ErrSkeletonMismatch
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1904)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1904)
+msgctxt "SUPTMainPanel,ErrSkeletonMismatch"
+msgid "'{0}' has a different skeleton from '{1}' and will not play as-is. Pick an animation retargeted in the 'Universal animation retarget' tab."
+msgstr "'{0}'는 '{1}'와 스켈레톤이 달라 그대로는 재생되지 않습니다. '애니메이션 범용화' 탭에서 리타기팅한 애니메이션을 고르세요."
+
+#. Key:	AnimationPicked
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1907)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1907)
+msgctxt "SUPTMainPanel,AnimationPicked"
+msgid "'{0}' is set as the animation for shot #{1}. Press 'Apply to this shot and update the sequence' to apply it."
+msgstr "'{0}'를 {1}번 샷 애니메이션으로 골랐습니다. '이 샷에 적용하고 시퀀스 갱신'을 누르면 반영됩니다."
+
+#. Key:	AnimationRemoved
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1914)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1914)
+msgctxt "SUPTMainPanel,AnimationRemoved"
+msgid "The animation was removed. Press 'Apply to this shot and update the sequence' to apply it."
+msgstr "애니메이션을 뺐습니다. '이 샷에 적용하고 시퀀스 갱신'을 누르면 반영됩니다."
+
+#. Key:	GenerateFirst
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1923)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1923)
+msgctxt "SUPTMainPanel,GenerateFirst"
+msgid "Generate a cinematic first."
+msgstr "먼저 시네마틱을 생성하세요."
+
+#. Key:	ErrShotEdit
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1992)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1992)
+msgctxt "SUPTMainPanel,ErrShotEdit"
+msgid "The edit to shot #{0} could not be applied and was reverted: {1}"
+msgstr "{0}번 샷 수정을 반영하지 못해 되돌렸습니다: {1}"
+
+#. Key:	ShotEditApplied
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1997)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(1997)
+msgctxt "SUPTMainPanel,ShotEditApplied"
+msgid "Applied the edit to shot #{0}, updated '{1}' in place and is playing it."
+msgstr "{0}번 샷 수정을 반영해 '{1}'를 그 자리에서 갱신하고 재생합니다."
+
+#. Key:	SequencerOpening
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2037)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2037)
+msgctxt "SUPTMainPanel,SequencerOpening"
+msgid "Sequencer is still opening. Try playing again in a moment."
+msgstr "Sequencer가 아직 열리는 중입니다. 잠시 후 다시 재생하세요."
+
+#. Key:	PlayingShot
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2046)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2046)
+msgctxt "SUPTMainPanel,PlayingShot"
+msgid "Playing shot #{0} '{1}' (frames {2}-{3})"
+msgstr "{0}번 샷 '{1}' 재생 중 ({2}~{3} 프레임)"
+
+#. Key:	OpenInSequencerFirst
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2060)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2060)
+msgctxt "SUPTMainPanel,OpenInSequencerFirst"
+msgid "Open the generated cinematic in Sequencer first."
+msgstr "생성된 시네마틱을 Sequencer에서 먼저 여세요."
+
+#. Key:	ErrNoCameraCut
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2067)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2067)
+msgctxt "SUPTMainPanel,ErrNoCameraCut"
+msgid "Could not find the Camera Cut for the selected shot."
+msgstr "선택한 샷의 Camera Cut을 찾지 못했습니다."
+
+#. Key:	ErrCameraNotEvaluated
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2082)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2082)
+msgctxt "SUPTMainPanel,ErrCameraNotEvaluated"
+msgid "The camera has not been evaluated yet. Play the shot once and try again."
+msgstr "카메라가 아직 평가되지 않았습니다. 샷을 한 번 재생한 뒤 다시 누르세요."
+
+#. Key:	CameraCaptured
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2112)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2112)
+msgctxt "SUPTMainPanel,CameraCaptured"
+msgid "The camera framing of shot #{0} was written into the Shot Plan JSON in (2). Generate again with 'Paste Shot Plan JSON' to use it."
+msgstr "{0}번 샷의 카메라 구도를 ②의 Shot Plan JSON에 보존했습니다. 'Shot Plan JSON 직접 입력'으로 다시 생성하면 반영됩니다."
+
+#. Key:	FramingCheckDone
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2124)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2124)
+msgctxt "SUPTMainPanel,FramingCheckDone"
+msgid "The per-shot framing check finished. See the results below."
+msgstr "샷별 구도 점검을 마쳤습니다. 아래 결과를 확인하세요."
+
+#. Key:	PickTargetMeshFirst
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2147)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2147)
+msgctxt "SUPTMainPanel,PickTargetMeshFirst"
+msgid "Select the target Skeletal Mesh for the animations in the Content Browser first."
+msgstr "Content Browser에서 애니메이션을 적용할 대상 Skeletal Mesh를 먼저 선택하세요."
+
+#. Key:	RetargetWindowOpened
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2151)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2151)
+msgctxt "SUPTMainPanel,RetargetWindowOpened"
+msgid "Opened the retarget window for '{0}'."
+msgstr "'{0}'용 범용화 창을 열었습니다."
+
+#. Key:	FixSoleCast
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(216)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(216)
+msgctxt "SUPTMainPanel,FixSoleCast"
+msgid "{0}: {1} '{2}' -> the only cast member '{3}'"
+msgstr "{0}: {1} '{2}' → 유일한 등장인물 '{3}'"
+
+#. Key:	PickMeshToCorrect
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2160)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2160)
+msgctxt "SUPTMainPanel,PickMeshToCorrect"
+msgid "Select the Skeletal Mesh to correct in the Content Browser."
+msgstr "Content Browser에서 보정할 Skeletal Mesh를 선택하세요."
+
+#. Key:	ErrOverrideJson
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2175)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2175)
+msgctxt "SUPTMainPanel,ErrOverrideJson"
+msgid "The correction JSON has an error. Check the errors in the analysis result."
+msgstr "보정 JSON에 오류가 있습니다. 분석 결과의 오류를 확인하세요."
+
+#. Key:	AnalysisDone
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2177)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2177)
+msgctxt "SUPTMainPanel,AnalysisDone"
+msgid "'{0}' analyzed - retarget readiness {1}%{2}"
+msgstr "'{0}' 분석 완료 — 리타기팅 준비도 {1}%{2}"
+
+#. Key:	FixBonesTo70
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2177)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2177)
+msgctxt "SUPTMainPanel,FixBonesTo70"
+msgid ". Correct the wrong bones until it reaches 70% or more."
+msgstr ". 70% 이상이 되도록 틀린 본을 보정하세요."
+
+#. Key:	SaveToUse
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2177)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2177)
+msgctxt "SUPTMainPanel,SaveToUse"
+msgid ". Save it and the retarget window will use it."
+msgstr ". 저장하면 범용화 창에서 사용할 수 있습니다."
+
+#. Key:	AnalyzeFirst
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2187)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2187)
+msgctxt "SUPTMainPanel,AnalyzeFirst"
+msgid "Press 'Analyze selected mesh' first."
+msgstr "먼저 '선택 메시 분석'을 누르세요."
+
+#. Key:	OverrideChanged
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2192)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2192)
+msgctxt "SUPTMainPanel,OverrideChanged"
+msgid "The correction changed after the analysis. Press 'Analyze selected mesh' again, then save."
+msgstr "보정값이 분석 후 바뀌었습니다. '선택 메시 분석'을 다시 누른 뒤 저장하세요."
+
+#. Key:	OverrideSaved
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2202)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(2202)
+msgctxt "SUPTMainPanel,OverrideSaved"
+msgid "Correction saved ({0}). The retarget window applies it to '{1}' automatically. Save the asset before closing the editor."
+msgstr "보정값을 저장했습니다({0}). 범용화 창이 '{1}'에 자동 적용합니다. 에디터를 닫기 전에 에셋을 저장하세요."
+
+#. Key:	FixEmptySubject
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(241)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(241)
+msgctxt "SUPTMainPanel,FixEmptySubject"
+msgid "{0}: subject was empty -> '{1}'"
+msgstr "{0}: subject 비어 있음 → '{1}'"
+
+#. Key:	FixDropAnimation
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(246)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(246)
+msgctxt "SUPTMainPanel,FixDropAnimation"
+msgid "{0}: removed unknown animation id '{1}'"
+msgstr "{0}: 없는 애니메이션 ID '{1}' 제거"
+
+#. Key:	FixDropAudio
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(248)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(248)
+msgctxt "SUPTMainPanel,FixDropAudio"
+msgid "{0}: removed unknown audio id '{1}'"
+msgstr "{0}: 없는 오디오 ID '{1}' 제거"
+
+#. Key:	FixUnknownMotion
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(257)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(257)
+msgctxt "SUPTMainPanel,FixUnknownMotion"
+msgid "{0}: unknown camera_motion '{1}' -> static"
+msgstr "{0}: 알 수 없는 camera_motion '{1}' → static"
 
 #. Key:	LowConfidenceTip
 #. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(295)
@@ -601,6 +1574,13 @@ msgctxt "SUPTMainPanel,EditSubject"
 msgid "Subject"
 msgstr "대상 인물"
 
+#. Key:	ValueNone
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(688)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(688)
+msgctxt "SUPTMainPanel,ValueNone"
+msgid "(none)"
+msgstr "(없음)"
+
 #. Key:	EditDuration
 #. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(692)
 #: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(692)
@@ -628,6 +1608,13 @@ msgstr "어깨 너머 앞사람"
 msgctxt "SUPTMainPanel,EditOverShoulderTip"
 msgid "Puts the camera behind that Actor's shoulder and shoots the main subject. The camera is computed from the foreground Actor's position instead of distance and azimuth, and the lens keeps the shot size."
 msgstr "고르면 카메라를 그 Actor의 어깨 뒤에 두고 주 피사체를 찍습니다. 거리·방위각 대신 앞사람 위치로 카메라를 계산하고, 렌즈로 샷 크기를 유지합니다."
+
+#. Key:	ValuePlainShot
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(705)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(705)
+msgctxt "SUPTMainPanel,ValuePlainShot"
+msgid "(plain shot)"
+msgstr "(일반 샷)"
 
 #. Key:	EditOverShoulderSide
 #. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(712)
@@ -677,6 +1664,13 @@ msgstr "방위각(°)"
 msgctxt "SUPTMainPanel,EditDistance"
 msgid "Distance (cm)"
 msgstr "거리(cm)"
+
+#. Key:	ValueNoneShort
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(738)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(738)
+msgctxt "SUPTMainPanel,ValueNoneShort"
+msgid "None"
+msgstr "없음"
 
 #. Key:	EditAnimation
 #. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(739)
@@ -853,6 +1847,13 @@ msgctxt "SUPTMainPanel,AngleLow"
 msgid "Low angle"
 msgstr "로우앵글"
 
+#. Key:	CastUnpinned
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(887)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(887)
+msgctxt "SUPTMainPanel,CastUnpinned"
+msgid "The cast is no longer pinned. Actors selected in the level become the cast."
+msgstr "등장인물 고정을 풀었습니다. 레벨에서 선택한 Actor가 등장인물로 반영됩니다."
+
 #. Key:	AngleEye
 #. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(89)
 #: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(89)
@@ -874,6 +1875,20 @@ msgctxt "SUPTMainPanel,AngleHigh"
 msgid "High angle"
 msgstr "하이앵글"
 
+#. Key:	CastPinned
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(901)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(901)
+msgctxt "SUPTMainPanel,CastPinned"
+msgid "   - in use by the last generation (pinned)"
+msgstr "   — 마지막 생성에 사용 중 (고정됨)"
+
+#. Key:	CastFollowsSelection
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(902)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(902)
+msgctxt "SUPTMainPanel,CastFollowsSelection"
+msgid "   - follows the level selection"
+msgstr "   — 레벨 선택이 자동 반영됩니다"
+
 #. Key:	AngleOverhead
 #. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(91)
 #: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(91)
@@ -881,12 +1896,75 @@ msgctxt "SUPTMainPanel,AngleOverhead"
 msgid "Overhead"
 msgstr "부감"
 
+#. Key:	NoFilePicker
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(911)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(911)
+msgctxt "SUPTMainPanel,NoFilePicker"
+msgid "The file picker is not available."
+msgstr "파일 선택기를 사용할 수 없습니다."
+
+#. Key:	ChooseReferenceVideo
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(916)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(916)
+msgctxt "SUPTMainPanel,ChooseReferenceVideo"
+msgid "Choose a reference video"
+msgstr "레퍼런스 영상 선택"
+
 #. Key:	AngleDutch
 #. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(92)
 #: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(92)
 msgctxt "SUPTMainPanel,AngleDutch"
 msgid "Dutch (tilted)"
 msgstr "더치(기울임)"
+
+#. Key:	VideoChosen
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(933)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(933)
+msgctxt "SUPTMainPanel,VideoChosen"
+msgid "Reference video selected. The original video is never sent anywhere; only downscaled frames are analyzed."
+msgstr "레퍼런스 영상을 선택했습니다. 원본 영상은 외부로 전송되지 않고 축소 프레임만 분석에 사용됩니다."
+
+#. Key:	MediaAdded
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(966)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(966)
+msgctxt "SUPTMainPanel,MediaAdded"
+msgid "Added {0} animation and audio assets."
+msgstr "애니메이션·오디오 {0}개를 추가했습니다."
+
+#. Key:	MediaPickFirst
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(967)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(967)
+msgctxt "SUPTMainPanel,MediaPickFirst"
+msgid "Select an Animation Sequence/Montage or a Sound in the Content Browser first."
+msgstr "Content Browser에서 Animation Sequence/Montage 또는 Sound를 선택한 뒤 누르세요."
+
+#. Key:	MediaCleared
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(976)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(976)
+msgctxt "SUPTMainPanel,MediaCleared"
+msgid "Cleared the animation and audio list."
+msgstr "애니메이션·오디오 목록을 비웠습니다."
+
+#. Key:	MotionPan
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(99)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(99)
+msgctxt "SUPTMainPanel,MotionPan"
+msgid "Pan"
+msgstr "팬"
+
+#. Key:	MotionStatic
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(99)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(99)
+msgctxt "SUPTMainPanel,MotionStatic"
+msgid "Static"
+msgstr "고정"
+
+#. Key:	MotionTilt
+#. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(99)
+#: Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(99)
+msgctxt "SUPTMainPanel,MotionTilt"
+msgid "Tilt"
+msgstr "틸트"
 
 #. Key:	NoMedia
 #. SourceLocation:	Plugins/UniversalProductionTools/Source/UniversalProductionTools/Private/SUPTMainPanel.cpp(993)

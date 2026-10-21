@@ -43,7 +43,12 @@ DEFINE_LOG_CATEGORY_STATIC(LogUPTRetarget, Log, All);
 
 namespace
 {
-const TCHAR* ManualFixHint = TEXT("Universal Production Tools > 애니메이션 범용화 탭 > '고급: 본 매핑 수동 보정'에서 이 메시를 보정하세요.");
+// 파일 범위의 상수로 두면 정적 초기화 때 번역이 준비돼 있지 않을 수 있다. 쓰는 시점에 만든다.
+FString ManualFixHint()
+{
+    return LOCTEXT("ManualFixHintText", "Correct this mesh in Universal Production Tools > "
+        "Universal animation retarget tab > 'Advanced: manual bone mapping'.").ToString();
+}
 
 USkeletalMesh* ResolveSourceMesh(USkeleton* Skeleton)
 {
@@ -204,7 +209,7 @@ static TAutoConsoleVariable<int32> CVarForceFallbackRig(
 
 bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRetargeter*& OutRetargeter, FString& OutError)
 {
-    if (!SourceMesh || !TargetMesh) { OutError = TEXT("Source 또는 Target Skeletal Mesh가 없습니다."); return false; }
+    if (!SourceMesh || !TargetMesh) { OutError = LOCTEXT("ErrNoMesh", "No source or target Skeletal Mesh.").ToString(); return false; }
 
     const FString SourceOverride = FUPTSkeletonProfileBuilder::FindManualOverride(SourceMesh);
     const FString TargetOverride = FUPTSkeletonProfileBuilder::FindManualOverride(TargetMesh);
@@ -212,7 +217,7 @@ bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRe
         || CVarForceFallbackRig.GetValueOnAnyThread() != 0;
 
     // 알려진 UE/MetaHuman/Mixamo 휴머노이드는 엔진 Auto Characterizer가 가장 안정적이다. 사용자가 저장한 수동 보정값이 있으면 그것을 우선한다.
-    FString AutoSourceError = TEXT("수동 보정값 우선");
+    FString AutoSourceError = LOCTEXT("ManualOverrideFirst", "manual correction takes precedence").ToString();
     FString AutoTargetError = AutoSourceError;
     if (!bHasManualOverride)
     {
@@ -232,14 +237,16 @@ bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRe
     const FUPTSkeletonAnalysisData TargetAnalysis = FUPTSkeletonAnalyzer::AnalyzeDetailed(TargetMesh, TargetOverride);
     if (!SourceAnalysis.bOverridesValid || SourceAnalysis.Readiness < 0.70f)
     {
-        OutError = FString::Printf(TEXT("원본 '%s' 본 구조 인식 실패 (엔진 인식: %s / 보조 분석 준비도 %.0f%%). %s"),
-            *SourceMesh->GetName(), *AutoSourceError, SourceAnalysis.Readiness * 100.0f, ManualFixHint);
+        OutError = FString::Format(*LOCTEXT("ErrSourceUnrecognized",
+            "Source '{0}': bone structure not recognized (engine: {1} / fallback readiness {2}%). {3}").ToString(),
+            {SourceMesh->GetName(), AutoSourceError, FMath::RoundToInt(SourceAnalysis.Readiness * 100.0f), ManualFixHint()});
         return false;
     }
     if (!TargetAnalysis.bOverridesValid || TargetAnalysis.Readiness < 0.70f)
     {
-        OutError = FString::Printf(TEXT("대상 '%s' 본 구조 인식 실패 (엔진 인식: %s / 보조 분석 준비도 %.0f%%). %s"),
-            *TargetMesh->GetName(), *AutoTargetError, TargetAnalysis.Readiness * 100.0f, ManualFixHint);
+        OutError = FString::Format(*LOCTEXT("ErrTargetUnrecognized",
+            "Target '{0}': bone structure not recognized (engine: {1} / fallback readiness {2}%). {3}").ToString(),
+            {TargetMesh->GetName(), AutoTargetError, FMath::RoundToInt(TargetAnalysis.Readiness * 100.0f), ManualFixHint()});
         return false;
     }
 
@@ -254,12 +261,12 @@ bool BuildRetargeter(USkeletalMesh* SourceMesh, USkeletalMesh* TargetMesh, UIKRe
     // 망가지는 것은 사람 → 늑대처럼 **자세가 다른 쌍**이다.
     if (SourceAnalysis.bUprightBiped != TargetAnalysis.bUprightBiped)
     {
-        const auto Describe = [](const FUPTSkeletonAnalysisData& Analysis) { return Analysis.bUprightBiped ? TEXT("직립 이족") : TEXT("사족·비직립"); };
-        OutError = FString::Printf(
-            TEXT("자세가 다른 쌍입니다: 원본 '%s'는 %s(손 높이 %.2f), 대상 '%s'는 %s(손 높이 %.2f). "
-                 "역할 이름은 양쪽 다 매핑되지만 자세가 다르면 같은 역할이 다른 일을 하므로 결과가 망가집니다."),
-            *SourceMesh->GetName(), Describe(SourceAnalysis), SourceAnalysis.HandAboveFootRatio,
-            *TargetMesh->GetName(), Describe(TargetAnalysis), TargetAnalysis.HandAboveFootRatio);
+        const auto Describe = [](const FUPTSkeletonAnalysisData& Analysis) { return Analysis.bUprightBiped ? LOCTEXT("PostureUpright", "upright biped").ToString() : LOCTEXT("PostureQuadruped", "quadruped or non-upright").ToString(); };
+        OutError = FString::Format(*LOCTEXT("ErrPostureMismatch",
+            "The pair has different postures: source '{0}' is {1} (hand height {2}), target '{3}' is {4} (hand height {5}). "
+            "The role names map on both sides, but when the postures differ the same role does a different job and the result breaks.").ToString(),
+            {SourceMesh->GetName(), Describe(SourceAnalysis), FString::Printf(TEXT("%.2f"), SourceAnalysis.HandAboveFootRatio),
+             TargetMesh->GetName(), Describe(TargetAnalysis), FString::Printf(TEXT("%.2f"), TargetAnalysis.HandAboveFootRatio)});
         return false;
     }
 
@@ -354,9 +361,9 @@ FReply SUPTAnimationRetargetWindow::ValidatePipeline()
 {
     USkeletalMesh* Target = TargetMesh.Get();
     if (!Target || !Target->GetSkeleton())
-    { SetStatus(TEXT("점검 실패: 대상 Skeletal Mesh 또는 Skeleton이 없습니다."), FLinearColor::Red); return FReply::Handled(); }
+    { SetStatus(LOCTEXT("CheckNoMesh", "Check failed: no target Skeletal Mesh or Skeleton.").ToString(), FLinearColor::Red); return FReply::Handled(); }
     if (!GetCurrentSelectionDelegate.IsBound() || GetCurrentSelectionDelegate.Execute().IsEmpty())
-    { SetStatus(TEXT("점검 실패: 변환할 Animation Sequence를 하나 이상 선택하세요."), FLinearColor::Yellow); return FReply::Handled(); }
+    { SetStatus(LOCTEXT("CheckNoSelection", "Check failed: select at least one Animation Sequence to convert.").ToString(), FLinearColor::Yellow); return FReply::Handled(); }
 
     int32 DirectCount = 0;
     TSet<USkeletalMesh*> SourceMeshes;
@@ -365,16 +372,16 @@ FReply SUPTAnimationRetargetWindow::ValidatePipeline()
     {
         UAnimationAsset* Animation = Cast<UAnimationAsset>(Data.GetAsset());
         USkeleton* Skeleton = Animation ? Animation->GetSkeleton() : nullptr;
-        if (!Skeleton) { Problems.Add(Data.AssetName.ToString() + TEXT(": Skeleton 없음")); continue; }
+        if (!Skeleton) { Problems.Add(Data.AssetName.ToString() + LOCTEXT("CheckNoSkeleton", ": no Skeleton").ToString()); continue; }
         if (Skeleton == Target->GetSkeleton()) { ++DirectCount; continue; }
         USkeletalMesh* SourceMesh = ResolveSourceMesh(Skeleton);
-        if (!SourceMesh) { Problems.Add(Data.AssetName.ToString() + TEXT(": 원본 캐릭터 메시를 찾지 못함")); continue; }
+        if (!SourceMesh) { Problems.Add(Data.AssetName.ToString() + LOCTEXT("CheckNoSourceMesh", ": source character mesh not found").ToString()); continue; }
         if (SourceMeshes.Contains(SourceMesh)) continue;
         SourceMeshes.Add(SourceMesh);
         const FUPTSkeletonAnalysisData Analysis = FUPTSkeletonAnalyzer::AnalyzeDetailed(SourceMesh, FUPTSkeletonProfileBuilder::FindManualOverride(SourceMesh));
         if (!Analysis.bOverridesValid || Analysis.Readiness < 0.70f)
         {
-            Problems.Add(FString::Printf(TEXT("%s: 보조 분석 준비도 %.0f%% — 엔진 자동 인식이 실패하면 수동 보정이 필요합니다"), *SourceMesh->GetName(), Analysis.Readiness * 100.0f));
+            Problems.Add(FString::Format(*LOCTEXT("CheckLowReadiness", "{0}: fallback readiness {1}% - a manual correction is needed if engine auto-detection fails").ToString(), {SourceMesh->GetName(), FMath::RoundToInt(Analysis.Readiness * 100.0f)}));
         }
         // 자세는 여기서 검사하지 않는다. 이 사전 검사는 **원본 메시만** 보는데, 자세는
         // 원본과 대상을 견줘야 뜻이 생긴다(사족 → 사족은 정상이다). 실제 가드는 BuildRetargeter에 있다.
@@ -382,11 +389,11 @@ FReply SUPTAnimationRetargetWindow::ValidatePipeline()
 
     if (!Problems.IsEmpty())
     {
-        SetStatus(TEXT("확인 필요: ") + FString::Join(Problems, TEXT(" | ")), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("CheckNeedsAttention", "Needs attention: ").ToString() + FString::Join(Problems, TEXT(" | ")), FLinearColor::Yellow);
     }
     else
     {
-        SetStatus(FString::Printf(TEXT("점검 통과: 그대로 사용 가능 %d개, 변환이 필요한 원본 캐릭터 %d종."), DirectCount, SourceMeshes.Num()), FLinearColor::Green);
+        SetStatus(FString::Format(*LOCTEXT("CheckPassed", "Check passed: {0} usable as-is, {1} source characters need conversion.").ToString(), {DirectCount, SourceMeshes.Num()}), FLinearColor::Green);
     }
     return FReply::Handled();
 }
@@ -394,13 +401,13 @@ FReply SUPTAnimationRetargetWindow::ValidatePipeline()
 FReply SUPTAnimationRetargetWindow::OpenGeneratedAssets()
 {
     UAssetEditorSubsystem* AssetEditorSubsystem = GEditor ? GEditor->GetEditorSubsystem<UAssetEditorSubsystem>() : nullptr;
-    if (!AssetEditorSubsystem) { SetStatus(TEXT("Asset Editor Subsystem을 사용할 수 없습니다."), FLinearColor::Red); return FReply::Handled(); }
+    if (!AssetEditorSubsystem) { SetStatus(LOCTEXT("NoAssetEditorSubsystem", "The Asset Editor Subsystem is not available.").ToString(), FLinearColor::Red); return FReply::Handled(); }
     int32 Opened = 0;
     for (const TWeakObjectPtr<UObject>& Generated : LastGeneratedAssets)
     {
         if (UObject* Asset = Generated.Get()) { AssetEditorSubsystem->OpenEditorForAsset(Asset); ++Opened; }
     }
-    SetStatus(Opened > 0 ? FString::Printf(TEXT("생성 결과 %d개를 열었습니다."), Opened) : TEXT("열 수 있는 생성 결과가 없습니다."), Opened > 0 ? FLinearColor::Green : FLinearColor::Yellow);
+    SetStatus(Opened > 0 ? FString::Format(*LOCTEXT("OpenedResults", "Opened {0} generated assets.").ToString(), {Opened}) : LOCTEXT("NoResultsToOpen", "There are no generated assets to open.").ToString(), Opened > 0 ? FLinearColor::Green : FLinearColor::Yellow);
     return FReply::Handled();
 }
 
@@ -412,10 +419,10 @@ void SUPTAnimationRetargetWindow::SetStatus(const FString& Message, const FLinea
 FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
 {
     USkeletalMesh* Target = TargetMesh.Get();
-    if (!Target || !GetCurrentSelectionDelegate.IsBound()) { SetStatus(TEXT("대상 메시 또는 애니메이션 선택기를 사용할 수 없습니다."), FLinearColor::Red); return FReply::Handled(); }
+    if (!Target || !GetCurrentSelectionDelegate.IsBound()) { SetStatus(LOCTEXT("NoTargetOrPicker", "The target mesh or the animation picker is not available.").ToString(), FLinearColor::Red); return FReply::Handled(); }
 
     const TArray<FAssetData> Selection = GetCurrentSelectionDelegate.Execute();
-    if (Selection.IsEmpty()) { SetStatus(TEXT("변환할 Animation Sequence를 하나 이상 선택하세요."), FLinearColor::Yellow); return FReply::Handled(); }
+    if (Selection.IsEmpty()) { SetStatus(LOCTEXT("SelectAtLeastOne", "Select at least one Animation Sequence to convert.").ToString(), FLinearColor::Yellow); return FReply::Handled(); }
 
     LastRetargeters.Reset();
     LastGeneratedAssets.Reset();
@@ -470,25 +477,25 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
         }
     }
 
-    FString Summary = FString::Printf(TEXT("'%s'용 %d개 생성, 그대로 사용 가능 %d개"), *Target->GetName(), CreatedCount, DirectlyCompatible);
-    if (!Skipped.IsEmpty()) Summary += FString::Printf(TEXT(", 원본 메시를 찾지 못해 건너뜀 %d개"), Skipped.Num());
+    FString Summary = FString::Format(*LOCTEXT("RetargetSummary", "'{0}': {1} created, {2} usable as-is").ToString(), {Target->GetName(), CreatedCount, DirectlyCompatible});
+    if (!Skipped.IsEmpty()) Summary += FString::Format(*LOCTEXT("RetargetSkipped", ", {0} skipped because the source mesh was not found").ToString(), {Skipped.Num()});
     // 저장했는지 아닌지를 분명히 적는다. 저장되지 않은 결과는 에디터를 닫으면 사라진다.
     if (!GetDefault<UUPTSettings>()->bSaveGeneratedAssets)
     {
-        Summary += TEXT("\n저장하지 않음(설정 'Save Generated Assets'가 꺼져 있습니다) — 에디터를 닫기 전에 직접 저장하세요.");
+        Summary += LOCTEXT("NotSaved", "\nNot saved ('Save Generated Assets' is off in the settings) - save them yourself before closing the editor.").ToString();
     }
     else if (!SaveFailures.IsEmpty())
     {
-        Summary += FString::Printf(TEXT("\n디스크 저장 %d개, 실패 %d개: %s"),
-            SavedCount, SaveFailures.Num(), *FString::Join(SaveFailures, TEXT(", ")));
+        Summary += FString::Format(*LOCTEXT("SavedWithFailures", "\nSaved {0} to disk, {1} failed: {2}").ToString(),
+            {SavedCount, SaveFailures.Num(), FString::Join(SaveFailures, TEXT(", "))});
     }
     else
     {
-        Summary += FString::Printf(TEXT("\n디스크 저장 %d개"), SavedCount);
+        Summary += FString::Format(*LOCTEXT("SavedCount", "\nSaved {0} to disk").ToString(), {SavedCount});
     }
     if (!Errors.IsEmpty())
     {
-        SetStatus(Summary + TEXT("\n실패: ") + FString::Join(Errors, TEXT("\n")), FLinearColor::Red);
+        SetStatus(Summary + LOCTEXT("FailurePrefix", "\nFailed: ").ToString() + FString::Join(Errors, TEXT("\n")), FLinearColor::Red);
         return FReply::Handled();
     }
 
@@ -508,12 +515,12 @@ FReply SUPTAnimationRetargetWindow::RetargetSelectedAnimations()
     {
         Quality += TEXT("\n") + FString::Join(Review, TEXT("\n"));
         const int32 Hidden = QualityRows.FilterByPredicate([](const FUPTRetargetQualityRow& Row) { return Row.bNeedsReview; }).Num() - Review.Num();
-        if (Hidden > 0) Quality += FString::Printf(TEXT("\n  · 외 %d개 (전체는 리포트 파일에)"), Hidden);
+        if (Hidden > 0) Quality += FString::Format(*LOCTEXT("ReviewMore", "\n  and {0} more (the full list is in the report file)").ToString(), {Hidden});
     }
-    if (!ReportPath.IsEmpty()) Quality += TEXT("\n리포트: ") + ReportPath;
+    if (!ReportPath.IsEmpty()) Quality += LOCTEXT("ReportPrefix", "\nReport: ").ToString() + ReportPath;
 
     const bool bAllClear = !QualityRows.ContainsByPredicate([](const FUPTRetargetQualityRow& Row) { return Row.bNeedsReview; });
-    SetStatus(TEXT("완료: ") + Summary + TEXT("\n") + Quality, bAllClear ? FLinearColor::Green : FLinearColor::Yellow);
+    SetStatus(LOCTEXT("DonePrefix", "Done: ").ToString() + Summary + TEXT("\n") + Quality, bAllClear ? FLinearColor::Green : FLinearColor::Yellow);
     return FReply::Handled();
 }
 
@@ -522,7 +529,7 @@ FReply SUPTAnimationRetargetWindow::OpenComparisonRetargeters()
     UAssetEditorSubsystem* AssetEditorSubsystem = GEditor ? GEditor->GetEditorSubsystem<UAssetEditorSubsystem>() : nullptr;
     if (!AssetEditorSubsystem)
     {
-        SetStatus(TEXT("Asset Editor Subsystem을 사용할 수 없습니다."), FLinearColor::Red);
+        SetStatus(LOCTEXT("NoAssetEditorSubsystem", "The Asset Editor Subsystem is not available.").ToString(), FLinearColor::Red);
         return FReply::Handled();
     }
 
@@ -538,12 +545,13 @@ FReply SUPTAnimationRetargetWindow::OpenComparisonRetargeters()
 
     if (OpenedCount == 0)
     {
-        SetStatus(TEXT("비교할 결과가 없습니다. 먼저 일괄 리타기팅을 실행하세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("NothingToCompare", "There is nothing to compare. Run a batch retarget first.").ToString(), FLinearColor::Yellow);
     }
     else
     {
-        SetStatus(FString::Printf(TEXT("비교 창 %d개를 열었습니다. IK Retargeter의 Asset Browser에서 원본 애니메이션(%s)을 재생하세요."),
-            OpenedCount, *FString::Join(LastSourceAnimationNames, TEXT(", "))), FLinearColor::Green);
+        SetStatus(FString::Format(*LOCTEXT("OpenedComparison",
+            "Opened {0} comparison windows. Play the source animation ({1}) from the IK Retargeter's Asset Browser.").ToString(),
+            {OpenedCount, FString::Join(LastSourceAnimationNames, TEXT(", "))}), FLinearColor::Green);
     }
     return FReply::Handled();
 }

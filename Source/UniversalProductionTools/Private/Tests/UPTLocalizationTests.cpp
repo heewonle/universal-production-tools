@@ -23,6 +23,13 @@ bool FUPTLocalizationTest::RunTest(const FString& Parameters)
         {TEXT("SUPTMainPanel"), TEXT("Step3"), TEXT("(3) Generate"), TEXT("③ 생성")},
         {TEXT("SUPTMainPanel"), TEXT("AnimationTab"), TEXT("Universal animation retarget"), TEXT("애니메이션 범용화")},
         {TEXT("UPTAnimationRetargetWindow"), TEXT("Validate"), TEXT("(2) Pre-flight check"), TEXT("② 사전 점검")},
+        // 상태 메시지도 본다. 서식이 있는 것은 `FString::Format`으로 옮겼으므로, 번역이 빠지면
+        // 버튼 이름이 아니라 **진행·오류 메시지**가 영어로 돌아간다.
+        {TEXT("UPTAnimationRetargetWindow"), TEXT("CheckPassed"),
+         TEXT("Check passed: {0} usable as-is, {1} source characters need conversion."),
+         TEXT("점검 통과: 그대로 사용 가능 {0}개, 변환이 필요한 원본 캐릭터 {1}종.")},
+        {TEXT("SUPTMainPanel"), TEXT("ProgBuildSequence"),
+         TEXT("[4/4] Building the Level Sequence..."), TEXT("[4/4] Level Sequence를 만드는 중입니다...")},
     };
 
     FInternationalization& I18N = FInternationalization::Get();

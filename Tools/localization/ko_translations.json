@@ -767,6 +767,930 @@
    "key": "BoneFixHelp",
    "source": "Use this only for a mesh the retarget window reported as 'bone structure not recognized'. Select that mesh in the Content Browser and analyze it, then fix only the wrong bones as JSON and save - the retarget window picks the correction up automatically.",
    "ko": "범용화 창에서 '본 구조 인식 실패'가 뜬 메시에만 사용합니다. Content Browser에서 그 메시를 선택해 분석하고, 틀린 본만 JSON으로 고쳐 저장하면 범용화 창이 자동으로 이 보정값을 사용합니다."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "ErrSourceUnrecognized",
+   "source": "Source '{0}': bone structure not recognized (engine: {1} / fallback readiness {2}%). {3}",
+   "ko": "원본 '{0}' 본 구조 인식 실패 (엔진 인식: {1} / 보조 분석 준비도 {2}%). {3}"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "ErrTargetUnrecognized",
+   "source": "Target '{0}': bone structure not recognized (engine: {1} / fallback readiness {2}%). {3}",
+   "ko": "대상 '{0}' 본 구조 인식 실패 (엔진 인식: {1} / 보조 분석 준비도 {2}%). {3}"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "CheckLowReadiness",
+   "source": "{0}: fallback readiness {1}% - a manual correction is needed if engine auto-detection fails",
+   "ko": "{0}: 보조 분석 준비도 {1}% — 엔진 자동 인식이 실패하면 수동 보정이 필요합니다"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "CheckPassed",
+   "source": "Check passed: {0} usable as-is, {1} source characters need conversion.",
+   "ko": "점검 통과: 그대로 사용 가능 {0}개, 변환이 필요한 원본 캐릭터 {1}종."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "OpenedResults",
+   "source": "Opened {0} generated assets.",
+   "ko": "생성 결과 {0}개를 열었습니다."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "RetargetSummary",
+   "source": "'{0}': {1} created, {2} usable as-is",
+   "ko": "'{0}'용 {1}개 생성, 그대로 사용 가능 {2}개"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "RetargetSkipped",
+   "source": ", {0} skipped because the source mesh was not found",
+   "ko": ", 원본 메시를 찾지 못해 건너뜀 {0}개"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "SavedWithFailures",
+   "source": "\\nSaved {0} to disk, {1} failed: {2}",
+   "ko": "\\n디스크 저장 {0}개, 실패 {1}개: {2}"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "SavedCount",
+   "source": "\\nSaved {0} to disk",
+   "ko": "\\n디스크 저장 {0}개"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "ReviewMore",
+   "source": "\\n  and {0} more (the full list is in the report file)",
+   "ko": "\\n  · 외 {0}개 (전체는 리포트 파일에)"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "OpenedComparison",
+   "source": "Opened {0} comparison windows. Play the source animation ({1}) from the IK Retargeter's Asset Browser.",
+   "ko": "비교 창 {0}개를 열었습니다. IK Retargeter의 Asset Browser에서 원본 애니메이션({1})을 재생하세요."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "ErrNoMesh",
+   "source": "No source or target Skeletal Mesh.",
+   "ko": "Source 또는 Target Skeletal Mesh가 없습니다."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "ManualOverrideFirst",
+   "source": "manual correction takes precedence",
+   "ko": "수동 보정값 우선"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "PostureUpright",
+   "source": "upright biped",
+   "ko": "직립 이족"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "PostureQuadruped",
+   "source": "quadruped or non-upright",
+   "ko": "사족·비직립"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "CheckNoMesh",
+   "source": "Check failed: no target Skeletal Mesh or Skeleton.",
+   "ko": "점검 실패: 대상 Skeletal Mesh 또는 Skeleton이 없습니다."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "CheckNoSelection",
+   "source": "Check failed: select at least one Animation Sequence to convert.",
+   "ko": "점검 실패: 변환할 Animation Sequence를 하나 이상 선택하세요."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "CheckNoSkeleton",
+   "source": ": no Skeleton",
+   "ko": ": Skeleton 없음"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "CheckNoSourceMesh",
+   "source": ": source character mesh not found",
+   "ko": ": 원본 캐릭터 메시를 찾지 못함"
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "CheckNeedsAttention",
+   "source": "Needs attention: ",
+   "ko": "확인 필요: "
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "NoAssetEditorSubsystem",
+   "source": "The Asset Editor Subsystem is not available.",
+   "ko": "Asset Editor Subsystem을 사용할 수 없습니다."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "NoResultsToOpen",
+   "source": "There are no generated assets to open.",
+   "ko": "열 수 있는 생성 결과가 없습니다."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "NoTargetOrPicker",
+   "source": "The target mesh or the animation picker is not available.",
+   "ko": "대상 메시 또는 애니메이션 선택기를 사용할 수 없습니다."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "SelectAtLeastOne",
+   "source": "Select at least one Animation Sequence to convert.",
+   "ko": "변환할 Animation Sequence를 하나 이상 선택하세요."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "NotSaved",
+   "source": "\\nNot saved ('Save Generated Assets' is off in the settings) - save them yourself before closing the editor.",
+   "ko": "\\n저장하지 않음(설정 'Save Generated Assets'가 꺼져 있습니다) — 에디터를 닫기 전에 직접 저장하세요."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "FailurePrefix",
+   "source": "\\nFailed: ",
+   "ko": "\\n실패: "
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "ReportPrefix",
+   "source": "\\nReport: ",
+   "ko": "\\n리포트: "
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "DonePrefix",
+   "source": "Done: ",
+   "ko": "완료: "
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "NothingToCompare",
+   "source": "There is nothing to compare. Run a batch retarget first.",
+   "ko": "비교할 결과가 없습니다. 먼저 일괄 리타기팅을 실행하세요."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "ManualFixHintText",
+   "source": "Correct this mesh in Universal Production Tools > Universal animation retarget tab > 'Advanced: manual bone mapping'.",
+   "ko": "Universal Production Tools > 애니메이션 범용화 탭 > '고급: 본 매핑 수동 보정'에서 이 메시를 보정하세요."
+  },
+  {
+   "namespace": "UPTAnimationRetargetWindow",
+   "key": "ErrPostureMismatch",
+   "source": "The pair has different postures: source '{0}' is {1} (hand height {2}), target '{3}' is {4} (hand height {5}). The role names map on both sides, but when the postures differ the same role does a different job and the result breaks.",
+   "ko": "자세가 다른 쌍입니다: 원본 '{0}'는 {1}(손 높이 {2}), 대상 '{3}'는 {4}(손 높이 {5}). 역할 이름은 양쪽 다 매핑되지만 자세가 다르면 같은 역할이 다른 일을 하므로 결과가 망가집니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionStatic",
+   "source": "Static",
+   "ko": "고정"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionPan",
+   "source": "Pan",
+   "ko": "팬"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionTilt",
+   "source": "Tilt",
+   "ko": "틸트"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionDollyIn",
+   "source": "Dolly in",
+   "ko": "돌리 인"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionDollyOut",
+   "source": "Dolly out",
+   "ko": "돌리 아웃"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionZoomIn",
+   "source": "Zoom in",
+   "ko": "줌 인"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionZoomOut",
+   "source": "Zoom out",
+   "ko": "줌 아웃"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionTruckLeft",
+   "source": "Truck left",
+   "ko": "트럭 왼쪽"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionTruckRight",
+   "source": "Truck right",
+   "ko": "트럭 오른쪽"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionPedestalUp",
+   "source": "Pedestal (up)",
+   "ko": "페데스탈(상승)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionOrbit",
+   "source": "Orbit",
+   "ko": "궤도"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionTracking",
+   "source": "Tracking",
+   "ko": "트래킹"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MotionHandheld",
+   "source": "Handheld",
+   "ko": "핸드헬드"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FixSoleCast",
+   "source": "{0}: {1} '{2}' -> the only cast member '{3}'",
+   "ko": "{0}: {1} '{2}' → 유일한 등장인물 '{3}'"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FixEmptySubject",
+   "source": "{0}: subject was empty -> '{1}'",
+   "ko": "{0}: subject 비어 있음 → '{1}'"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FixDropAnimation",
+   "source": "{0}: removed unknown animation id '{1}'",
+   "ko": "{0}: 없는 애니메이션 ID '{1}' 제거"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FixDropAudio",
+   "source": "{0}: removed unknown audio id '{1}'",
+   "ko": "{0}: 없는 오디오 ID '{1}' 제거"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FixUnknownMotion",
+   "source": "{0}: unknown camera_motion '{1}' -> static",
+   "ko": "{0}: 알 수 없는 camera_motion '{1}' → static"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ValueNone",
+   "source": "(none)",
+   "ko": "(없음)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ValuePlainShot",
+   "source": "(plain shot)",
+   "ko": "(일반 샷)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ValueNoneShort",
+   "source": "None",
+   "ko": "없음"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "CastUnpinned",
+   "source": "The cast is no longer pinned. Actors selected in the level become the cast.",
+   "ko": "등장인물 고정을 풀었습니다. 레벨에서 선택한 Actor가 등장인물로 반영됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "CastPinned",
+   "source": "   - in use by the last generation (pinned)",
+   "ko": "   — 마지막 생성에 사용 중 (고정됨)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "CastFollowsSelection",
+   "source": "   - follows the level selection",
+   "ko": "   — 레벨 선택이 자동 반영됩니다"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoFilePicker",
+   "source": "The file picker is not available.",
+   "ko": "파일 선택기를 사용할 수 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ChooseReferenceVideo",
+   "source": "Choose a reference video",
+   "ko": "레퍼런스 영상 선택"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "VideoChosen",
+   "source": "Reference video selected. The original video is never sent anywhere; only downscaled frames are analyzed.",
+   "ko": "레퍼런스 영상을 선택했습니다. 원본 영상은 외부로 전송되지 않고 축소 프레임만 분석에 사용됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MediaAdded",
+   "source": "Added {0} animation and audio assets.",
+   "ko": "애니메이션·오디오 {0}개를 추가했습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MediaPickFirst",
+   "source": "Select an Animation Sequence/Montage or a Sound in the Content Browser first.",
+   "ko": "Content Browser에서 Animation Sequence/Montage 또는 Sound를 선택한 뒤 누르세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "MediaCleared",
+   "source": "Cleared the animation and audio list.",
+   "ko": "애니메이션·오디오 목록을 비웠습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NeedCast",
+   "source": "(1) Pick the cast first - click the character Actors in the level viewport.",
+   "ko": "① 등장인물을 먼저 선택하세요. 레벨 뷰포트에서 캐릭터 Actor를 클릭하면 됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NeedPromptLong",
+   "source": "(2) Describe the staging you are looking for. e.g. open on a two-shot, talk over the shoulder, end on a close-up",
+   "ko": "② 찾고 싶은 연출을 글로 적어 주세요. 예: 투샷으로 시작해 어깨 너머로 대화, 클로즈업으로 마무리"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NeedPrompt",
+   "source": "(2) Describe the staging you are looking for.",
+   "ko": "② 찾고 싶은 연출을 글로 적어 주세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NeedJson",
+   "source": "(2) Paste a JSON into the Shot Plan JSON box.",
+   "ko": "② Shot Plan JSON 칸에 JSON을 붙여넣으세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NeedScript",
+   "source": "(2) Enter a script or staging directions.",
+   "ko": "② 대본이나 연출 지시를 입력하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NeedVideo",
+   "source": "(2) Pick a reference video with 'Choose video...'.",
+   "ko": "② '영상 선택...'으로 레퍼런스 영상을 고르세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NeedLibraryFolder",
+   "source": "(2) Point 'Choose folder...' at the folder that holds your reference videos.",
+   "ko": "② '폴더 선택...'으로 레퍼런스 영상을 모아 둔 폴더를 지정하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoApiKey",
+   "source": "No API key, so the LLM cannot be called. Set the environment variable as described above.",
+   "ko": "API 키가 없어 LLM을 호출할 수 없습니다. 상단 안내에 따라 환경변수를 설정하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoFFmpeg",
+   "source": "FFmpeg was not found. Install it or set its path as described above.",
+   "ko": "FFmpeg를 찾지 못했습니다. 상단 안내에 따라 설치하거나 경로를 지정하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoVisionKey",
+   "source": "The API key needed for video analysis is missing. Set the environment variable as described above.",
+   "ko": "영상 분석에 필요한 API 키가 없습니다. 상단 안내에 따라 환경변수를 설정하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgLlmPlan",
+   "source": "[1/3] The LLM is building the shot plan...",
+   "ko": "[1/3] LLM이 샷 구성을 만드는 중입니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgLinkPose",
+   "source": "[1/4] Fetching the linked video and running local pose analysis (download -> cut detection -> person and joint detection). This can take a few minutes depending on the video length and your connection...",
+   "ko": "[1/4] 링크 영상을 받아 로컬 포즈 분석 중입니다 (다운로드 → 컷 검출 → 인물·관절 검출). 영상 길이와 인터넷 속도에 따라 몇 분 걸릴 수 있습니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgLocalPose",
+   "source": "[1/4] Running local pose analysis (cut detection -> person and joint detection). Takes tens of seconds to a few minutes depending on the video length...",
+   "ko": "[1/4] 로컬 포즈 분석 중입니다 (컷 검출 → 인물·관절 검출). 영상 길이에 따라 수십 초~몇 분 걸립니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgExtractFrames",
+   "source": "[1/4] Extracting representative frames and cut boundaries from the video...",
+   "ko": "[1/4] 영상에서 대표 프레임과 컷 경계를 추출하는 중입니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgReuseAnalysis",
+   "source": "[2/4] Reusing the previous analysis of the same video.",
+   "ko": "[2/4] 같은 영상의 이전 분석 결과를 재사용합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgVisionAnalyze",
+   "source": "[2/4] Analyzing {0} candidate cuts with the vision model...",
+   "ko": "[2/4] {0}개 컷 후보를 Vision 모델로 분석하는 중입니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgReusePose",
+   "source": "[2/4] Reusing the pose analysis of the same video.",
+   "ko": "[2/4] 같은 영상의 포즈 분석 결과를 재사용합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgPoseDone",
+   "source": "[2/4] Pose analysis finished.",
+   "ko": "[2/4] 포즈 분석을 마쳤습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgLibrarySearch",
+   "source": "[1/4] Searching the reference library. The first run, or a run after adding videos, analyzes each video and can take a few minutes...",
+   "ko": "[1/4] 레퍼런스 라이브러리를 검색하는 중입니다. 처음이거나 영상을 새로 넣었다면 영상마다 포즈 분석을 하므로 몇 분 걸릴 수 있습니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgUseResult",
+   "source": "[2/4] Using search result #{0} '{1}' ({2}) as the reference.",
+   "ko": "[2/4] 검색 결과 {0}위 '{1}' ({2})를 레퍼런스로 씁니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgAssignCast",
+   "source": "[3/4] Assigning the people in the video to the cast and computing cameras...",
+   "ko": "[3/4] 영상 속 인물을 등장인물에 배정하고 카메라를 계산하는 중입니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgBuildSequence",
+   "source": "[4/4] Building the Level Sequence...",
+   "ko": "[4/4] Level Sequence를 만드는 중입니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgValidatePlan",
+   "source": "[2/3] Validating the shot plan...",
+   "ko": "[2/3] 샷 구성을 검증하는 중입니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgBuildSequence3",
+   "source": "[3/3] Building the Level Sequence...",
+   "ko": "[3/3] Level Sequence를 만드는 중입니다..."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrVideoAnalysisFormat",
+   "source": "The video analysis result is not in the expected format: {0}",
+   "ko": "영상 분석 결과 형식이 올바르지 않습니다: {0}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrPoseAnalysisFormat",
+   "source": "The pose analysis result is not in the expected format: {0}",
+   "ko": "포즈 분석 결과 형식이 올바르지 않습니다: {0}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrNoVideoAnalysis",
+   "source": "There is no video analysis result.",
+   "ko": "영상 분석 결과가 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LibraryFolderTitle",
+   "source": "Reference video library folder",
+   "ko": "레퍼런스 영상 라이브러리 폴더"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrLibraryResult",
+   "source": "Could not read the library search result.",
+   "ko": "라이브러리 검색 결과를 읽지 못했습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ReportPromptRead",
+   "source": "[Prompt as read]\\n",
+   "ko": "[프롬프트 해석]\\n"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OverShoulderWord",
+   "source": "over the shoulder",
+   "ko": "어깨 너머"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "PeopleCount",
+   "source": "{0} people",
+   "ko": "{0}명"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ReportKeywordOnly",
+   "source": "No shot size, angle, camera motion or head count was recognized, so the search used file-name keywords only.\\n",
+   "ko": "샷 크기·앵글·카메라 모션·인원 표현을 찾지 못해 파일 이름 키워드로만 찾았습니다.\\n"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ReportResults",
+   "source": "\\n[Search results]\\n",
+   "ko": "\\n[검색 결과]\\n"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ShotRange",
+   "source": "shots {0}-{1} ({2}-{3}s)",
+   "ko": "샷 {0}~{1} ({2}~{3}초)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ReportRow",
+   "source": "#{0} {1} pts  {2}  {3}  matched shots: {4}\\n",
+   "ko": "{0}위 {1}점  {2}  {3}  맞춘 샷: {4}\\n"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LibraryNoMatch",
+   "source": "No similar segment was found in the library. Try different wording, or add more videos.",
+   "ko": "라이브러리에서 비슷한 구간을 찾지 못했습니다. 표현을 바꾸거나 영상을 더 넣어 보세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "LibrarySearchDone",
+   "source": "Search finished: {0} results. Pick one from the list (the top one by default) and press 'Generate cinematic'.",
+   "ko": "검색 완료: {0}개 결과. 목록에서 고른 뒤(기본 1위) '시네마틱 생성'을 누르세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgUseTopResult",
+   "source": "[2/4] Using the top result '{0}' ({1}, {2} pts) as the reference.",
+   "ko": "[2/4] 1위 '{0}' ({1}, {2}점)를 레퍼런스로 씁니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrSegmentFile",
+   "source": "Could not read the reference segment file from the search result. Search again.",
+   "ko": "검색 결과의 레퍼런스 구간 파일을 읽지 못했습니다. 다시 검색하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrSegmentFormat",
+   "source": "The reference segment is not in the expected format: {0}",
+   "ko": "레퍼런스 구간 형식이 올바르지 않습니다: {0}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "RankLabel",
+   "source": "#{0}",
+   "ko": "{0}위"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ScoreLabel",
+   "source": "{0} pts",
+   "ko": "{0}점"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "WarnLowConfidence",
+   "source": " [note] {0} shots have low analysis confidence: {1} - play them back and adjust with 'Edit selected shot'.",
+   "ko": " [주의] 분석 신뢰도가 낮은 샷 {0}개: {1} — 재생해 보고 '선택한 샷 수정'으로 손보세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NotePersonless",
+   "source": " {0} shots without a person (distant views, inserts) were placed relative to the first cast member.",
+   "ko": " 인물이 없는 샷 {0}개(원경·인서트 등)는 첫 등장인물 기준으로 배치했습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgCompareFraming",
+   "source": "[4/4] Comparing the camera framing against the reference... (measurement 1/{0})",
+   "ko": "[4/4] 카메라 구도를 레퍼런스와 비교하는 중입니다... (측정 1/{0})"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ProgRefineFraming",
+   "source": "[4/4] Refining the camera framing... measurement {0}/{1}, current score {2}",
+   "ko": "[4/4] 카메라 구도 자동 보정 중... 측정 {0}/{1}, 현재 점수 {2}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrFramingCheck",
+   "source": " (framing check failed: ",
+   "ko": " (구도 검증 실패: "
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FramingScore",
+   "source": "{0} - framing score against the reference {1} / 100",
+   "ko": "{0} — 레퍼런스 대비 구도 점수 {1} / 100"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrRoleMappingJson",
+   "source": "The role mapping JSON in the advanced settings is not valid.",
+   "ko": "고급 설정의 역할 매핑 JSON 형식이 올바르지 않습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrRoleMappingValue",
+   "source": "The value of role mapping '{0}' must be a non-empty Actor label string.",
+   "ko": "역할 매핑 '{0}'의 값은 비어 있지 않은 Actor 라벨 문자열이어야 합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrLlmPlan",
+   "source": "There is a problem with the shot plan the LLM produced - {0} (you can fix the Shot Plan JSON in (2) and generate again)",
+   "ko": "LLM이 만든 샷 구성에 문제가 있습니다 — {0} (②의 Shot Plan JSON을 고쳐 다시 생성할 수 있습니다)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ReportAutoFix",
+   "source": "[Automatic corrections]\\n",
+   "ko": "[자동 보정]\\n"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoteAutoFix",
+   "source": " ({0} automatic corrections to the LLM result)",
+   "ko": " (LLM 결과 {0}곳 자동 보정)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrShotPlanJson",
+   "source": "Could not read the Shot Plan JSON: {0}",
+   "ko": "Shot Plan JSON을 읽지 못했습니다: {0}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrSubjectMissing",
+   "source": "{0}: subject '{1}' is not in the cast.",
+   "ko": "{0}: subject '{1}'가 등장인물에 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrLookAtMissing",
+   "source": "{0}: look_at '{1}' is not in the cast.",
+   "ko": "{0}: look_at '{1}'가 등장인물에 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrAnimationMissing",
+   "source": "{0}: animation_id '{1}' is not in the animation list.",
+   "ko": "{0}: animation_id '{1}'가 애니메이션 목록에 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrLipSyncMissing",
+   "source": "{0}: lip_sync_animation_id '{1}' is not in the animation list.",
+   "ko": "{0}: lip_sync_animation_id '{1}'가 애니메이션 목록에 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrAudioMissing",
+   "source": "{0}: audio_id '{1}' is not in the audio list.",
+   "ko": "{0}: audio_id '{1}'가 오디오 목록에 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrValidation",
+   "source": "Validation failed: {0}",
+   "ko": "검증 실패: {0}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrValidationMore",
+   "source": "Validation failed: {0} and {1} more (see the details below)",
+   "ko": "검증 실패: {0} 외 {1}건 (아래 상세 참고)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrNoShotPlan",
+   "source": "There is no Shot Plan to generate from.",
+   "ko": "생성할 Shot Plan이 없습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrSafetyCheck",
+   "source": "The shot plan failed the safety check. See the details below.",
+   "ko": "샷 구성 안전성 검증에 실패했습니다. 아래 상세를 확인하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrPlanMismatch",
+   "source": "The cast or the animation/audio list does not match the Shot Plan. Check the lists and generate again.",
+   "ko": "등장인물이나 애니메이션·오디오 목록이 Shot Plan과 맞지 않습니다. 목록을 확인한 뒤 다시 생성하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "GenerateDone",
+   "source": "Done: {0} - {1} shots. Double-click a row in the shot list to play that section.{2}",
+   "ko": "완료: {0} — {1}개 샷. 샷 목록을 더블클릭하면 해당 구간을 재생합니다.{2}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SecondsValue",
+   "source": "{0}s",
+   "ko": "{0}초"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AbsoluteCoords",
+   "source": "(absolute)",
+   "ko": "(절대 좌표)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "NoPerson",
+   "source": "no person",
+   "ko": "인물 없음"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "PickAnimationFirst",
+   "source": "Select an Animation Sequence or Montage in the Content Browser first.",
+   "ko": "Content Browser에서 Animation Sequence 또는 Montage를 선택한 뒤 누르세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrSkeletonMismatch",
+   "source": "'{0}' has a different skeleton from '{1}' and will not play as-is. Pick an animation retargeted in the 'Universal animation retarget' tab.",
+   "ko": "'{0}'는 '{1}'와 스켈레톤이 달라 그대로는 재생되지 않습니다. '애니메이션 범용화' 탭에서 리타기팅한 애니메이션을 고르세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnimationPicked",
+   "source": "'{0}' is set as the animation for shot #{1}. Press 'Apply to this shot and update the sequence' to apply it.",
+   "ko": "'{0}'를 {1}번 샷 애니메이션으로 골랐습니다. '이 샷에 적용하고 시퀀스 갱신'을 누르면 반영됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnimationRemoved",
+   "source": "The animation was removed. Press 'Apply to this shot and update the sequence' to apply it.",
+   "ko": "애니메이션을 뺐습니다. '이 샷에 적용하고 시퀀스 갱신'을 누르면 반영됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "GenerateFirst",
+   "source": "Generate a cinematic first.",
+   "ko": "먼저 시네마틱을 생성하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrShotEdit",
+   "source": "The edit to shot #{0} could not be applied and was reverted: {1}",
+   "ko": "{0}번 샷 수정을 반영하지 못해 되돌렸습니다: {1}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ShotEditApplied",
+   "source": "Applied the edit to shot #{0}, updated '{1}' in place and is playing it.",
+   "ko": "{0}번 샷 수정을 반영해 '{1}'를 그 자리에서 갱신하고 재생합니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SequencerOpening",
+   "source": "Sequencer is still opening. Try playing again in a moment.",
+   "ko": "Sequencer가 아직 열리는 중입니다. 잠시 후 다시 재생하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "PlayingShot",
+   "source": "Playing shot #{0} '{1}' (frames {2}-{3})",
+   "ko": "{0}번 샷 '{1}' 재생 중 ({2}~{3} 프레임)"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OpenInSequencerFirst",
+   "source": "Open the generated cinematic in Sequencer first.",
+   "ko": "생성된 시네마틱을 Sequencer에서 먼저 여세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrNoCameraCut",
+   "source": "Could not find the Camera Cut for the selected shot.",
+   "ko": "선택한 샷의 Camera Cut을 찾지 못했습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrCameraNotEvaluated",
+   "source": "The camera has not been evaluated yet. Play the shot once and try again.",
+   "ko": "카메라가 아직 평가되지 않았습니다. 샷을 한 번 재생한 뒤 다시 누르세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "CameraCaptured",
+   "source": "The camera framing of shot #{0} was written into the Shot Plan JSON in (2). Generate again with 'Paste Shot Plan JSON' to use it.",
+   "ko": "{0}번 샷의 카메라 구도를 ②의 Shot Plan JSON에 보존했습니다. 'Shot Plan JSON 직접 입력'으로 다시 생성하면 반영됩니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FramingCheckDone",
+   "source": "The per-shot framing check finished. See the results below.",
+   "ko": "샷별 구도 점검을 마쳤습니다. 아래 결과를 확인하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "PickTargetMeshFirst",
+   "source": "Select the target Skeletal Mesh for the animations in the Content Browser first.",
+   "ko": "Content Browser에서 애니메이션을 적용할 대상 Skeletal Mesh를 먼저 선택하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "RetargetWindowOpened",
+   "source": "Opened the retarget window for '{0}'.",
+   "ko": "'{0}'용 범용화 창을 열었습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "PickMeshToCorrect",
+   "source": "Select the Skeletal Mesh to correct in the Content Browser.",
+   "ko": "Content Browser에서 보정할 Skeletal Mesh를 선택하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "ErrOverrideJson",
+   "source": "The correction JSON has an error. Check the errors in the analysis result.",
+   "ko": "보정 JSON에 오류가 있습니다. 분석 결과의 오류를 확인하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnalysisDone",
+   "source": "'{0}' analyzed - retarget readiness {1}%{2}",
+   "ko": "'{0}' 분석 완료 — 리타기팅 준비도 {1}%{2}"
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "SaveToUse",
+   "source": ". Save it and the retarget window will use it.",
+   "ko": ". 저장하면 범용화 창에서 사용할 수 있습니다."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "FixBonesTo70",
+   "source": ". Correct the wrong bones until it reaches 70% or more.",
+   "ko": ". 70% 이상이 되도록 틀린 본을 보정하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "AnalyzeFirst",
+   "source": "Press 'Analyze selected mesh' first.",
+   "ko": "먼저 '선택 메시 분석'을 누르세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OverrideChanged",
+   "source": "The correction changed after the analysis. Press 'Analyze selected mesh' again, then save.",
+   "ko": "보정값이 분석 후 바뀌었습니다. '선택 메시 분석'을 다시 누른 뒤 저장하세요."
+  },
+  {
+   "namespace": "SUPTMainPanel",
+   "key": "OverrideSaved",
+   "source": "Correction saved ({0}). The retarget window applies it to '{1}' automatically. Save the asset before closing the editor.",
+   "ko": "보정값을 저장했습니다({0}). 범용화 창이 '{1}'에 자동 적용합니다. 에디터를 닫기 전에 에셋을 저장하세요."
   }
  ]
 }

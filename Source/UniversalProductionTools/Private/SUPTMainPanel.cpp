@@ -96,11 +96,11 @@ FText CameraAngleLabel(const FString& Id)
 FText CameraMotionLabel(const FString& Id)
 {
     static const TMap<FString, FString> Labels = {
-        { TEXT("static"), TEXT("고정") }, { TEXT("pan"), TEXT("팬") }, { TEXT("tilt"), TEXT("틸트") },
-        { TEXT("dolly_in"), TEXT("돌리 인") }, { TEXT("dolly_out"), TEXT("돌리 아웃") }, { TEXT("zoom_in"), TEXT("줌 인") },
-        { TEXT("zoom_out"), TEXT("줌 아웃") }, { TEXT("truck_left"), TEXT("트럭 왼쪽") }, { TEXT("truck_right"), TEXT("트럭 오른쪽") },
-        { TEXT("pedestal"), TEXT("페데스탈(상승)") }, { TEXT("orbit"), TEXT("궤도") }, { TEXT("tracking"), TEXT("트래킹") },
-        { TEXT("handheld"), TEXT("핸드헬드") } };
+        { TEXT("static"), LOCTEXT("MotionStatic", "Static").ToString() }, { TEXT("pan"), LOCTEXT("MotionPan", "Pan").ToString() }, { TEXT("tilt"), LOCTEXT("MotionTilt", "Tilt").ToString() },
+        { TEXT("dolly_in"), LOCTEXT("MotionDollyIn", "Dolly in").ToString() }, { TEXT("dolly_out"), LOCTEXT("MotionDollyOut", "Dolly out").ToString() }, { TEXT("zoom_in"), LOCTEXT("MotionZoomIn", "Zoom in").ToString() },
+        { TEXT("zoom_out"), LOCTEXT("MotionZoomOut", "Zoom out").ToString() }, { TEXT("truck_left"), LOCTEXT("MotionTruckLeft", "Truck left").ToString() }, { TEXT("truck_right"), LOCTEXT("MotionTruckRight", "Truck right").ToString() },
+        { TEXT("pedestal"), LOCTEXT("MotionPedestalUp", "Pedestal (up)").ToString() }, { TEXT("orbit"), LOCTEXT("MotionOrbit", "Orbit").ToString() }, { TEXT("tracking"), LOCTEXT("MotionTracking", "Tracking").ToString() },
+        { TEXT("handheld"), LOCTEXT("MotionHandheld", "Handheld").ToString() } };
     const FString* Label = Labels.Find(Id);
     return FText::FromString(Label ? *Label : Id);
 }
@@ -213,7 +213,7 @@ TArray<FString> RepairModelPlan(FUPTCinematicPlan& Plan, const TMap<FString, TWe
         }
         if (Labels.Num() == 1)
         {
-            Notes.Add(FString::Printf(TEXT("%s: %s '%s' → 유일한 등장인물 '%s'"), *ShotName, Field, *Value, *Labels[0]));
+            Notes.Add(FString::Format(*LOCTEXT("FixSoleCast", "{0}: {1} '{2}' -> the only cast member '{3}'").ToString(), {ShotName, Field, Value, Labels[0]}));
             return Labels[0];
         }
         return Value;
@@ -238,14 +238,14 @@ TArray<FString> RepairModelPlan(FUPTCinematicPlan& Plan, const TMap<FString, TWe
         Shot.LookAt = ResolveLabel(Shot.LookAt, Shot.Name, TEXT("look_at"));
         if (Shot.Subject.IsEmpty() && Shot.CameraLocation.IsNearlyZero() && !Labels.IsEmpty())
         {
-            Notes.Add(FString::Printf(TEXT("%s: subject 비어 있음 → '%s'"), *Shot.Name, *Labels[0]));
+            Notes.Add(FString::Format(*LOCTEXT("FixEmptySubject", "{0}: subject was empty -> '{1}'").ToString(), {Shot.Name, Labels[0]}));
             Shot.Subject = Labels[0];
         }
         for (FString* Id : { &Shot.AnimationId, &Shot.LipSyncAnimationId })
         {
-            if (!Id->IsEmpty() && !Animations.Contains(*Id)) { Notes.Add(FString::Printf(TEXT("%s: 없는 애니메이션 ID '%s' 제거"), *Shot.Name, **Id)); Id->Reset(); }
+            if (!Id->IsEmpty() && !Animations.Contains(*Id)) { Notes.Add(FString::Format(*LOCTEXT("FixDropAnimation", "{0}: removed unknown animation id '{1}'").ToString(), {Shot.Name, *Id})); Id->Reset(); }
         }
-        if (!Shot.AudioId.IsEmpty() && !Sounds.Contains(Shot.AudioId)) { Notes.Add(FString::Printf(TEXT("%s: 없는 오디오 ID '%s' 제거"), *Shot.Name, *Shot.AudioId)); Shot.AudioId.Reset(); }
+        if (!Shot.AudioId.IsEmpty() && !Sounds.Contains(Shot.AudioId)) { Notes.Add(FString::Format(*LOCTEXT("FixDropAudio", "{0}: removed unknown audio id '{1}'").ToString(), {Shot.Name, Shot.AudioId})); Shot.AudioId.Reset(); }
         ClampField(Shot.DurationSeconds, 0.5f, 120.0f, 3.0f, Shot.Name, TEXT("duration_seconds"));
         ClampField(Shot.FocalLength, 8.0f, 200.0f, 50.0f, Shot.Name, TEXT("focal_length"));
         ClampField(Shot.DistanceCm, 30.0f, 10000.0f, 300.0f, Shot.Name, TEXT("distance_cm"));
@@ -254,7 +254,7 @@ TArray<FString> RepairModelPlan(FUPTCinematicPlan& Plan, const TMap<FString, TWe
         ClampField(Shot.SubjectScreenX, 0.0f, 1.0f, 0.5f, Shot.Name, TEXT("subject_screen_x"));
         ClampField(Shot.SubjectScreenY, 0.0f, 1.0f, 0.5f, Shot.Name, TEXT("subject_screen_y"));
         ClampField(Shot.FocusHeightRatio, 0.0f, 1.0f, 0.5f, Shot.Name, TEXT("focus_height"));
-        if (!AllowedMotions.Contains(Shot.CameraMotion)) { Notes.Add(FString::Printf(TEXT("%s: 알 수 없는 camera_motion '%s' → static"), *Shot.Name, *Shot.CameraMotion)); Shot.CameraMotion = TEXT("static"); }
+        if (!AllowedMotions.Contains(Shot.CameraMotion)) { Notes.Add(FString::Format(*LOCTEXT("FixUnknownMotion", "{0}: unknown camera_motion '{1}' -> static").ToString(), {Shot.Name, Shot.CameraMotion})); Shot.CameraMotion = TEXT("static"); }
     }
     return Notes;
 }
@@ -685,7 +685,7 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                             .OptionsSource(&SubjectOptions)
                             .OnGenerateWidget_Lambda([](TSharedPtr<FString> Option) { return SNew(STextBlock).Text(FText::FromString(Option.IsValid() ? *Option : FString())); })
                             .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Option, ESelectInfo::Type) { if (Option.IsValid()) EditSubject = *Option; })
-                            [ SNew(STextBlock).Text_Lambda([this] { return FText::FromString(EditSubject.IsEmpty() ? TEXT("(없음)") : EditSubject); }) ],
+                            [ SNew(STextBlock).Text_Lambda([this] { return FText::FromString(EditSubject.IsEmpty() ? LOCTEXT("ValueNone", "(none)").ToString() : EditSubject); }) ],
                             160.0f)
                     ]
                     + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 16, 0)
@@ -702,9 +702,9 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                             SAssignNew(OverShoulderCombo, SComboBox<TSharedPtr<FString>>)
                             .ToolTipText(LOCTEXT("EditOverShoulderTip", "Puts the camera behind that Actor's shoulder and shoots the main subject. The camera is computed from the foreground Actor's position instead of distance and azimuth, and the lens keeps the shot size."))
                             .OptionsSource(&OverShoulderOptions)
-                            .OnGenerateWidget_Lambda([](TSharedPtr<FString> Option) { return SNew(STextBlock).Text(FText::FromString(Option.IsValid() && !Option->IsEmpty() ? *Option : FString(TEXT("(일반 샷)")))); })
+                            .OnGenerateWidget_Lambda([](TSharedPtr<FString> Option) { return SNew(STextBlock).Text(FText::FromString(Option.IsValid() && !Option->IsEmpty() ? *Option : FString(LOCTEXT("ValuePlainShot", "(plain shot)").ToString()))); })
                             .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Option, ESelectInfo::Type) { if (Option.IsValid()) EditOverShoulderActor = *Option; })
-                            [ SNew(STextBlock).Text_Lambda([this] { return FText::FromString(EditOverShoulderActor.IsEmpty() ? TEXT("(일반 샷)") : EditOverShoulderActor); }) ],
+                            [ SNew(STextBlock).Text_Lambda([this] { return FText::FromString(EditOverShoulderActor.IsEmpty() ? LOCTEXT("ValuePlainShot", "(plain shot)").ToString() : EditOverShoulderActor); }) ],
                             160.0f)
                     ]
                     + SHorizontalBox::Slot().AutoWidth()
@@ -735,7 +735,7 @@ TSharedRef<SWidget> SUPTMainPanel::BuildCinematicTab()
                         SNew(STextBlock).Text_Lambda([this]
                         {
                             const TWeakObjectPtr<UAnimSequenceBase>* Animation = Animations.Find(EditAnimationId);
-                            const FString Name = EditAnimationId.IsEmpty() ? TEXT("없음") : (Animation && Animation->IsValid() ? Animation->Get()->GetName() : EditAnimationId);
+                            const FString Name = EditAnimationId.IsEmpty() ? LOCTEXT("ValueNoneShort", "None").ToString() : (Animation && Animation->IsValid() ? Animation->Get()->GetName() : EditAnimationId);
                             return FText::Format(LOCTEXT("EditAnimation", "Animation: {0}"), FText::FromString(Name));
                         })
                     ]
@@ -884,7 +884,7 @@ FReply SUPTMainPanel::UnlockCast()
 {
     bCastLocked = false;
     RefreshCastFromSelection();
-    SetStatus(TEXT("등장인물 고정을 풀었습니다. 레벨에서 선택한 Actor가 등장인물로 반영됩니다."), FLinearColor::Green);
+    SetStatus(LOCTEXT("CastUnpinned", "The cast is no longer pinned. Actors selected in the level become the cast.").ToString(), FLinearColor::Green);
     return FReply::Handled();
 }
 
@@ -898,8 +898,8 @@ FText SUPTMainPanel::GetCastText() const
     Labels.Sort();
     if (Labels.IsEmpty()) return LOCTEXT("NoCast", "Select the cast Actors in the level viewport (Ctrl+click for several).");
     return FText::FromString(FString::Join(Labels, TEXT(", ")) + (bCastLocked
-        ? TEXT("   — 마지막 생성에 사용 중 (고정됨)")
-        : TEXT("   — 레벨 선택이 자동 반영됩니다")));
+        ? LOCTEXT("CastPinned", "   - in use by the last generation (pinned)").ToString()
+        : LOCTEXT("CastFollowsSelection", "   - follows the level selection").ToString()));
 }
 
 FReply SUPTMainPanel::SelectReferenceVideo()
@@ -908,12 +908,12 @@ FReply SUPTMainPanel::SelectReferenceVideo()
     IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
     if (!DesktopPlatform)
     {
-        SetStatus(TEXT("파일 선택기를 사용할 수 없습니다."), FLinearColor::Red);
+        SetStatus(LOCTEXT("NoFilePicker", "The file picker is not available.").ToString(), FLinearColor::Red);
         return FReply::Handled();
     }
     TArray<FString> SelectedFiles;
     const void* ParentWindow = FSlateApplication::Get().FindBestParentWindowHandleForDialogs(AsShared());
-    if (!DesktopPlatform->OpenFileDialog(ParentWindow, TEXT("레퍼런스 영상 선택"),
+    if (!DesktopPlatform->OpenFileDialog(ParentWindow, LOCTEXT("ChooseReferenceVideo", "Choose a reference video").ToString(),
         ReferenceVideoPath.IsEmpty() ? FPaths::ProjectDir() : FPaths::GetPath(ReferenceVideoPath), TEXT(""),
         TEXT("Video Files (*.mp4;*.mov;*.m4v;*.avi)|*.mp4;*.mov;*.m4v;*.avi"), EFileDialogFlags::None, SelectedFiles) || SelectedFiles.IsEmpty())
     {
@@ -930,7 +930,7 @@ FReply SUPTMainPanel::SelectReferenceVideo()
     ReferenceFrameResult = FUPTReferenceFrameResult();
     CurrentReferencePlan = FUPTReferencePlan();
     bHasReferencePlan = false;
-    SetStatus(TEXT("레퍼런스 영상을 선택했습니다. 원본 영상은 외부로 전송되지 않고 축소 프레임만 분석에 사용됩니다."), FLinearColor::Green);
+    SetStatus(LOCTEXT("VideoChosen", "Reference video selected. The original video is never sent anywhere; only downscaled frames are analyzed.").ToString(), FLinearColor::Green);
     return FReply::Handled();
 }
 
@@ -963,8 +963,8 @@ FReply SUPTMainPanel::AddSelectedMedia()
         }
     }
     SetStatus(Added > 0
-        ? FString::Printf(TEXT("애니메이션·오디오 %d개를 추가했습니다."), Added)
-        : TEXT("Content Browser에서 Animation Sequence/Montage 또는 Sound를 선택한 뒤 누르세요."),
+        ? FString::Format(*LOCTEXT("MediaAdded", "Added {0} animation and audio assets.").ToString(), {Added})
+        : LOCTEXT("MediaPickFirst", "Select an Animation Sequence/Montage or a Sound in the Content Browser first.").ToString(),
         Added > 0 ? FLinearColor::Green : FLinearColor::Yellow);
     return FReply::Handled();
 }
@@ -973,7 +973,7 @@ FReply SUPTMainPanel::ClearMedia()
 {
     Animations.Reset();
     Sounds.Reset();
-    SetStatus(TEXT("애니메이션·오디오 목록을 비웠습니다."));
+    SetStatus(LOCTEXT("MediaCleared", "Cleared the animation and audio list.").ToString());
     return FReply::Handled();
 }
 
@@ -1001,7 +1001,7 @@ FReply SUPTMainPanel::GenerateCinematic()
     RefreshCastFromSelection();
     if (SceneActors.IsEmpty())
     {
-        SetStatus(TEXT("① 등장인물을 먼저 선택하세요. 레벨 뷰포트에서 캐릭터 Actor를 클릭하면 됩니다."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("NeedCast", "(1) Pick the cast first - click the character Actors in the level viewport.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     SetReport(FString());
@@ -1014,7 +1014,7 @@ FReply SUPTMainPanel::GenerateCinematic()
         const FString Prompt = LibraryPromptInput.IsValid() ? LibraryPromptInput->GetText().ToString().TrimStartAndEnd() : FString();
         if (Prompt.IsEmpty())
         {
-            SetStatus(TEXT("② 찾고 싶은 연출을 글로 적어 주세요. 예: 투샷으로 시작해 어깨 너머로 대화, 클로즈업으로 마무리"), FLinearColor::Yellow);
+            SetStatus(LOCTEXT("NeedPromptLong", "(2) Describe the staging you are looking for. e.g. open on a two-shot, talk over the shoulder, end on a close-up").ToString(), FLinearColor::Yellow);
             return FReply::Handled();
         }
         // 같은 폴더·프롬프트로 이미 검색했다면 목록에서 고른 결과(고르지 않았으면 1위)로 바로 만든다.
@@ -1029,7 +1029,7 @@ FReply SUPTMainPanel::GenerateCinematic()
                 FinishGeneration(LoadError, FLinearColor::Red);
                 return FReply::Handled();
             }
-            SetStatus(FString::Printf(TEXT("[2/4] 검색 결과 %d위 '%s' (%s)를 레퍼런스로 씁니다."), Item->Rank, *Item->Video, *Item->Segment));
+            SetStatus(FString::Format(*LOCTEXT("ProgUseResult", "[2/4] Using search result #{0} '{1}' ({2}) as the reference.").ToString(), {Item->Rank, Item->Video, Item->Segment}));
             ContinueReferencePipeline();
             return FReply::Handled();
         }
@@ -1041,7 +1041,7 @@ FReply SUPTMainPanel::GenerateCinematic()
     {
         if (!JsonInput.IsValid() || JsonInput->GetText().IsEmpty())
         {
-            SetStatus(TEXT("② Shot Plan JSON 칸에 JSON을 붙여넣으세요."), FLinearColor::Yellow);
+            SetStatus(LOCTEXT("NeedJson", "(2) Paste a JSON into the Shot Plan JSON box.").ToString(), FLinearColor::Yellow);
             return FReply::Handled();
         }
         return ApplyJsonAndRegenerate();
@@ -1052,16 +1052,16 @@ FReply SUPTMainPanel::GenerateCinematic()
         const FString Script = ScriptInput.IsValid() ? ScriptInput->GetText().ToString().TrimStartAndEnd() : FString();
         if (Script.IsEmpty())
         {
-            SetStatus(TEXT("② 대본이나 연출 지시를 입력하세요."), FLinearColor::Yellow);
+            SetStatus(LOCTEXT("NeedScript", "(2) Enter a script or staging directions.").ToString(), FLinearColor::Yellow);
             return FReply::Handled();
         }
         if (!bApiKeyReady)
         {
-            SetStatus(TEXT("API 키가 없어 LLM을 호출할 수 없습니다. 상단 안내에 따라 환경변수를 설정하세요."), FLinearColor::Red);
+            SetStatus(LOCTEXT("NoApiKey", "No API key, so the LLM cannot be called. Set the environment variable as described above.").ToString(), FLinearColor::Red);
             return FReply::Handled();
         }
         bGenerationInFlight = true;
-        SetStatus(TEXT("[1/3] LLM이 샷 구성을 만드는 중입니다..."));
+        SetStatus(LOCTEXT("ProgLlmPlan", "[1/3] The LLM is building the shot plan...").ToString());
         LLMClient->GeneratePlan(Script, BuildSceneContext(), BuildAssetContext(), FUPTLLMComplete::CreateSP(this, &SUPTMainPanel::OnScriptPlanReceived));
         return FReply::Handled();
     }
@@ -1079,14 +1079,14 @@ FReply SUPTMainPanel::GenerateCinematic()
         const FString Section = ReferenceSectionInput.IsValid() ? ReferenceSectionInput->GetText().ToString().TrimStartAndEnd() : FString();
         bGenerationInFlight = true;
         bHasReferencePlan = false;
-        SetStatus(TEXT("[1/4] 링크 영상을 받아 로컬 포즈 분석 중입니다 (다운로드 → 컷 검출 → 인물·관절 검출). 영상 길이와 인터넷 속도에 따라 몇 분 걸릴 수 있습니다..."));
+        SetStatus(LOCTEXT("ProgLinkPose", "[1/4] Fetching the linked video and running local pose analysis (download -> cut detection -> person and joint detection). This can take a few minutes depending on the video length and your connection...").ToString());
         FUPTPoseReferenceAnalyzer::AnalyzeLink(ReferenceLink, Section, bLinkRightsConfirmed, ReferenceMatchMode,
             FUPTPoseAnalysisComplete::CreateSP(this, &SUPTMainPanel::OnPoseAnalysisCompleted));
         return FReply::Handled();
     }
     if (!FUPTReferenceVideoProcessor::ValidateVideo(ReferenceVideoPath, Error))
     {
-        SetStatus(ReferenceVideoPath.IsEmpty() ? TEXT("② '영상 선택...'으로 레퍼런스 영상을 고르세요.") : Error, FLinearColor::Yellow);
+        SetStatus(ReferenceVideoPath.IsEmpty() ? LOCTEXT("NeedVideo", "(2) Pick a reference video with 'Choose video...'.").ToString() : Error, FLinearColor::Yellow);
         return FReply::Handled();
     }
     if (ReferenceAnalysisMethod == EUPTReferenceAnalysisMethod::LocalPose)
@@ -1098,19 +1098,19 @@ FReply SUPTMainPanel::GenerateCinematic()
         }
         bGenerationInFlight = true;
         bHasReferencePlan = false;
-        SetStatus(TEXT("[1/4] 로컬 포즈 분석 중입니다 (컷 검출 → 인물·관절 검출). 영상 길이에 따라 수십 초~몇 분 걸립니다..."));
+        SetStatus(LOCTEXT("ProgLocalPose", "[1/4] Running local pose analysis (cut detection -> person and joint detection). Takes tens of seconds to a few minutes depending on the video length...").ToString());
         FUPTPoseReferenceAnalyzer::Analyze(ReferenceVideoPath, ReferenceMatchMode, FUPTPoseAnalysisComplete::CreateSP(this, &SUPTMainPanel::OnPoseAnalysisCompleted));
         return FReply::Handled();
     }
     if (ResolvedFFmpegPath.IsEmpty())
     {
-        SetStatus(TEXT("FFmpeg를 찾지 못했습니다. 상단 안내에 따라 설치하거나 경로를 지정하세요."), FLinearColor::Red);
+        SetStatus(LOCTEXT("NoFFmpeg", "FFmpeg was not found. Install it or set its path as described above.").ToString(), FLinearColor::Red);
         return FReply::Handled();
     }
 
     bGenerationInFlight = true;
     bHasReferencePlan = false;
-    SetStatus(TEXT("[1/4] 영상에서 대표 프레임과 컷 경계를 추출하는 중입니다..."));
+    SetStatus(LOCTEXT("ProgExtractFrames", "[1/4] Extracting representative frames and cut boundaries from the video...").ToString());
     const UUPTSettings* Settings = GetDefault<UUPTSettings>();
     FUPTReferenceVideoProcessor::ExtractFrames(ReferenceVideoPath, Settings->ReferenceFrameIntervalSeconds, Settings->MaxReferenceFrames,
         FUPTReferenceFramesComplete::CreateSP(this, &SUPTMainPanel::OnReferenceFramesExtracted));
@@ -1127,16 +1127,16 @@ void SUPTMainPanel::OnReferenceFramesExtracted(const bool bSuccess, const FUPTRe
     ReferenceFrameResult = Result;
     if (TryLoadCachedReferenceAnalysis())
     {
-        SetStatus(TEXT("[2/4] 같은 영상의 이전 분석 결과를 재사용합니다."));
+        SetStatus(LOCTEXT("ProgReuseAnalysis", "[2/4] Reusing the previous analysis of the same video.").ToString());
         ContinueReferencePipeline();
         return;
     }
     if (!bApiKeyReady)
     {
-        FinishGeneration(TEXT("영상 분석에 필요한 API 키가 없습니다. 상단 안내에 따라 환경변수를 설정하세요."), FLinearColor::Red);
+        FinishGeneration(LOCTEXT("NoVisionKey", "The API key needed for video analysis is missing. Set the environment variable as described above.").ToString(), FLinearColor::Red);
         return;
     }
-    SetStatus(FString::Printf(TEXT("[2/4] %d개 컷 후보를 Vision 모델로 분석하는 중입니다..."), Result.ShotBoundaries.Num()));
+    SetStatus(FString::Format(*LOCTEXT("ProgVisionAnalyze", "[2/4] Analyzing {0} candidate cuts with the vision model...").ToString(), {Result.ShotBoundaries.Num()}));
     LLMClient->AnalyzeReferenceFrames(ReferenceFrameResult, ReferenceMatchMode,
         FUPTLLMComplete::CreateSP(this, &SUPTMainPanel::OnReferenceAnalysisCompleted));
 }
@@ -1153,7 +1153,7 @@ void SUPTMainPanel::OnReferenceAnalysisCompleted(const bool bSuccess, const FStr
     if (!FUPTReferencePlanParser::Parse(Result, ParsedPlan, Error))
     {
         SetReport(Result);
-        FinishGeneration(FString::Printf(TEXT("영상 분석 결과 형식이 올바르지 않습니다: %s"), *Error), FLinearColor::Red);
+        FinishGeneration(FString::Format(*LOCTEXT("ErrVideoAnalysisFormat", "The video analysis result is not in the expected format: {0}").ToString(), {Error}), FLinearColor::Red);
         return;
     }
 
@@ -1186,7 +1186,7 @@ void SUPTMainPanel::OnPoseAnalysisCompleted(const bool bSuccess, const FUPTPoseA
     if (!FUPTReferencePlanParser::Parse(Result.PlanJson, ParsedPlan, ParseError))
     {
         SetReport(Result.PlanJson.Left(4000));
-        FinishGeneration(FString::Printf(TEXT("포즈 분석 결과 형식이 올바르지 않습니다: %s"), *ParseError), FLinearColor::Red);
+        FinishGeneration(FString::Format(*LOCTEXT("ErrPoseAnalysisFormat", "The pose analysis result is not in the expected format: {0}").ToString(), {ParseError}), FLinearColor::Red);
         return;
     }
     ParsedPlan.MatchMode = ReferenceMatchMode;
@@ -1195,7 +1195,7 @@ void SUPTMainPanel::OnPoseAnalysisCompleted(const bool bSuccess, const FUPTPoseA
     LastPoseDebugDirectory = Result.DebugDirectory;
     LastReferencePlanFile = Result.PlanFile;
     UE_LOG(LogUPTPanel, Log, TEXT("Pose reference plan: %s (cache=%d)"), *Result.PlanFile, Result.bFromCache ? 1 : 0);
-    SetStatus(Result.bFromCache ? TEXT("[2/4] 같은 영상의 포즈 분석 결과를 재사용합니다.") : TEXT("[2/4] 포즈 분석을 마쳤습니다."));
+    SetStatus(Result.bFromCache ? LOCTEXT("ProgReusePose", "[2/4] Reusing the pose analysis of the same video.").ToString() : LOCTEXT("ProgPoseDone", "[2/4] Pose analysis finished.").ToString());
     ContinueReferencePipeline();
 }
 
@@ -1205,7 +1205,7 @@ FReply SUPTMainPanel::BrowseLibraryFolder()
     if (!DesktopPlatform) return FReply::Handled();
     FString Folder;
     const void* ParentWindow = FSlateApplication::Get().FindBestParentWindowHandleForDialogs(AsShared());
-    if (DesktopPlatform->OpenDirectoryDialog(ParentWindow, TEXT("레퍼런스 영상 라이브러리 폴더"), GetDefault<UUPTSettings>()->ReferenceLibraryDirectory, Folder))
+    if (DesktopPlatform->OpenDirectoryDialog(ParentWindow, LOCTEXT("LibraryFolderTitle", "Reference video library folder").ToString(), GetDefault<UUPTSettings>()->ReferenceLibraryDirectory, Folder))
     {
         UUPTSettings* Settings = GetMutableDefault<UUPTSettings>();
         Settings->ReferenceLibraryDirectory = Folder;
@@ -1232,7 +1232,7 @@ void SUPTMainPanel::StartLibrarySearch(const bool bContinueToGeneration)
     const FString Prompt = LibraryPromptInput.IsValid() ? LibraryPromptInput->GetText().ToString().TrimStartAndEnd() : FString();
     if (Prompt.IsEmpty())
     {
-        SetStatus(TEXT("② 찾고 싶은 연출을 글로 적어 주세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("NeedPrompt", "(2) Describe the staging you are looking for.").ToString(), FLinearColor::Yellow);
         return;
     }
     // 폴더 칸에 입력만 하고 Enter를 누르지 않았어도 지금 보이는 경로로 검색한다.
@@ -1249,12 +1249,12 @@ void SUPTMainPanel::StartLibrarySearch(const bool bContinueToGeneration)
     const FString Library = GetDefault<UUPTSettings>()->ReferenceLibraryDirectory.TrimStartAndEnd();
     if (Library.IsEmpty())
     {
-        SetStatus(TEXT("② '폴더 선택...'으로 레퍼런스 영상을 모아 둔 폴더를 지정하세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("NeedLibraryFolder", "(2) Point 'Choose folder...' at the folder that holds your reference videos.").ToString(), FLinearColor::Yellow);
         return;
     }
     bGenerationInFlight = true;
     PendingLibraryKey = GetLibraryQueryKey();
-    SetStatus(TEXT("[1/4] 레퍼런스 라이브러리를 검색하는 중입니다. 처음이거나 영상을 새로 넣었다면 영상마다 포즈 분석을 하므로 몇 분 걸릴 수 있습니다..."));
+    SetStatus(LOCTEXT("ProgLibrarySearch", "[1/4] Searching the reference library. The first run, or a run after adding videos, analyzes each video and can take a few minutes...").ToString());
     FUPTPoseReferenceAnalyzer::SearchLibrary(Library, Prompt, GetDefault<UUPTSettings>()->ReferenceLibraryResultCount,
         FUPTLibrarySearchComplete::CreateSP(this, &SUPTMainPanel::OnLibrarySearchCompleted, bContinueToGeneration));
 }
@@ -1273,12 +1273,12 @@ void SUPTMainPanel::OnLibrarySearchCompleted(const bool bSuccess, const FString&
     TSharedPtr<FJsonObject> Root;
     if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(ResultJson), Root) || !Root.IsValid())
     {
-        FinishGeneration(TEXT("라이브러리 검색 결과를 읽지 못했습니다."), FLinearColor::Red);
+        FinishGeneration(LOCTEXT("ErrLibraryResult", "Could not read the library search result.").ToString(), FLinearColor::Red);
         return;
     }
 
     // 프롬프트를 어떤 샷 요구로 이해했는지 먼저 보여 준다(원하는 결과가 안 나오면 표현을 바꾸는 근거가 된다).
-    LibraryReport = TEXT("[프롬프트 해석]\n");
+    LibraryReport = LOCTEXT("ReportPromptRead", "[Prompt as read]\n").ToString();
     const TSharedPtr<FJsonObject>* Query = nullptr;
     const TArray<TSharedPtr<FJsonValue>>* QueryShots = nullptr;
     int32 RequestCount = 0;
@@ -1296,16 +1296,16 @@ void SUPTMainPanel::OnLibrarySearchCompleted(const bool bSuccess, const FString&
             }
             double People = 0.0;
             bool bOverShoulder = false;
-            if (Request->TryGetBoolField(TEXT("ots"), bOverShoulder) && bOverShoulder) Parts.Add(TEXT("어깨 너머"));
-            else if (Request->TryGetNumberField(TEXT("people"), People)) Parts.Add(FString::Printf(TEXT("%d명"), FMath::RoundToInt(People)));
+            if (Request->TryGetBoolField(TEXT("ots"), bOverShoulder) && bOverShoulder) Parts.Add(LOCTEXT("OverShoulderWord", "over the shoulder").ToString());
+            else if (Request->TryGetNumberField(TEXT("people"), People)) Parts.Add(FString::Format(*LOCTEXT("PeopleCount", "{0} people").ToString(), {FMath::RoundToInt(People)}));
             FString Text;
             Request->TryGetStringField(TEXT("text"), Text);
             LibraryReport += FString::Printf(TEXT("%d) \"%s\" → %s\n"), ++RequestCount, *Text, *FString::Join(Parts, TEXT(" / ")));
         }
     }
-    if (RequestCount == 0) LibraryReport += TEXT("샷 크기·앵글·카메라 모션·인원 표현을 찾지 못해 파일 이름 키워드로만 찾았습니다.\n");
+    if (RequestCount == 0) LibraryReport += LOCTEXT("ReportKeywordOnly", "No shot size, angle, camera motion or head count was recognized, so the search used file-name keywords only.\n").ToString();
 
-    LibraryReport += TEXT("\n[검색 결과]\n");
+    LibraryReport += LOCTEXT("ReportResults", "\n[Search results]\n").ToString();
     const TArray<TSharedPtr<FJsonValue>>* Results = nullptr;
     if (Root->TryGetArrayField(TEXT("results"), Results) && Results)
     {
@@ -1326,7 +1326,7 @@ void SUPTMainPanel::OnLibrarySearchCompleted(const bool bSuccess, const FString&
                 (*Segment)->TryGetNumberField(TEXT("end_shot"), EndShot);
                 (*Segment)->TryGetNumberField(TEXT("start_seconds"), StartSeconds);
                 (*Segment)->TryGetNumberField(TEXT("end_seconds"), EndSeconds);
-                Item->Segment = FString::Printf(TEXT("샷 %d~%d (%.1f~%.1f초)"), FMath::RoundToInt(StartShot), FMath::RoundToInt(EndShot), StartSeconds, EndSeconds);
+                Item->Segment = FString::Format(*LOCTEXT("ShotRange", "shots {0}-{1} ({2}-{3}s)").ToString(), {FMath::RoundToInt(StartShot), FMath::RoundToInt(EndShot), FString::Printf(TEXT("%.1f"), StartSeconds), FString::Printf(TEXT("%.1f"), EndSeconds)});
             }
             const TArray<TSharedPtr<FJsonValue>>* Matches = nullptr;
             TArray<FString> MatchTexts;
@@ -1343,7 +1343,7 @@ void SUPTMainPanel::OnLibrarySearchCompleted(const bool bSuccess, const FString&
                 }
             }
             Item->Matches = FString::Join(MatchTexts, TEXT(", "));
-            LibraryReport += FString::Printf(TEXT("%d위 %.0f점  %s  %s  맞춘 샷: %s\n"), Item->Rank, Item->Score, *Item->Video, *Item->Segment, *Item->Matches);
+            LibraryReport += FString::Format(*LOCTEXT("ReportRow", "#{0} {1} pts  {2}  {3}  matched shots: {4}\n").ToString(), {Item->Rank, FString::Printf(TEXT("%.0f"), Item->Score), Item->Video, Item->Segment, Item->Matches});
             LibraryResults.Add(Item);
         }
     }
@@ -1357,12 +1357,12 @@ void SUPTMainPanel::OnLibrarySearchCompleted(const bool bSuccess, const FString&
 
     if (LibraryResults.IsEmpty())
     {
-        FinishGeneration(TEXT("라이브러리에서 비슷한 구간을 찾지 못했습니다. 표현을 바꾸거나 영상을 더 넣어 보세요."), FLinearColor::Yellow);
+        FinishGeneration(LOCTEXT("LibraryNoMatch", "No similar segment was found in the library. Try different wording, or add more videos.").ToString(), FLinearColor::Yellow);
         return;
     }
     if (!bContinueToGeneration)
     {
-        FinishGeneration(FString::Printf(TEXT("검색 완료: %d개 결과. 목록에서 고른 뒤(기본 1위) '시네마틱 생성'을 누르세요."), LibraryResults.Num()), FLinearColor::Green);
+        FinishGeneration(FString::Format(*LOCTEXT("LibrarySearchDone", "Search finished: {0} results. Pick one from the list (the top one by default) and press 'Generate cinematic'.").ToString(), {LibraryResults.Num()}), FLinearColor::Green);
         return;
     }
     FString LoadError;
@@ -1371,7 +1371,7 @@ void SUPTMainPanel::OnLibrarySearchCompleted(const bool bSuccess, const FString&
         FinishGeneration(LoadError, FLinearColor::Red);
         return;
     }
-    SetStatus(FString::Printf(TEXT("[2/4] 1위 '%s' (%s, %.0f점)를 레퍼런스로 씁니다."), *LibraryResults[0]->Video, *LibraryResults[0]->Segment, LibraryResults[0]->Score));
+    SetStatus(FString::Format(*LOCTEXT("ProgUseTopResult", "[2/4] Using the top result '{0}' ({1}, {2} pts) as the reference.").ToString(), {LibraryResults[0]->Video, LibraryResults[0]->Segment, FString::Printf(TEXT("%.0f"), LibraryResults[0]->Score)}));
     ContinueReferencePipeline();
 }
 
@@ -1380,14 +1380,14 @@ bool SUPTMainPanel::LoadLibraryResult(const TSharedPtr<FUPTLibraryResultItem>& I
     FString Json;
     if (!Item.IsValid() || !FFileHelper::LoadFileToString(Json, *Item->ReferencePlanFile))
     {
-        OutError = TEXT("검색 결과의 레퍼런스 구간 파일을 읽지 못했습니다. 다시 검색하세요.");
+        OutError = LOCTEXT("ErrSegmentFile", "Could not read the reference segment file from the search result. Search again.").ToString();
         return false;
     }
     FUPTReferencePlan Parsed;
     FString ParseError;
     if (!FUPTReferencePlanParser::Parse(Json, Parsed, ParseError))
     {
-        OutError = FString::Printf(TEXT("레퍼런스 구간 형식이 올바르지 않습니다: %s"), *ParseError);
+        OutError = FString::Format(*LOCTEXT("ErrSegmentFormat", "The reference segment is not in the expected format: {0}").ToString(), {ParseError});
         return false;
     }
     Parsed.MatchMode = TEXT("scene");
@@ -1405,9 +1405,9 @@ TSharedRef<ITableRow> SUPTMainPanel::GenerateLibraryRow(TSharedPtr<FUPTLibraryRe
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
-            [ SNew(SBox).WidthOverride(32)[ SNew(STextBlock).Text(FText::FromString(FString::Printf(TEXT("%d위"), Item->Rank))) ] ]
+            [ SNew(SBox).WidthOverride(32)[ SNew(STextBlock).Text(FText::FromString(FString::Format(*LOCTEXT("RankLabel", "#{0}").ToString(), {Item->Rank}))) ] ]
             + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
-            [ SNew(SBox).WidthOverride(48)[ SNew(STextBlock).Text(FText::FromString(FString::Printf(TEXT("%.0f점"), Item->Score))) ] ]
+            [ SNew(SBox).WidthOverride(48)[ SNew(STextBlock).Text(FText::FromString(FString::Format(*LOCTEXT("ScoreLabel", "{0} pts").ToString(), {FString::Printf(TEXT("%.0f"), Item->Score)}))) ] ]
             + SHorizontalBox::Slot().FillWidth(0.3f).Padding(0, 0, 8, 0)
             [ SNew(STextBlock).Text(FText::FromString(Item->Video)).ToolTipText(FText::FromString(Item->ReferencePlanFile)) ]
             + SHorizontalBox::Slot().FillWidth(0.25f).Padding(0, 0, 8, 0)
@@ -1445,7 +1445,7 @@ bool SUPTMainPanel::TryLoadCachedReferenceAnalysis()
 
 void SUPTMainPanel::ContinueReferencePipeline()
 {
-    SetStatus(TEXT("[3/4] 영상 속 인물을 등장인물에 배정하고 카메라를 계산하는 중입니다..."));
+    SetStatus(LOCTEXT("ProgAssignCast", "[3/4] Assigning the people in the video to the cast and computing cameras...").ToString());
     FString Error;
     if (!ApplyReferenceBlocking(Error))
     {
@@ -1470,19 +1470,18 @@ void SUPTMainPanel::ContinueReferencePipeline()
     PendingGenerationWarning.Reset();
     if (!LowConfidenceShots.IsEmpty())
     {
-        PendingGenerationWarning += FString::Printf(TEXT(" [주의] 분석 신뢰도가 낮은 샷 %d개: %s — 재생해 보고 '선택한 샷 수정'으로 손보세요."),
-            LowConfidenceShots.Num(), *FString::Join(LowConfidenceShots, TEXT(", ")));
+        PendingGenerationWarning += FString::Format(*LOCTEXT("WarnLowConfidence", " [note] {0} shots have low analysis confidence: {1} - play them back and adjust with 'Edit selected shot'.").ToString(), {LowConfidenceShots.Num(), FString::Join(LowConfidenceShots, TEXT(", "))});
     }
     if (EmptyShots > 0)
     {
         // 인물 없는 샷(원경·인서트·타이틀)은 첫 등장인물을 기준으로 영상의 샷 크기대로 찍는다.
-        PendingGenerationWarning += FString::Printf(TEXT(" 인물이 없는 샷 %d개(원경·인서트 등)는 첫 등장인물 기준으로 배치했습니다."), EmptyShots);
+        PendingGenerationWarning += FString::Format(*LOCTEXT("NotePersonless", " {0} shots without a person (distant views, inserts) were placed relative to the first cast member.").ToString(), {EmptyShots});
     }
 
     // 구도 검증은 로컬 포즈 분석기가 만든 Reference Plan(영상 분석 결과나 라이브러리 검색 구간)이 있을 때만 할 수 있다.
     if (LastReferencePlanFile.IsEmpty() || !FPaths::FileExists(LastReferencePlanFile))
     {
-        SetStatus(TEXT("[4/4] Level Sequence를 만드는 중입니다..."));
+        SetStatus(LOCTEXT("ProgBuildSequence", "[4/4] Building the Level Sequence...").ToString());
         if (!CreateSequence(Error))
         {
             FinishGeneration(Error, FLinearColor::Red);
@@ -1499,15 +1498,16 @@ void SUPTMainPanel::ContinueReferencePipeline()
     // 보정 중 선택이 바뀌어도 등장인물이 흔들리지 않도록 먼저 고정한다.
     const bool bWasCastLocked = bCastLocked;
     bCastLocked = true;
-    SetStatus(FString::Printf(TEXT("[4/4] 카메라 구도를 레퍼런스와 비교하는 중입니다... (측정 1/%d)"), MaxCorrections + 1));
+    SetStatus(FString::Format(*LOCTEXT("ProgCompareFraming", "[4/4] Comparing the camera framing against the reference... (measurement 1/{0})").ToString(), {MaxCorrections + 1}));
     TWeakPtr<SWidget> WeakPanel = AsShared();
     FUPTPoseReferenceAnalyzer::RefineShotCameras(CurrentPlan, SceneActors, ReferencePlanFile, MaxCorrections,
         FUPTPoseRefineProgress::CreateLambda([WeakPanel](const int32 Pass, const double Score)
         {
             const TSharedPtr<SWidget> Pinned = WeakPanel.Pin();
             if (!Pinned.IsValid()) return;
-            static_cast<SUPTMainPanel*>(Pinned.Get())->SetStatus(FString::Printf(
-                TEXT("[4/4] 카메라 구도 자동 보정 중... 측정 %d/%d, 현재 점수 %.0f"), Pass + 1, MaxCorrections + 1, Score));
+            static_cast<SUPTMainPanel*>(Pinned.Get())->SetStatus(FString::Format(
+                *LOCTEXT("ProgRefineFraming", "[4/4] Refining the camera framing... measurement {0}/{1}, current score {2}").ToString(),
+                {Pass + 1, MaxCorrections + 1, FString::Printf(TEXT("%.0f"), Score)}));
         }),
         FUPTPoseRefineComplete::CreateLambda([WeakPanel, bWasCastLocked](const bool bSuccess, const FUPTCinematicPlan& BestPlan, const FString& Result)
         {
@@ -1529,7 +1529,7 @@ void SUPTMainPanel::ContinueReferencePipeline()
                 UE_LOG(LogUPTPanel, Warning, TEXT("Render verification failed: %s"), *Result);
             }
 
-            Panel->SetStatus(TEXT("[4/4] Level Sequence를 만드는 중입니다..."));
+            Panel->SetStatus(LOCTEXT("ProgBuildSequence", "[4/4] Building the Level Sequence...").ToString());
             FString Error;
             if (!Panel->CreateSequence(Error))
             {
@@ -1540,12 +1540,12 @@ void SUPTMainPanel::ContinueReferencePipeline()
             const FString CompletionMessage = Panel->BuildCompletionMessage();
             if (!bSuccess)
             {
-                Panel->FinishGeneration(CompletionMessage + TEXT(" (구도 검증 실패: ") + Result.Left(300) + TEXT(")"), FLinearColor::Yellow);
+                Panel->FinishGeneration(CompletionMessage + LOCTEXT("ErrFramingCheck", " (framing check failed: ").ToString() + Result.Left(300) + TEXT(")"), FLinearColor::Yellow);
                 return;
             }
             const FString Previous = Panel->ReportOutput.IsValid() ? Panel->ReportOutput->GetText().ToString() : FString();
             Panel->SetReport(ReportText + TEXT("\n") + Previous);
-            Panel->FinishGeneration(FString::Printf(TEXT("%s — 레퍼런스 대비 구도 점수 %.0f / 100"), *CompletionMessage, Score),
+            Panel->FinishGeneration(FString::Format(*LOCTEXT("FramingScore", "{0} - framing score against the reference {1} / 100").ToString(), {CompletionMessage, FString::Printf(TEXT("%.0f"), Score)}),
                 Score >= 70.0 ? FLinearColor::Green : FLinearColor::Yellow);
         }));
 }
@@ -1554,7 +1554,7 @@ bool SUPTMainPanel::ApplyReferenceBlocking(FString& OutError)
 {
     if (!bHasReferencePlan)
     {
-        OutError = TEXT("영상 분석 결과가 없습니다.");
+        OutError = LOCTEXT("ErrNoVideoAnalysis", "There is no video analysis result.").ToString();
         return false;
     }
     TMap<FString, FString> ExplicitMappings;
@@ -1564,7 +1564,7 @@ bool SUPTMainPanel::ApplyReferenceBlocking(FString& OutError)
         TSharedPtr<FJsonObject> MappingObject;
         if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(MappingJson), MappingObject) || !MappingObject.IsValid())
         {
-            OutError = TEXT("고급 설정의 역할 매핑 JSON 형식이 올바르지 않습니다.");
+            OutError = LOCTEXT("ErrRoleMappingJson", "The role mapping JSON in the advanced settings is not valid.").ToString();
             return false;
         }
         for (const TPair<FString, TSharedPtr<FJsonValue>>& Field : MappingObject->Values)
@@ -1572,7 +1572,7 @@ bool SUPTMainPanel::ApplyReferenceBlocking(FString& OutError)
             FString ActorLabel;
             if (!Field.Value.IsValid() || !Field.Value->TryGetString(ActorLabel) || Field.Key.IsEmpty() || ActorLabel.IsEmpty())
             {
-                OutError = FString::Printf(TEXT("역할 매핑 '%s'의 값은 비어 있지 않은 Actor 라벨 문자열이어야 합니다."), *Field.Key);
+                OutError = FString::Format(*LOCTEXT("ErrRoleMappingValue", "The value of role mapping '{0}' must be a non-empty Actor label string.").ToString(), {Field.Key});
                 return false;
             }
             ExplicitMappings.Add(Field.Key, ActorLabel);
@@ -1610,7 +1610,7 @@ void SUPTMainPanel::OnScriptPlanReceived(const bool bSuccess, const FString& Res
         return;
     }
     UE_LOG(LogUPTPanel, Log, TEXT("LLM shot plan response:\n%s"), *Result.Left(8000));
-    SetStatus(TEXT("[2/3] 샷 구성을 검증하는 중입니다..."));
+    SetStatus(LOCTEXT("ProgValidatePlan", "[2/3] Validating the shot plan...").ToString());
 
     FString PlanJson = Result;
     TArray<FString> RepairNotes;
@@ -1628,10 +1628,10 @@ void SUPTMainPanel::OnScriptPlanReceived(const bool bSuccess, const FString& Res
     if (!ValidatePlanJson(PlanJson, Error))
     {
         Source = EUPTCinematicSource::ShotPlanJson;
-        FinishGeneration(FString::Printf(TEXT("LLM이 만든 샷 구성에 문제가 있습니다 — %s (②의 Shot Plan JSON을 고쳐 다시 생성할 수 있습니다)"), *Error), FLinearColor::Red);
+        FinishGeneration(FString::Format(*LOCTEXT("ErrLlmPlan", "There is a problem with the shot plan the LLM produced - {0} (you can fix the Shot Plan JSON in (2) and generate again)").ToString(), {Error}), FLinearColor::Red);
         return;
     }
-    SetStatus(TEXT("[3/3] Level Sequence를 만드는 중입니다..."));
+    SetStatus(LOCTEXT("ProgBuildSequence3", "[3/3] Building the Level Sequence...").ToString());
     if (!CreateSequence(Error))
     {
         FinishGeneration(Error, FLinearColor::Red);
@@ -1639,9 +1639,9 @@ void SUPTMainPanel::OnScriptPlanReceived(const bool bSuccess, const FString& Res
     }
     if (!RepairNotes.IsEmpty() && ReportOutput.IsValid())
     {
-        SetReport(TEXT("[자동 보정]\n") + FString::Join(RepairNotes, TEXT("\n")) + TEXT("\n\n") + ReportOutput->GetText().ToString());
+        SetReport(LOCTEXT("ReportAutoFix", "[Automatic corrections]\n").ToString() + FString::Join(RepairNotes, TEXT("\n")) + TEXT("\n\n") + ReportOutput->GetText().ToString());
     }
-    FinishGeneration(BuildCompletionMessage() + (RepairNotes.IsEmpty() ? FString() : FString::Printf(TEXT(" (LLM 결과 %d곳 자동 보정)"), RepairNotes.Num())), FLinearColor::Green);
+    FinishGeneration(BuildCompletionMessage() + (RepairNotes.IsEmpty() ? FString() : FString::Format(*LOCTEXT("NoteAutoFix", " ({0} automatic corrections to the LLM result)").ToString(), {RepairNotes.Num()})), FLinearColor::Green);
 }
 
 bool SUPTMainPanel::ValidatePlanJson(const FString& JsonText, FString& OutError)
@@ -1652,7 +1652,7 @@ bool SUPTMainPanel::ValidatePlanJson(const FString& JsonText, FString& OutError)
     {
         SetReport(ParseError);
         UE_LOG(LogUPTPanel, Warning, TEXT("Shot Plan parse failed: %s"), *ParseError);
-        OutError = FString::Printf(TEXT("Shot Plan JSON을 읽지 못했습니다: %s"), *ParseError);
+        OutError = FString::Format(*LOCTEXT("ErrShotPlanJson", "Could not read the Shot Plan JSON: {0}").ToString(), {ParseError});
         return false;
     }
 
@@ -1661,23 +1661,23 @@ bool SUPTMainPanel::ValidatePlanJson(const FString& JsonText, FString& OutError)
     for (const FUPTCinematicShot& Shot : ParsedPlan.Shots)
     {
         if (!Shot.Subject.IsEmpty() && !SceneActors.Contains(Shot.Subject))
-            Problems.Add(FString::Printf(TEXT("%s: subject '%s'가 등장인물에 없습니다."), *Shot.Name, *Shot.Subject));
+            Problems.Add(FString::Format(*LOCTEXT("ErrSubjectMissing", "{0}: subject '{1}' is not in the cast.").ToString(), {Shot.Name, Shot.Subject}));
         if (!Shot.LookAt.IsEmpty() && !SceneActors.Contains(Shot.LookAt))
-            Problems.Add(FString::Printf(TEXT("%s: look_at '%s'가 등장인물에 없습니다."), *Shot.Name, *Shot.LookAt));
+            Problems.Add(FString::Format(*LOCTEXT("ErrLookAtMissing", "{0}: look_at '{1}' is not in the cast.").ToString(), {Shot.Name, Shot.LookAt}));
         if (!Shot.AnimationId.IsEmpty() && !Animations.Contains(Shot.AnimationId))
-            Problems.Add(FString::Printf(TEXT("%s: animation_id '%s'가 애니메이션 목록에 없습니다."), *Shot.Name, *Shot.AnimationId));
+            Problems.Add(FString::Format(*LOCTEXT("ErrAnimationMissing", "{0}: animation_id '{1}' is not in the animation list.").ToString(), {Shot.Name, Shot.AnimationId}));
         if (!Shot.LipSyncAnimationId.IsEmpty() && !Animations.Contains(Shot.LipSyncAnimationId))
-            Problems.Add(FString::Printf(TEXT("%s: lip_sync_animation_id '%s'가 애니메이션 목록에 없습니다."), *Shot.Name, *Shot.LipSyncAnimationId));
+            Problems.Add(FString::Format(*LOCTEXT("ErrLipSyncMissing", "{0}: lip_sync_animation_id '{1}' is not in the animation list.").ToString(), {Shot.Name, Shot.LipSyncAnimationId}));
         if (!Shot.AudioId.IsEmpty() && !Sounds.Contains(Shot.AudioId))
-            Problems.Add(FString::Printf(TEXT("%s: audio_id '%s'가 오디오 목록에 없습니다."), *Shot.Name, *Shot.AudioId));
+            Problems.Add(FString::Format(*LOCTEXT("ErrAudioMissing", "{0}: audio_id '{1}' is not in the audio list.").ToString(), {Shot.Name, Shot.AudioId}));
     }
     if (!Problems.IsEmpty())
     {
         SetReport(FString::Join(Problems, TEXT("\n")));
         UE_LOG(LogUPTPanel, Warning, TEXT("Shot Plan validation failed:\n%s"), *FString::Join(Problems, TEXT("\n")));
         OutError = Problems.Num() == 1
-            ? FString::Printf(TEXT("검증 실패: %s"), *Problems[0])
-            : FString::Printf(TEXT("검증 실패: %s 외 %d건 (아래 상세 참고)"), *Problems[0], Problems.Num() - 1);
+            ? FString::Format(*LOCTEXT("ErrValidation", "Validation failed: {0}").ToString(), {Problems[0]})
+            : FString::Format(*LOCTEXT("ErrValidationMore", "Validation failed: {0} and {1} more (see the details below)").ToString(), {Problems[0], Problems.Num() - 1});
         return false;
     }
 
@@ -1695,14 +1695,14 @@ bool SUPTMainPanel::CreateSequence(FString& OutError, const bool bReuseExistingS
 {
     if (!bHasValidPlan)
     {
-        OutError = TEXT("생성할 Shot Plan이 없습니다.");
+        OutError = LOCTEXT("ErrNoShotPlan", "There is no Shot Plan to generate from.").ToString();
         return false;
     }
     const FUPTBlockingValidationResult BlockingValidation = FUPTBlockingValidator::Validate(CurrentPlan);
     if (!BlockingValidation.IsValid())
     {
         SetReport(BlockingValidation.ToText());
-        OutError = TEXT("샷 구성 안전성 검증에 실패했습니다. 아래 상세를 확인하세요.");
+        OutError = LOCTEXT("ErrSafetyCheck", "The shot plan failed the safety check. See the details below.").ToString();
         return false;
     }
     for (const FUPTCinematicShot& Shot : CurrentPlan.Shots)
@@ -1712,7 +1712,7 @@ bool SUPTMainPanel::CreateSequence(FString& OutError, const bool bReuseExistingS
             (!Shot.LipSyncAnimationId.IsEmpty() && !Animations.Contains(Shot.LipSyncAnimationId)) ||
             (!Shot.AudioId.IsEmpty() && !Sounds.Contains(Shot.AudioId)))
         {
-            OutError = TEXT("등장인물이나 애니메이션·오디오 목록이 Shot Plan과 맞지 않습니다. 목록을 확인한 뒤 다시 생성하세요.");
+            OutError = LOCTEXT("ErrPlanMismatch", "The cast or the animation/audio list does not match the Shot Plan. Check the lists and generate again.").ToString();
             return false;
         }
     }
@@ -1744,8 +1744,7 @@ void SUPTMainPanel::FinishGeneration(const FString& Message, const FSlateColor& 
 FString SUPTMainPanel::BuildCompletionMessage() const
 {
     const ULevelSequence* Sequence = LastCreatedSequence.Get();
-    return FString::Printf(TEXT("완료: %s — %d개 샷. 샷 목록을 더블클릭하면 해당 구간을 재생합니다.%s"),
-        Sequence ? *Sequence->GetName() : TEXT("Level Sequence"), CurrentPlan.Shots.Num(), *PendingGenerationWarning);
+    return FString::Format(*LOCTEXT("GenerateDone", "Done: {0} - {1} shots. Double-click a row in the shot list to play that section.{2}").ToString(), {Sequence ? *Sequence->GetName() : TEXT("Level Sequence"), CurrentPlan.Shots.Num(), PendingGenerationWarning});
 }
 
 void SUPTMainPanel::RefreshShotList()
@@ -1759,15 +1758,15 @@ void SUPTMainPanel::RefreshShotList()
             TSharedPtr<FUPTShotListItem> Item = MakeShared<FUPTShotListItem>();
             Item->Index = Index;
             Item->Name = Shot.Name;
-            Item->Duration = FString::Printf(TEXT("%.1f초"), Shot.DurationSeconds);
+            Item->Duration = FString::Format(*LOCTEXT("SecondsValue", "{0}s").ToString(), {FString::Printf(TEXT("%.1f"), Shot.DurationSeconds)});
             Item->Lens = FString::Printf(TEXT("%.0fmm"), Shot.FocalLength);
-            Item->Subject = Shot.Subject.IsEmpty() ? TEXT("(절대 좌표)") : Shot.Subject;
+            Item->Subject = Shot.Subject.IsEmpty() ? LOCTEXT("AbsoluteCoords", "(absolute)").ToString() : Shot.Subject;
             Item->Screen = Shot.Subject.IsEmpty() ? TEXT("-") : FString::Printf(TEXT("%.2f, %.2f"), Shot.SubjectScreenX, Shot.SubjectScreenY);
             Item->Motion = Shot.CameraMotion.IsEmpty() ? TEXT("static") : Shot.CameraMotion;
             if (ShotConfidences.Num() == CurrentPlan.Shots.Num())
             {
                 const float Confidence = ShotConfidences[Index];
-                Item->Confidence = Confidence < 0.0f ? TEXT("인물 없음") : FString::Printf(TEXT("%.0f%%"), Confidence * 100.0f);
+                Item->Confidence = Confidence < 0.0f ? LOCTEXT("NoPerson", "no person").ToString() : FString::Printf(TEXT("%.0f%%"), Confidence * 100.0f);
                 Item->bLowConfidence = Confidence >= 0.0f && Confidence < GetDefault<UUPTSettings>()->MinimumAutoGenerationConfidence;
             }
             else
@@ -1881,7 +1880,7 @@ FReply SUPTMainPanel::AssignSelectedAnimationToShot()
     }
     if (!Animation)
     {
-        SetStatus(TEXT("Content Browser에서 Animation Sequence 또는 Montage를 선택한 뒤 누르세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("PickAnimationFirst", "Select an Animation Sequence or Montage in the Content Browser first.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     FString Id;
@@ -1902,18 +1901,17 @@ FReply SUPTMainPanel::AssignSelectedAnimationToShot()
     const USkeletalMeshComponent* Mesh = SubjectPtr && SubjectPtr->IsValid() ? SubjectPtr->Get()->FindComponentByClass<USkeletalMeshComponent>() : nullptr;
     if (Mesh && Mesh->GetSkeletalMeshAsset() && Animation->GetSkeleton() != Mesh->GetSkeletalMeshAsset()->GetSkeleton())
     {
-        SetStatus(FString::Printf(TEXT("'%s'는 '%s'와 스켈레톤이 달라 그대로는 재생되지 않습니다. '애니메이션 범용화' 탭에서 리타기팅한 애니메이션을 고르세요."),
-            *Animation->GetName(), *EditSubject), FLinearColor::Yellow);
+        SetStatus(FString::Format(*LOCTEXT("ErrSkeletonMismatch", "'{0}' has a different skeleton from '{1}' and will not play as-is. Pick an animation retargeted in the 'Universal animation retarget' tab.").ToString(), {Animation->GetName(), EditSubject}), FLinearColor::Yellow);
         return FReply::Handled();
     }
-    SetStatus(FString::Printf(TEXT("'%s'를 %d번 샷 애니메이션으로 골랐습니다. '이 샷에 적용하고 시퀀스 갱신'을 누르면 반영됩니다."), *Animation->GetName(), CurrentShotIndex + 1), FLinearColor::Green);
+    SetStatus(FString::Format(*LOCTEXT("AnimationPicked", "'{0}' is set as the animation for shot #{1}. Press 'Apply to this shot and update the sequence' to apply it.").ToString(), {Animation->GetName(), CurrentShotIndex + 1}), FLinearColor::Green);
     return FReply::Handled();
 }
 
 FReply SUPTMainPanel::ClearShotAnimation()
 {
     EditAnimationId.Empty();
-    SetStatus(TEXT("애니메이션을 뺐습니다. '이 샷에 적용하고 시퀀스 갱신'을 누르면 반영됩니다."));
+    SetStatus(LOCTEXT("AnimationRemoved", "The animation was removed. Press 'Apply to this shot and update the sequence' to apply it.").ToString());
     return FReply::Handled();
 }
 
@@ -1922,7 +1920,7 @@ FReply SUPTMainPanel::ApplyShotEdit()
     if (IsGenerationInFlight() || !bHasValidPlan || !CurrentPlan.Shots.IsValidIndex(CurrentShotIndex)) return FReply::Handled();
     if (!LastCreatedSequence.IsValid())
     {
-        SetStatus(TEXT("먼저 시네마틱을 생성하세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("GenerateFirst", "Generate a cinematic first.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     FUPTCinematicShot& Shot = CurrentPlan.Shots[CurrentShotIndex];
@@ -1991,12 +1989,12 @@ FReply SUPTMainPanel::ApplyShotEdit()
     {
         Shot = Before;
         RefreshShotList();
-        SetStatus(FString::Printf(TEXT("%d번 샷 수정을 반영하지 못해 되돌렸습니다: %s"), CurrentShotIndex + 1, *Error), FLinearColor::Red);
+        SetStatus(FString::Format(*LOCTEXT("ErrShotEdit", "The edit to shot #{0} could not be applied and was reverted: {1}").ToString(), {CurrentShotIndex + 1, Error}), FLinearColor::Red);
         return FReply::Handled();
     }
     if (JsonInput.IsValid()) JsonInput->SetText(FText::FromString(FUPTPlanParser::ToJson(CurrentPlan)));
     PlaySelectedShot();
-    SetStatus(FString::Printf(TEXT("%d번 샷 수정을 반영해 '%s'를 그 자리에서 갱신하고 재생합니다."), CurrentShotIndex + 1, *LastCreatedSequence->GetName()), FLinearColor::Green);
+    SetStatus(FString::Format(*LOCTEXT("ShotEditApplied", "Applied the edit to shot #{0}, updated '{1}' in place and is playing it.").ToString(), {CurrentShotIndex + 1, LastCreatedSequence->GetName()}), FLinearColor::Green);
     return FReply::Handled();
 }
 
@@ -2021,7 +2019,7 @@ FReply SUPTMainPanel::PlaySelectedShot()
     ULevelSequence* Sequence = LastCreatedSequence.Get();
     if (!bHasValidPlan || CurrentPlan.Shots.IsEmpty() || !Sequence)
     {
-        SetStatus(TEXT("먼저 시네마틱을 생성하세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("GenerateFirst", "Generate a cinematic first.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
 
@@ -2036,7 +2034,7 @@ FReply SUPTMainPanel::PlaySelectedShot()
     if (GEditor) GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorForAsset(Sequence);
     if (ULevelSequenceEditorBlueprintLibrary::GetCurrentLevelSequence() != Sequence)
     {
-        SetStatus(TEXT("Sequencer가 아직 열리는 중입니다. 잠시 후 다시 재생하세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("SequencerOpening", "Sequencer is still opening. Try playing again in a moment.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
 
@@ -2045,7 +2043,7 @@ FReply SUPTMainPanel::PlaySelectedShot()
     ULevelSequenceEditorBlueprintLibrary::SetSelectionRangeEnd(EndFrame);
     ULevelSequenceEditorBlueprintLibrary::SetGlobalPosition(FMovieSceneSequencePlaybackParams(FFrameTime(StartFrame), EUpdatePositionMethod::Jump));
     ULevelSequenceEditorBlueprintLibrary::PlayTo(FMovieSceneSequencePlaybackParams(FFrameTime(EndFrame), EUpdatePositionMethod::Play));
-    SetStatus(FString::Printf(TEXT("%d번 샷 '%s' 재생 중 (%d~%d 프레임)"), CurrentShotIndex + 1, *CurrentPlan.Shots[CurrentShotIndex].Name, StartFrame, EndFrame), FLinearColor::Green);
+    SetStatus(FString::Format(*LOCTEXT("PlayingShot", "Playing shot #{0} '{1}' (frames {2}-{3})").ToString(), {CurrentShotIndex + 1, CurrentPlan.Shots[CurrentShotIndex].Name, StartFrame, EndFrame}), FLinearColor::Green);
     return FReply::Handled();
 }
 
@@ -2054,19 +2052,19 @@ FReply SUPTMainPanel::CaptureCurrentShotCamera()
     ULevelSequence* Sequence = LastCreatedSequence.Get();
     if (!Sequence || !bHasValidPlan || !CurrentPlan.Shots.IsValidIndex(CurrentShotIndex))
     {
-        SetStatus(TEXT("먼저 시네마틱을 생성하세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("GenerateFirst", "Generate a cinematic first.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     if (ULevelSequenceEditorBlueprintLibrary::GetCurrentLevelSequence() != Sequence)
     {
-        SetStatus(TEXT("생성된 시네마틱을 Sequencer에서 먼저 여세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("OpenInSequencerFirst", "Open the generated cinematic in Sequencer first.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
 
     UMovieSceneCameraCutTrack* CutTrack = Cast<UMovieSceneCameraCutTrack>(Sequence->GetMovieScene()->GetCameraCutTrack());
     if (!CutTrack || !CutTrack->GetAllSections().IsValidIndex(CurrentShotIndex))
     {
-        SetStatus(TEXT("선택한 샷의 Camera Cut을 찾지 못했습니다."), FLinearColor::Red);
+        SetStatus(LOCTEXT("ErrNoCameraCut", "Could not find the Camera Cut for the selected shot.").ToString(), FLinearColor::Red);
         return FReply::Handled();
     }
     UMovieSceneCameraCutSection* CutSection = Cast<UMovieSceneCameraCutSection>(CutTrack->GetAllSections()[CurrentShotIndex]);
@@ -2081,7 +2079,7 @@ FReply SUPTMainPanel::CaptureCurrentShotCamera()
     }
     if (!Camera)
     {
-        SetStatus(TEXT("카메라가 아직 평가되지 않았습니다. 샷을 한 번 재생한 뒤 다시 누르세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("ErrCameraNotEvaluated", "The camera has not been evaluated yet. Play the shot once and try again.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
 
@@ -2111,7 +2109,7 @@ FReply SUPTMainPanel::CaptureCurrentShotCamera()
     }
     if (JsonInput.IsValid()) JsonInput->SetText(FText::FromString(FUPTPlanParser::ToJson(CurrentPlan)));
     RefreshShotList();
-    SetStatus(FString::Printf(TEXT("%d번 샷의 카메라 구도를 ②의 Shot Plan JSON에 보존했습니다. 'Shot Plan JSON 직접 입력'으로 다시 생성하면 반영됩니다."), CurrentShotIndex + 1), FLinearColor::Green);
+    SetStatus(FString::Format(*LOCTEXT("CameraCaptured", "The camera framing of shot #{0} was written into the Shot Plan JSON in (2). Generate again with 'Paste Shot Plan JSON' to use it.").ToString(), {CurrentShotIndex + 1}), FLinearColor::Green);
     return FReply::Handled();
 }
 
@@ -2119,11 +2117,11 @@ FReply SUPTMainPanel::AnalyzeComposition()
 {
     if (!bHasValidPlan)
     {
-        SetStatus(TEXT("먼저 시네마틱을 생성하세요."), FLinearColor::Yellow);
+        SetStatus(LOCTEXT("GenerateFirst", "Generate a cinematic first.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     SetReport(FUPTCompositionAnalyzer::Analyze(CurrentPlan, SceneActors));
-    SetStatus(TEXT("샷별 구도 점검을 마쳤습니다. 아래 결과를 확인하세요."), FLinearColor::Green);
+    SetStatus(LOCTEXT("FramingCheckDone", "The per-shot framing check finished. See the results below.").ToString(), FLinearColor::Green);
     return FReply::Handled();
 }
 
@@ -2146,11 +2144,11 @@ FReply SUPTMainPanel::OpenRetargetWindowForSelection()
     USkeletalMesh* Mesh = GetSelectedSkeletalMesh();
     if (!Mesh)
     {
-        SetAnimationStatus(TEXT("Content Browser에서 애니메이션을 적용할 대상 Skeletal Mesh를 먼저 선택하세요."), FLinearColor::Yellow);
+        SetAnimationStatus(LOCTEXT("PickTargetMeshFirst", "Select the target Skeletal Mesh for the animations in the Content Browser first.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     FUniversalProductionToolsModule::OpenAnimationRetargetWindow(Mesh);
-    SetAnimationStatus(FString::Printf(TEXT("'%s'용 범용화 창을 열었습니다."), *Mesh->GetName()), FLinearColor::Green);
+    SetAnimationStatus(FString::Format(*LOCTEXT("RetargetWindowOpened", "Opened the retarget window for '{0}'.").ToString(), {Mesh->GetName()}), FLinearColor::Green);
     return FReply::Handled();
 }
 
@@ -2159,7 +2157,7 @@ FReply SUPTMainPanel::AnalyzeSelectedSkeleton()
     USkeletalMesh* Mesh = GetSelectedSkeletalMesh();
     if (!Mesh)
     {
-        SetAnimationStatus(TEXT("Content Browser에서 보정할 Skeletal Mesh를 선택하세요."), FLinearColor::Yellow);
+        SetAnimationStatus(LOCTEXT("PickMeshToCorrect", "Select the Skeletal Mesh to correct in the Content Browser.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     FString OverrideJson = SkeletonOverrideInput->GetText().ToString().TrimStartAndEnd();
@@ -2174,10 +2172,9 @@ FReply SUPTMainPanel::AnalyzeSelectedSkeleton()
     LastSkeletonOverrideJson = OverrideJson;
     SkeletonReportOutput->SetText(FText::FromString(LastSkeletonAnalysis.Report));
     if (!LastSkeletonAnalysis.bOverridesValid)
-        SetAnimationStatus(TEXT("보정 JSON에 오류가 있습니다. 분석 결과의 오류를 확인하세요."), FLinearColor::Red);
+        SetAnimationStatus(LOCTEXT("ErrOverrideJson", "The correction JSON has an error. Check the errors in the analysis result.").ToString(), FLinearColor::Red);
     else
-        SetAnimationStatus(FString::Printf(TEXT("'%s' 분석 완료 — 리타기팅 준비도 %.0f%%%s"), *Mesh->GetName(), LastSkeletonAnalysis.Readiness * 100.0f,
-            LastSkeletonAnalysis.Readiness >= 0.7f ? TEXT(". 저장하면 범용화 창에서 사용할 수 있습니다.") : TEXT(". 70% 이상이 되도록 틀린 본을 보정하세요.")),
+        SetAnimationStatus(FString::Format(*LOCTEXT("AnalysisDone", "'{0}' analyzed - retarget readiness {1}%{2}").ToString(), {Mesh->GetName(), FString::Printf(TEXT("%.0f"), LastSkeletonAnalysis.Readiness * 100.0f), LastSkeletonAnalysis.Readiness >= 0.7f ? LOCTEXT("SaveToUse", ". Save it and the retarget window will use it.").ToString() : LOCTEXT("FixBonesTo70", ". Correct the wrong bones until it reaches 70% or more.").ToString()}),
             LastSkeletonAnalysis.Readiness >= 0.7f ? FLinearColor::Green : FLinearColor::Yellow);
     return FReply::Handled();
 }
@@ -2187,12 +2184,12 @@ FReply SUPTMainPanel::SaveSkeletonOverride()
     USkeletalMesh* Mesh = LastAnalyzedMesh.Get();
     if (!Mesh)
     {
-        SetAnimationStatus(TEXT("먼저 '선택 메시 분석'을 누르세요."), FLinearColor::Yellow);
+        SetAnimationStatus(LOCTEXT("AnalyzeFirst", "Press 'Analyze selected mesh' first.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     if (SkeletonOverrideInput->GetText().ToString().TrimStartAndEnd() != LastSkeletonOverrideJson)
     {
-        SetAnimationStatus(TEXT("보정값이 분석 후 바뀌었습니다. '선택 메시 분석'을 다시 누른 뒤 저장하세요."), FLinearColor::Yellow);
+        SetAnimationStatus(LOCTEXT("OverrideChanged", "The correction changed after the analysis. Press 'Analyze selected mesh' again, then save.").ToString(), FLinearColor::Yellow);
         return FReply::Handled();
     }
     FString Error;
@@ -2202,8 +2199,7 @@ FReply SUPTMainPanel::SaveSkeletonOverride()
         SetAnimationStatus(Error, FLinearColor::Red);
         return FReply::Handled();
     }
-    SetAnimationStatus(FString::Printf(TEXT("보정값을 저장했습니다(%s). 범용화 창이 '%s'에 자동 적용합니다. 에디터를 닫기 전에 에셋을 저장하세요."),
-        *Profile->GetPathName(), *Mesh->GetName()), FLinearColor::Green);
+    SetAnimationStatus(FString::Format(*LOCTEXT("OverrideSaved", "Correction saved ({0}). The retarget window applies it to '{1}' automatically. Save the asset before closing the editor.").ToString(), {Profile->GetPathName(), Mesh->GetName()}), FLinearColor::Green);
     return FReply::Handled();
 }
 
